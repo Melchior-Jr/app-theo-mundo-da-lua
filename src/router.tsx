@@ -4,6 +4,7 @@ import HomePage from '@/pages/HomePage'
 import ChaptersPage from '@/pages/ChaptersPage'
 import ChapterPage from '@/pages/ChapterPage'
 import QuizPage from '@/pages/QuizPage'
+import GamesPage from '@/pages/GamesPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         path: 'quiz',
         element: <QuizPage />,
+      },
+      {
+        path: 'jogos',
+        element: <GamesPage />,
       },
       {
         path: '*',

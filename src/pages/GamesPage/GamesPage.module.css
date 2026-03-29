@@ -1,0 +1,322 @@
+.page {
+  position: relative;
+  min-height: 100dvh;
+  background: linear-gradient(175deg, #050810 0%, #0A0E1A 30%, #0d1525 60%, #050810 100%);
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: slide-up 0.5s ease;
+}
+
+.backButton {
+  display: inline-flex;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-moon);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.backButton:hover {
+  opacity: 1;
+}
+
+.headerInfo .label {
+  display: inline-block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-moon);
+  margin-bottom: var(--space-1);
+}
+
+.title {
+  font-size: var(--text-3xl);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(255, 209, 102, 0.3);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1.8fr 1fr;
+    gap: var(--space-10);
+  }
+}
+
+/* --- Seção de Jogos --- */
+.sectionHeader h2 {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: var(--space-1);
+}
+
+.sectionHeader p {
+  font-size: var(--text-sm);
+  color: var(--color-star-dim);
+  margin-bottom: var(--space-6);
+}
+
+.gamesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.gameCard {
+  position: relative;
+  background: rgba(13, 19, 36, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  text-decoration: none;
+  transition: all 400ms var(--ease-spring);
+  overflow: hidden;
+  animation: slide-up 0.6s ease-out backwards;
+}
+
+.gameCard:hover {
+  transform: translateY(-5px);
+  background: rgba(26, 35, 64, 0.6);
+  border-color: var(--color-moon);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.gameIcon {
+  font-size: 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  transition: transform 0.3s ease;
+}
+
+.gameCard:hover .gameIcon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.gameInfo {
+  flex: 1;
+}
+
+.gameInfo h3 {
+  font-size: var(--text-base);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.gameInfo p {
+  font-size: var(--text-xs);
+  color: var(--color-star-dim);
+  line-height: 1.4;
+}
+
+.playNow, .comingSoon {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.playNow {
+  background: var(--color-moon);
+  color: var(--color-void);
+}
+
+.comingSoon {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.cardGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 209, 102, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.gameCard:hover .cardGlow {
+  opacity: 1;
+}
+
+/* --- Ranking Section --- */
+.rankingCard {
+  background: rgba(13, 19, 36, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-8);
+  height: fit-content;
+}
+
+.rankingHeader {
+  margin-bottom: var(--space-6);
+}
+
+.rankingTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.rankingTitleGroup h2 {
+  font-size: var(--text-xl);
+  font-weight: 900;
+  color: #fff;
+}
+
+.titleIcon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px rgba(255, 209, 102, 0.6));
+}
+
+.rankingHeader p {
+  font-size: var(--text-xs);
+  color: var(--color-star-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.leaderboardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.leaderboardItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-xl);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.leaderboardItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateX(5px);
+}
+
+.rankBadge {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 900;
+  color: var(--color-moon);
+}
+
+.userInfo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.userEmoji {
+  font-size: 1.25rem;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: #fff;
+}
+
+.userStats {
+  font-size: 0.65rem;
+  color: var(--color-comet);
+  font-weight: 600;
+}
+
+.userScore {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 900;
+  color: var(--color-star);
+}
+
+.podiumGlow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--rank-color);
+  box-shadow: 0 0 10px var(--rank-color);
+}
+
+.rankingFooter {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--color-star-dim);
+}
+
+.footer {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: rgba(168, 180, 204, 0.4);
+  padding-bottom: var(--space-2);
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

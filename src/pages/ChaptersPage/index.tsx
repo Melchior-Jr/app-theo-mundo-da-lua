@@ -82,19 +82,19 @@ export default function ChaptersPage() {
             />
           ))}
 
-          {/* Card Especial do Quiz */}
-          <Link to="/quiz" className={styles.quizCard} style={{ animationDelay: '600ms' }}>
-            <div className={styles.quizIcon}>🏆</div>
+          {/* Card Especial da Central de Jogos */}
+          <Link to="/jogos" className={styles.quizCard} style={{ animationDelay: '600ms' }}>
+            <div className={styles.quizIcon}>🎮</div>
             <div className={styles.quizContent}>
-              <span className={styles.quizTag}>DESAFIO FINAL</span>
-              <h3 className={styles.quizTitle}>Testar meus conhecimentos</h3>
-              <p className={styles.quizDesc}>Pronto para o desafio do Théo?</p>
+              <span className={styles.quizTag}>CENTRAL DE JOGOS</span>
+              <h3 className={styles.quizTitle}>Desafios no Espaço</h3>
+              <p className={styles.quizDesc}>Pronto para os jogos do Théo?</p>
             </div>
             <div className={styles.quizArrow}>→</div>
           </Link>
         </div>
 
-        <footer className={`${styles.footer} opacity-0 animate-fade-in delay-600`}>
+        <footer className={`${styles.footer} opacity-0 animate-fade-in delay-800`}>
           <p>🚀 Théo vai te guiar em cada capítulo!</p>
         </footer>
       </div>

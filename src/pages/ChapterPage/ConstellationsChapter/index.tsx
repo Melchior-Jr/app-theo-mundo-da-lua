@@ -355,7 +355,6 @@ export default function ConstellationsChapter() {
                 {[
                   { label: 'Estrela Principal', value: revealed ? activeConstellation.mainStar : '???' },
                   { label: 'Total de Estrelas', value: revealed ? `${activeConstellation.starsCount}` : '???' },
-                  { label: 'Curiosidades', value: revealed ? 'Você sabia?' : '???' },
                 ].map((stat, i) => (
                   <button 
                     key={stat.label} 
@@ -371,6 +370,16 @@ export default function ConstellationsChapter() {
                   </button>
                 ))}
               </div>
+
+              {revealed && (
+                <div className={`${styles.funFactCard} ${styles.visible}`}>
+                  <div className={styles.funFactIcon}>
+                    <span>✨</span>
+                    Dica do Théo
+                  </div>
+                  <p className={styles.funFactText}>{activeConstellation.lore}</p>
+                </div>
+              )}
             </>
           ) : (
             <div className={styles.emptyInfo}>
@@ -397,7 +406,7 @@ export default function ConstellationsChapter() {
               onClick={() => handleSelect(c.id)}
               style={{ '--c-color': c.color } as React.CSSProperties}
             >
-              <div className={styles.dockIcon}>{c.icon}</div>
+              <div className={styles.dockCircle}>{c.icon}</div>
               <span className={styles.dockLabel}>{c.name}</span>
             </button>
           ))}

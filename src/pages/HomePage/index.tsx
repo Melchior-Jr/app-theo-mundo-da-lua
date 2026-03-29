@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
 import StarField from '@/components/StarField'
 import NarrationPlayer from '@/components/NarrationPlayer'
 import { getNarrationByChapter } from '@/data/narration'
@@ -12,15 +12,7 @@ import styles from './HomePage.module.css'
 export default function HomePage() {
   const navigate = useNavigate()
   const homeNarration = getNarrationByChapter('home')
-  const [shouldAutoPlay, setShouldAutoPlay] = useState(false)
-
-  // Início automático após 3 segundos
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShouldAutoPlay(true)
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [])
+  const [shouldAutoPlay] = useState(false)
 
   const handleStartJourney = () => {
     navigate('/capitulos')
@@ -92,6 +84,15 @@ export default function HomePage() {
               <div className={styles.buttonGlow} aria-hidden="true" />
             </button>
 
+            {/* Botão Secundário de Jogos */}
+            <Link 
+              to="/jogos" 
+              className={`${styles.gamesAccess} opacity-0 animate-slide-up delay-700`}
+            >
+              <span className={styles.gamesIcon}>🎮</span>
+              <span className={styles.gamesText}>Ir para Central de Jogos</span>
+            </Link>
+
             {/* Detalhes da escola */}
             <div className={`${styles.schoolInfo} opacity-0 animate-fade-in delay-700`}>
               <p className={styles.schoolName}>Escola Arassuay Gomes de Castro</p>
@@ -100,7 +101,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Barra de créditos no rodapé */}
         <footer className={`${styles.footer} opacity-0 animate-fade-in delay-800`}>
           <p>Uma jornada educativa criada com carinho ✨</p>
         </footer>

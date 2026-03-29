@@ -12,6 +12,10 @@ export interface Planet {
   temperature: string
   gravity: string
   distance: string
+  // Novos campos para preencher o vazio do grid
+  dayDuration: string
+  yearDuration: string
+  mainFeature: string
 }
 
 export const planets: Planet[] = [
@@ -26,7 +30,10 @@ export const planets: Planet[] = [
     narrationText: 'E aí, astronauta! Conheça Mercúrio. Ele é o menorzinho do grupo e está bem colado no Sol. Por isso, ele corre muito rápido nas órbitas!',
     temperature: '430° a -180°C',
     gravity: '3.7 m/s²',
-    distance: '58 Mi km'
+    distance: '58 Mi km',
+    dayDuration: '59 dias',
+    yearDuration: '88 dias',
+    mainFeature: 'O Flash da Órbita'
   },
   {
     id: 'venus',
@@ -39,7 +46,10 @@ export const planets: Planet[] = [
     narrationText: 'Vênus é o planeta do brilho! Ele é tão quente que nem as naves conseguem ficar muito tempo lá. E olha que loucura: ele gira pro lado contrário da Terra!',
     temperature: '464°C',
     gravity: '8.9 m/s²',
-    distance: '108 Mi km'
+    distance: '108 Mi km',
+    dayDuration: '243 dias (ao contrário!)',
+    yearDuration: '225 dias',
+    mainFeature: 'Planeta Estufa'
   },
   {
     id: 'terra',
@@ -52,7 +62,10 @@ export const planets: Planet[] = [
     narrationText: 'Nossa casa, a Terra! Olhando daqui de cima, dá pra ver como ela é azul por causa dos oceanos. É o único planeta com vida que a gente conhece!',
     temperature: '15°C',
     gravity: '9.8 m/s²',
-    distance: '150 Mi km'
+    distance: '150 Mi km',
+    dayDuration: '24 horas',
+    yearDuration: '365 dias',
+    mainFeature: '70% de Água'
   },
   {
     id: 'marte',
@@ -65,7 +78,10 @@ export const planets: Planet[] = [
     narrationText: 'O planeta vermelho! Marte parece um grande deserto de poeira enferrujada. Sabia que existem robôs lá agora mesmo explorando tudo?',
     temperature: '-65°C',
     gravity: '3.7 m/s²',
-    distance: '228 Mi km'
+    distance: '228 Mi km',
+    dayDuration: '24.6 horas',
+    yearDuration: '687 dias',
+    mainFeature: 'Monte Olimpo (Vulcão)'
   },
   {
     id: 'jupiter',
@@ -78,7 +94,10 @@ export const planets: Planet[] = [
     narrationText: 'Júpiter é o grandão do sistema! Ele não tem chão firme, é feito de gás. Aquela mancha vermelha ali é uma tempestade maior que a Terra inteira!',
     temperature: '-110°C',
     gravity: '24.8 m/s²',
-    distance: '778 Mi km'
+    distance: '778 Mi km',
+    dayDuration: '10 horas',
+    yearDuration: '12 anos',
+    mainFeature: 'Grande Mancha Vermelha'
   },
   {
     id: 'saturno',
@@ -91,7 +110,10 @@ export const planets: Planet[] = [
     narrationText: 'Olha esses anéis! Saturno é incrível. Esses anéis são feitos de gelo e poeira brilhando no espaço. Se a gente tivesse uma banheira gigante, ele boiaria!',
     temperature: '-140°C',
     gravity: '10.4 m/s²',
-    distance: '1.4 Bi km'
+    distance: '1.4 Bi km',
+    dayDuration: '10.7 horas',
+    yearDuration: '29 anos',
+    mainFeature: '146 Luas'
   },
   {
     id: 'urano',
@@ -104,7 +126,10 @@ export const planets: Planet[] = [
     narrationText: 'Urano é um gigante gelado e azul clarinho. O mais engraçado é que ele gira deitado, como se estivesse tirando uma soneca no espaço!',
     temperature: '-195°C',
     gravity: '8.7 m/s²',
-    distance: '2.9 Bi km'
+    distance: '2.9 Bi km',
+    dayDuration: '17.2 horas',
+    yearDuration: '84 anos',
+    mainFeature: 'Gira de Lado'
   },
   {
     id: 'netuno',
@@ -117,7 +142,10 @@ export const planets: Planet[] = [
     narrationText: 'Lá no finalzinho está Netuno, o azul profundo. Lá venta muito forte, mais que qualquer furacão na Terra. E dizem que chove diamantes lá dentro!',
     temperature: '-201°C',
     gravity: '11.1 m/s²',
-    distance: '4.5 Bi km'
+    distance: '4.5 Bi km',
+    dayDuration: '16.1 horas',
+    yearDuration: '165 anos',
+    mainFeature: 'Chove Diamantes'
   }
 ]
 

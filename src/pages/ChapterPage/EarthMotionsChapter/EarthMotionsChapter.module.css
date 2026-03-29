@@ -16,14 +16,8 @@
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 24px;
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
   animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   min-height: 0;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   position: relative;
 }
 
@@ -53,6 +47,7 @@
   gap: 16px;
   overflow-y: auto;
   padding-right: 12px;
+  padding-top: 30px; /* Margem de segurança para o título */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
@@ -154,7 +149,7 @@
   display: flex;
   justify-content: center;
   padding: 0;
-  margin-bottom: -30px; 
+  margin-bottom: 0px; 
   z-index: 20;
   animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -240,9 +235,19 @@
 .dockItem.active .dockLabel {
   opacity: 1;
   transform: translateY(4px);
-  color: var(--theme-color);
-  background: rgba(0,0,0,0.7);
-  border-color: color-mix(in srgb, var(--theme-color) 40%, transparent);
+  color: #7efbfd; /* Azul neon de alto contraste */
+  background: rgba(0, 0, 0, 0.85); /* Fundo mais escuro para o texto brilhar */
+  border-color: #7efbfd;
+  box-shadow: 0 0 10px rgba(126, 251, 253, 0.4);
+}
+
+.orbitIcon {
+  transform-origin: 24px 24px;
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ELEMENTOS DA CENA (REUTILIZADOS) */
@@ -261,70 +266,202 @@
   justify-content: center;
 }
 
-.earthGlobe {
+.planetViewerWrapper {
   position: relative;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: #3498db;
-  box-shadow: 0 0 50px rgba(52, 152, 219, 0.3), inset -20px 0 30px rgba(0,0,0,0.5);
-  overflow: hidden;
-  transform: rotate(23.5deg);
+  width: 250px;
+  height: 250px;
+  z-index: 1;
 }
 
-.earthMapMap {
+.miniEarth3D {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 10px rgba(75, 123, 237, 0.4));
+  pointer-events: none; /* Bloqueia manuseio tátil na translação */
+}
+
+.rotationAxis {
   position: absolute;
-  width: 280px;
-  height: 140px;
-  background-image: radial-gradient(circle at 30% 30%, #2ecc71 10%, transparent 12%),
-                    radial-gradient(ellipse at 70% 60%, #27ae60 15%, transparent 20%),
-                    radial-gradient(circle at 10% 70%, #f1c40f 8%, transparent 10%),
-                    radial-gradient(circle at 80% 20%, #e67e22 12%, transparent 14%);
-  background-size: 140px 140px;
-  animation: slideMap 4s linear infinite;
-}
-
-.earthMapMap.paused {
-  animation-play-state: paused;
-}
-
-.dayNightGradient {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent 40%, rgba(0,0,0,0.8) 100%);
+  top: 50%;
+  left: 50%;
+  width: 2.5px; /* Ligeiramente mais grosso */
+  height: 400px; /* Mais comprido */
+  background: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.95) 50%, 
+    transparent 100%
+  );
+  transform: translate(-50%, -50%) rotate(23.5deg);
+  z-index: 0;
   pointer-events: none;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), 0 0 10px rgba(0, 210, 255, 0.4);
+}
+
+.interactionHint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  pointer-events: none;
+  animation: fadeIn 1s ease-out;
+}
+
+.handAxisWrapper {
+  transform: rotate(23.5deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handIcon {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+  animation: swipeHint 2.5s ease-in-out infinite;
+}
+
+.hintCircle {
+  animation: pulseHint 1.5s infinite;
+}
+
+.hintText {
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  opacity: 0.8;
+  margin-top: 10px;
+}
+
+@keyframes swipeHint {
+  0% { transform: translateX(-60px) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  45% { transform: translateX(60px) rotate(15deg); }
+  75% { opacity: 1; }
+  100% { transform: translateX(60px) rotate(15deg); opacity: 0; }
+}
+
+@keyframes circularHint {
+  0% { transform: rotate(-30deg) translateY(-140px) rotate(30deg); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: rotate(330deg) translateY(-140px) rotate(-330deg); opacity: 0; }
+}
+
+.handIconCircular {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+  animation: circularHint 3s linear infinite;
+}
+
+@keyframes pulseHint {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.axisLineMini {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.5px;
+  height: 75px;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%) rotate(23.5deg);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* PAINEL DE VELOCIDADE */
+.speedBadge {
+  position: absolute;
+  bottom: -60px;
+  background: rgba(13, 19, 36, 0.85);
+  backdrop-filter: blur(16px);
+  padding: 10px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  min-width: 180px;
+  z-index: 10;
+  animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.speedLabel {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: #8892b0;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.speedDisplay {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  min-width: 90px;
+  text-align: center;
+  color: var(--theme-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .rotationArrow {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
   border-radius: 50%;
-  border: 3px dashed rgba(255, 255, 255, 0.3);
+  border: 4px solid rgba(126, 251, 253, 0.4);
   border-left-color: transparent;
   border-bottom-color: transparent;
-  animation: spinSlow 6.7s linear infinite;
+  border-top-color: transparent;
+  mask-image: linear-gradient(transparent, black 50%, transparent); /* Arco gradiente */
+  animation: spinSlow 6s linear infinite;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .rotationArrow::after {
-  content: "»";
+  content: "";
   position: absolute;
-  top: 15px;
-  right: 25px;
-  font-size: 2rem;
-  color: #fff;
-  transform: rotate(30deg);
+  top: 50%;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  background: #7efbfd;
+  clip-path: polygon(0 0, 100% 50%, 0 100%); /* Ponta de seta real */
+  box-shadow: 0 0 10px #7efbfd;
+  transform: translateY(-50%) rotate(90deg);
 }
 
-.theSun {
-  width: 80px;
-  height: 80px;
-  background: #f1c40f;
-  border-radius: 50%;
-  box-shadow: 0 0 50px #f1c40f, 0 0 100px rgba(241, 196, 15, 0.4);
+.theSun3D {
+  width: 140px;
+  height: 140px;
+  position: relative;
   z-index: 2;
-  animation: pulseSun 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 40px rgba(241, 196, 15, 0.6)) 
+          drop-shadow(0 0 100px rgba(241, 196, 15, 0.3));
 }
 
 .orbitPath {
@@ -344,13 +481,6 @@
   margin-left: -15px;
 }
 
-.miniEarth {
-  width: 32px;
-  height: 32px;
-  background: #3498db;
-  border-radius: 50%;
-  box-shadow: inset -6px -6px 10px rgba(0,0,0,0.5);
-}
 
 /* ANIMAÇÕES */
 @keyframes slideUp {
@@ -370,7 +500,7 @@
 
 @keyframes slideMap {
   from { background-position: 0 0; }
-  to { background-position: 140px 0; }
+  to { background-position: 160px 0; }
 }
 
 @keyframes spinSlow {
@@ -392,7 +522,6 @@
 @media (max-width: 1024px) {
   .dashboard {
     grid-template-columns: 1fr;
-    padding: 20px;
     gap: 16px;
     margin-bottom: 0px;
   }

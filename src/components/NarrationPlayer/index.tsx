@@ -74,6 +74,7 @@ export default function NarrationPlayer({
   const curiosityAudio = useNarration(curiosityNarration || null)
 
   const [hasStarted, setHasStarted] = useState(false)
+  const [showTapCue, setShowTapCue] = useState(!autoPlay)
   const [forceWaves, setForceWaves] = useState(false)
   
   // Estado para controle de arraste
@@ -87,6 +88,7 @@ export default function NarrationPlayer({
   useEffect(() => {
     if (autoPlay && narration) {
       setHasStarted(false)
+      setShowTapCue(false)
       setNarrationPhase('main')
       handlePlay()
     }
@@ -99,6 +101,7 @@ export default function NarrationPlayer({
     // SEMPRE reseta para a narração principal ao clicar no personagem
     setNarrationPhase('main')
     setHasStarted(true)
+    setShowTapCue(false)
     setForceWaves(true)
     
     // Para qualquer curiosidade que esteja tocando antes de iniciar o principal
@@ -292,6 +295,17 @@ export default function NarrationPlayer({
             }}
           >
             {/* No tamanho, usamos isSpeaking para o Théo "estufar" e 120 para ele relaxar ao pausar */}
+            {/* Indicador Sugestivo de Toque (Tap Cue - Premium HUD) */}
+            {showTapCue && !hasStarted && !isActive && (
+              <div className={styles.tapCue}>
+                <div className={styles.tapPulse} />
+                <div className={`${styles.tapPulse} ${styles.tapPulseSecondary}`} />
+                <div className={styles.tapTarget} />
+                <span className={styles.tapHand} role="img" aria-label="Toque aqui">👆</span>
+                <span className={styles.tapLabel}>Toca aqui</span>
+              </div>
+            )}
+
             <TheoCharacter size={floating ? 100 : (isSpeaking ? 160 : 120)} />
             
             {/* Camada de toque invisível para garantir captura de clique */}

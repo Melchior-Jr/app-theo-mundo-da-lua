@@ -3,6 +3,7 @@ import { getNarrationById } from '@/data/narration'
 import { getCaption } from '@/data/subtitles'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import TheoCharacter from '@/components/TheoCharacter'
+import PlanetViewer3D from '@/components/PlanetViewer3D'
 import styles from './EarthMotionsChapter.module.css'
 
 interface MotionData {
@@ -19,8 +20,89 @@ export default function EarthMotionsChapter() {
   // Estado inicial: nenhum movimento selecionado (Terra parada para a Intro)
   const [mode, setMode] = useState<'rotacao' | 'translaçao' | null>(null)
   
+  // Estado de controle de velocidade e toque
+  const [rotationSpeed, setRotationSpeed] = useState(40)
+  const [isDragging, setIsDragging] = useState(false)
+  const touchData = useRef({ 
+    lastX: 0, 
+    lastY: 0,
+    lastAngle: 0,
+    startX: 0, 
+    startTime: 0,
+    recentX: 0,
+    recentAngle: 0,
+    recentTime: 0
+  })
+  
   // Detalhes da curiosidade
   const [selectedCuriosity, setSelectedCuriosity] = useState<string | null>(null)
+  const [hasInteracted, setHasInteracted] = useState(false)
+  
+  // Estados para Translação
+  const [orbitSpeed, setOrbitSpeed] = useState(30)
+  const [orbitAngle, setOrbitAngle] = useState(0)
+
+  useEffect(() => {
+    if (!mode || isDragging) return;
+
+    let rafId: number;
+    const baseRotation = 40;
+    const baseOrbit = 30;
+
+    const applyFriction = () => {
+      let needsNextFrame = false;
+
+      // Fricção para Rotação
+      if (mode === 'rotacao' && Math.abs(rotationSpeed - baseRotation) > 0.1) {
+        setRotationSpeed(prev => {
+          const diff = prev - baseRotation;
+          if (Math.abs(diff) < 0.2) return baseRotation;
+          return baseRotation + (diff * 0.98);
+        });
+        needsNextFrame = true;
+      }
+
+      // Fricção para Translação
+      if (mode === 'translaçao' && Math.abs(orbitSpeed - baseOrbit) > 0.1) {
+        setOrbitSpeed(prev => {
+          const diff = prev - baseOrbit;
+          if (Math.abs(diff) < 0.2) return baseOrbit;
+          return baseOrbit + (diff * 0.98);
+        });
+        needsNextFrame = true;
+      }
+
+      if (needsNextFrame) {
+        rafId = requestAnimationFrame(applyFriction);
+      }
+    };
+
+    rafId = requestAnimationFrame(applyFriction);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [isDragging, mode, rotationSpeed, orbitSpeed]);
+
+  // Loop para atualizar o ângulo da órbita baseado na velocidade atual
+  useEffect(() => {
+    if (mode !== 'translaçao') return;
+
+    let rafId: number;
+    let lastTime = Date.now();
+
+    const updateOrbit = () => {
+      const now = Date.now();
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      setOrbitAngle(prev => (prev + orbitSpeed * dt) % 360);
+      rafId = requestAnimationFrame(updateOrbit);
+    };
+
+    rafId = requestAnimationFrame(updateOrbit);
+    return () => cancelAnimationFrame(rafId);
+  }, [mode, orbitSpeed]);
 
   const { 
     canStartLocal, 
@@ -51,19 +133,23 @@ export default function EarthMotionsChapter() {
     prevCanStartLocal.current = canStartLocal
   }, [canStartLocal, mode])
 
-  // Gerenciador de Narração Local
+  // Controle de Narração Local
+  const activeLocalNarration = useRef<string | null>(null)
+
   useEffect(() => {
+    // Só prossegue se o usuário puder iniciar e houver um modo selecionado
     if (!canStartLocal || !mode) return
 
-    // Limpa o callback da intro para não interferir nos áudios locais
-    setOnNarrationFinish(undefined)
+    // Se a narração para este modo já foi iniciada, não repete
+    if (activeLocalNarration.current === mode) return
 
-    // Injeta a narração do movimento diretamente.
-    // O 'narrationKey' no contexto garante remontagem do NarrationPlayer
-    // mesmo que o id seja o mesmo, eliminando a necessidade de passar por null.
     const narration = getNarrationById(mode === 'rotacao' ? 'rotacao' : 'translacao')
     if (narration) {
+      // Limpa o callback da intro para não interferir nos áudios locais
+      setOnNarrationFinish(undefined)
+      
       setActiveNarration(narration)
+      activeLocalNarration.current = mode
     }
   }, [mode, canStartLocal, setActiveNarration, setOnNarrationFinish])
 
@@ -117,17 +203,35 @@ export default function EarthMotionsChapter() {
         <div className={styles.dockTrack}>
           <button 
             className={`${styles.dockItem} ${mode === 'rotacao' ? styles.active : ''}`}
-            onClick={() => setMode('rotacao')}
+            onClick={() => {
+              if (mode !== 'rotacao') {
+                setMode('rotacao')
+                setCanStartLocal(true) // Libera o controle local imediatamente
+              }
+            }}
           >
-            <div className={styles.dockCircle}>↺</div>
+            <div className={styles.dockCircle}>🌍</div>
             <span className={styles.dockLabel}>Rotação</span>
           </button>
 
           <button 
             className={`${styles.dockItem} ${mode === 'translaçao' ? styles.active : ''}`}
-            onClick={() => setMode('translaçao')}
+            onClick={() => {
+              if (mode !== 'translaçao') {
+                setMode('translaçao')
+                setCanStartLocal(true) // Libera o controle local imediatamente
+              }
+            }}
           >
-            <div className={styles.dockCircle}>🌍</div>
+            <div className={styles.dockCircle}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="8" fill="#f1c40f" />
+                <circle cx="24" cy="24" r="16" stroke="white" strokeWidth="1" strokeDasharray="2 4" opacity="0.3" />
+                <g className={styles.orbitIcon}>
+                  <circle cx="40" cy="24" r="4" fill="#4b7bed" />
+                </g>
+              </svg>
+            </div>
             <span className={styles.dockLabel}>Translação</span>
           </button>
         </div>
@@ -159,15 +263,147 @@ export default function EarthMotionsChapter() {
           <div className={styles.sceneArea}>
             <div className={styles.planetGlow} style={{ backgroundColor: 'var(--theme-color)' }} />
             
-            <div className={styles.scene}>
-              {mode === 'rotacao' && <div className={styles.rotationArrow} />}
-              
+            <div 
+              className={styles.scene}
+              onPointerDown={(e) => {
+                const now = Date.now()
+                const rect = e.currentTarget.getBoundingClientRect()
+                const centerX = rect.left + rect.width / 2
+                const centerY = rect.top + rect.height / 2
+                const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI)
+
+                touchData.current = {
+                  lastX: e.clientX,
+                  lastY: e.clientY,
+                  lastAngle: startAngle,
+                  startX: e.clientX,
+                  startTime: now,
+                  recentX: e.clientX,
+                  recentAngle: startAngle,
+                  recentTime: now
+                }
+                setIsDragging(true)
+                setHasInteracted(true)
+                e.currentTarget.setPointerCapture(e.pointerId)
+              }}
+              onPointerMove={(e) => {
+                if (!isDragging) return
+                const now = Date.now()
+                
+                if (mode === 'rotacao') {
+                  const deltaX = e.clientX - touchData.current.lastX
+                  if (now - touchData.current.recentTime > 100) {
+                    touchData.current.recentX = touchData.current.lastX
+                    touchData.current.recentTime = now
+                  }
+                  const dragSpeed = deltaX * 15.0
+                  setRotationSpeed(prev => Math.max(-5000, Math.min(5000, prev + dragSpeed)))
+                } else if (mode === 'translaçao') {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const centerX = rect.left + rect.width / 2
+                  const centerY = rect.top + rect.height / 2
+                  const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI)
+                  
+                  let deltaAngle = currentAngle - touchData.current.lastAngle
+                  if (deltaAngle > 180) deltaAngle -= 360
+                  if (deltaAngle < -180) deltaAngle += 360
+                  
+                  setOrbitAngle(prev => (prev + deltaAngle) % 360)
+                  
+                  if (now - touchData.current.recentTime > 50) {
+                    touchData.current.recentAngle = touchData.current.lastAngle
+                    touchData.current.recentTime = now
+                  }
+                  
+                  // Atualiza velocidade instantânea para inércia
+                  const dt = (now - touchData.current.recentTime) / 1000
+                  if (dt > 0) {
+                    const instantSpeed = deltaAngle / dt
+                    setOrbitSpeed(instantSpeed)
+                  }
+                  
+                  touchData.current.lastAngle = currentAngle
+                }
+                
+                touchData.current.lastX = e.clientX
+                touchData.current.lastY = e.clientY
+              }}
+              onPointerUp={(e) => {
+                if (!isDragging) return
+                const now = Date.now()
+                
+                if (mode === 'rotacao') {
+                  const deltaTime = Math.max(1, now - touchData.current.recentTime)
+                  const deltaX = e.clientX - touchData.current.recentX
+                  const flickVelocity = deltaX / deltaTime
+                  const impulseRotation = flickVelocity * 15000
+                  setRotationSpeed(prev => Math.max(-5000, Math.min(5000, prev + impulseRotation)))
+                } else if (mode === 'translaçao') {
+                  // Inércia circular baseada no movimento recente
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const centerX = rect.left + rect.width / 2
+                  const centerY = rect.top + rect.height / 2
+                  const endAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI)
+                  
+                  let deltaAngle = endAngle - touchData.current.recentAngle
+                  if (deltaAngle > 180) deltaAngle -= 360
+                  if (deltaAngle < -180) deltaAngle += 360
+                  
+                  const dt = Math.max(1, now - touchData.current.recentTime) / 1000
+                  const flickOrbit = (deltaAngle / dt) * 1.5 // Multiplicador de impulso
+                  
+                  setOrbitSpeed(prev => Math.max(-1000, Math.min(1000, prev + flickOrbit)))
+                }
+
+                setIsDragging(false)
+                e.currentTarget.releasePointerCapture(e.pointerId)
+              }}
+              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+            >
               {mode === 'translaçao' && (
                 <div className={styles.translationContainer}>
-                  <div className={styles.theSun} />
-                  <div className={styles.orbitPath}>
-                    <div className={styles.orbitingEarth}>
-                      <div className={styles.miniEarth} />
+                  <div className={styles.theSun3D}>
+                    <PlanetViewer3D 
+                      modelSrc="/3D Model/the_star_sun.glb" 
+                      alt="O Sol" 
+                      color="#f1c40f"
+                      cameraControls={false}
+                      autoRotate={true}
+                      exposure={0.2}
+                    />
+                  </div>
+                  
+                  {!hasInteracted && (
+                    <div className={styles.interactionHint}>
+                      <div className={styles.handIconCircular}>
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="6" r="4" fill="rgba(255, 255, 255, 0.2)" className={styles.hintCircle} />
+                          <circle cx="12" cy="6" r="1.5" fill="white" />
+                          <path 
+                            d="M12 6V13M12 13V8.5C12 7.67 12.67 7 13.5 7C14.33 7 15 7.67 15 8.5V13M15 13V9.5C15 8.67 15.67 8 16.5 8C17.33 8 18 8.67 18 9.5V13M18 13V10.5C18 9.67 18.67 9 19.5 9C20.33 9 21 9.67 21 10.5V15C21 18.31 18.31 21 15 21H13.5C10.19 21 7.5 18.31 7.5 15V13C7.5 12.17 8.17 11.5 9 11.5C9.83 11.5 10.5 12.17 10.5 13V11.5" 
+                            stroke="white" 
+                            strokeWidth="1.5" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={styles.orbitPath} style={{ transform: `rotate(${orbitAngle}deg)`, animation: 'none' }}>
+                    <div className={styles.orbitingEarth} style={{ transform: `rotate(${-orbitAngle}deg)`, animation: 'none' }}>
+                      <div className={styles.miniEarth3D}>
+                         <div className={styles.axisLineMini} />
+                         <PlanetViewer3D 
+                            modelSrc="/3D Model/earth_new.glb" 
+                            alt="Terra em Translação" 
+                            color="#4b7bed"
+                            cameraControls={false}
+                            tilt={23.5}
+                            lockVertical={true}
+                          />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -175,9 +411,41 @@ export default function EarthMotionsChapter() {
 
               {mode === 'rotacao' && (
                 <div className={styles.rotationContainer}>
-                  <div className={styles.earthGlobe}>
-                    <div className={styles.earthMapMap} />
-                    <div className={styles.dayNightGradient} />
+                  <div className={styles.planetViewerWrapper}>
+                    <div className={styles.rotationAxis} />
+                    
+                    {!hasInteracted && (
+                      <div className={styles.interactionHint}>
+                        <div className={styles.handAxisWrapper}>
+                          <div className={styles.handIcon}>
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="6" r="4" fill="rgba(255, 255, 255, 0.2)" className={styles.hintCircle} />
+                              <circle cx="12" cy="6" r="1.5" fill="white" />
+                              <path 
+                                d="M12 6V13M12 13V8.5C12 7.67 12.67 7 13.5 7C14.33 7 15 7.67 15 8.5V13M15 13V9.5C15 8.67 15.67 8 16.5 8C17.33 8 18 8.67 18 9.5V13M18 13V10.5C18 9.67 18.67 9 19.5 9C20.33 9 21 9.67 21 10.5V15C21 18.31 18.31 21 15 21H13.5C10.19 21 7.5 18.31 7.5 15V13C7.5 12.17 8.17 11.5 9 11.5C9.83 11.5 10.5 12.17 10.5 13V11.5" 
+                                stroke="white" 
+                                strokeWidth="1.5" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className={styles.hintText}>Arraste para girar a Terra</p>
+                      </div>
+                    )}
+
+                    <PlanetViewer3D 
+                      modelSrc="/3D Model/earth_new.glb" 
+                      alt="Terra em Rotação" 
+                      color="#4b7bed"
+                      cameraOrbit="0deg 75deg 110%"
+                      tilt={23.5}
+                      lockVertical={true}
+                      cameraControls={false}
+                      autoRotate={true}
+                      rotationSpeed={`${rotationSpeed}deg`}
+                    />
                   </div>
                 </div>
               )}

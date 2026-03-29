@@ -6,11 +6,15 @@ import styles from './TheoSpinner.module.css'
 
 interface TheoSpinnerProps {
   label?: string
+  silent?: boolean
 }
 
-export default function TheoSpinner({ label = 'Carrregando o universo...' }: TheoSpinnerProps) {
+export default function TheoSpinner({ 
+  label = 'Carrregando o universo...',
+  silent = false 
+}: TheoSpinnerProps) {
   const loadingNarration = getNarrationById('loading')
-  const { play, stop } = useNarration(loadingNarration || null)
+  const { play, stop } = useNarration((loadingNarration && !silent) ? loadingNarration : null)
 
   useEffect(() => {
     // Ao montar o spinner, toca o áudio "Calma aí gente..." automaticamente

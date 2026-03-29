@@ -151,22 +151,13 @@ export default function ChapterContainer({
         {!hasNext ? (
           <div className={styles.finalButtons}>
             <button
-              id="btn-go-quiz"
+              id="btn-go-games"
               className={`${styles.navButton} ${styles.quizButton}`}
-              onClick={() => navigate('/quiz')}
-              aria-label="Ir para o Quiz final"
+              onClick={() => navigate('/jogos')}
+              aria-label="Ir para a Central de Jogos"
             >
-              <span>Fazer Quiz!</span>
-              <span aria-hidden="true">📝</span>
-            </button>
-            <button
-              id="btn-go-menu"
-              className={`${styles.navButton} ${styles.menuButton}`}
-              onClick={() => navigate('/capitulos')}
-              aria-label="Voltar ao menu principal"
-            >
-              <span>Menu Principal</span>
-              <span aria-hidden="true">🏠</span>
+              <span>Central de Jogos</span>
+              <span aria-hidden="true">🎮</span>
             </button>
           </div>
         ) : (
