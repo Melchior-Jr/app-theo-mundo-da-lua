@@ -1,0 +1,217 @@
+.playerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Oculta visualmente o player sem parar o áudio (usado na intro do Cap 2) */
+.hiddenPlayer {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.6s ease;
+}
+
+/* === Palco do Théo (Centro da Ação) === */
+.characterStage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  perspective: 1000px;
+}
+
+.characterAnchor {
+  position: relative;
+}
+
+.characterWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: grab;
+  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.characterWrapper:hover {
+  transform: scale(1.05);
+}
+
+.characterWrapper:active {
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.avatarSpeaking {
+  animation: bobbing 1.5s ease-in-out infinite;
+}
+
+@keyframes bobbing {
+  0%, 100% { transform: translateY(0) scale(1.02); }
+  50%       { transform: translateY(-8px) scale(0.98); }
+}
+
+/* Aura Sonora em volta do Théo */
+.audioVisualizer {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+
+.visualizerActive {
+  opacity: 1;
+}
+
+.soundWaves {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+}
+
+.bar {
+  width: 4px;
+  background-color: var(--theme-color, #FFD166);
+  border-radius: 99px;
+  height: 6px;
+  box-shadow: 0 0 10px var(--theme-color, #FFD166);
+}
+
+.visualizerActive .bar:nth-child(1) { animation: equal 0.6s infinite ease-in-out alternate; }
+.visualizerActive .bar:nth-child(2) { animation: equal 0.4s infinite ease-in-out alternate 0.2s; }
+.visualizerActive .bar:nth-child(3) { animation: equal 0.5s infinite ease-in-out alternate 0.4s; }
+.visualizerActive .bar:nth-child(4) { animation: equal 0.7s infinite ease-in-out alternate 0.1s; }
+.visualizerActive .bar:nth-child(5) { animation: equal 0.45s infinite ease-in-out alternate 0.3s; }
+
+@keyframes equal {
+  0% { height: 6px; opacity: 0.6; }
+  100% { height: 24px; opacity: 1; }
+}
+
+/* === Barra de Controles === */
+.controlsBar {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.mainStartBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-void, #050810);
+  background: var(--theme-color, #FFD166);
+  border: none;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-color) 40%, transparent);
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 250ms;
+  cursor: pointer;
+}
+
+.mainStartBtn:hover {
+  transform: scale(1.04) translateY(-2px);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--theme-color) 60%, transparent);
+}
+
+.activeControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(13, 19, 36, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.controlBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  color: var(--color-star-dim, #a8b4cc);
+  transition: all 200ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* === Modo Flutuante (Floating) === */
+.isFloating {
+  position: fixed;
+  z-index: 1000;
+  width: auto;
+  animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  touch-action: none;
+}
+
+/* Posições */
+.posBottomRight { bottom: 24px; right: 24px; }
+.posBottomLeft { bottom: 24px; left: 24px; }
+.posTopRight { top: 24px; right: 24px; }
+.posTopLeft { top: 24px; left: 24px; }
+
+.dragging {
+  transition: none !important;
+  opacity: 0.8;
+  cursor: grabbing !important;
+  z-index: 1001;
+}
+
+.isFloating > * {
+  pointer-events: auto;
+}
+
+.isFloating .characterStage {
+  padding: 0;
+}
+
+.isFloating .controlsBar {
+  padding-top: 8px;
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .posBottomRight { bottom: 16px; right: 16px; }
+  .posBottomLeft { bottom: 16px; left: 16px; }
+  .posTopRight { top: 16px; right: 16px; }
+  .posTopLeft { top: 16px; left: 16px; }
+  
+  .isFloating {
+    transform-origin: center;
+    transform: scale(0.85); /* Usando transform para evitar bug de scale */
+  }
+}

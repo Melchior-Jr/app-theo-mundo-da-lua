@@ -1,0 +1,9 @@
+Os astros do universo estão em constante movimento, eles giram em torno de si e de uma estrela chamada Sol. Existem 8 planetas que giram em torno da tal estrela.  
+Mercúrio
+Terra
+Vênus
+Marte
+júpiter
+saturno 
+urano
+netuno 

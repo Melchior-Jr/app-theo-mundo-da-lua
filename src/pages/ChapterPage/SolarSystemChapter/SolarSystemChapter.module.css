@@ -1,0 +1,17 @@
+.chapterContent {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chapterStep {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.narrationWrapper {
+  margin-bottom: 24px;
+}

@@ -1,0 +1,199 @@
+.page {
+  position: relative;
+  height: 100dvh; /* Força a página a ter a altura da viewport */
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  background: linear-gradient(
+    175deg,
+    #050810 0%,
+    #09111f 50%,
+    #050810 100%
+  );
+}
+
+/* Brilho temático do capítulo no canto superior */
+.themeGlow {
+  position: fixed;
+  top: -100px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--chapter-color, #FFD166) 8%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* === Estado: capítulo não encontrado === */
+.notFound {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050810;
+}
+
+.notFoundContent {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+}
+
+.notFoundIcon {
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.notFoundTitle {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--color-star, #F0F4FF);
+}
+
+.notFoundText {
+  font-family: var(--font-body);
+  color: var(--color-star-dim, #a8b4cc);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.notFoundButton {
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: var(--color-moon, #FFD166);
+  color: var(--color-void, #050810);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.notFoundButton:hover {
+  transform: scale(1.05);
+}
+
+/* === Placeholder de conteúdo === */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.placeholderEmoji {
+  font-size: 3.5rem;
+  animation: float 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px var(--chapter-color, #FFD166));
+}
+
+.placeholderLabel {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-star, #F0F4FF);
+}
+
+.placeholderHint {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-star-dim, #a8b4cc);
+  opacity: 0.7;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 0.2; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-4px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+
+/* === Sessão Em Breve === */
+.comingSoon {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.theoWorking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.workingIcon {
+  font-size: 5rem;
+  animation: float 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px var(--chapter-color));
+}
+
+.workingDots {
+  font-size: 2rem;
+  color: var(--chapter-color);
+  font-family: var(--font-display);
+  display: flex;
+  gap: 4px;
+}
+
+.workingDots span {
+  display: inline-block;
+  animation: dotBlink 1.4s infinite;
+}
+
+.workingDots span:nth-child(2) { animation-delay: 0.2s; }
+.workingDots span:nth-child(3) { animation-delay: 0.4s; }
+
+.comingSoonTitle {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 0 30px color-mix(in srgb, var(--chapter-color) 30%, transparent);
+}
+
+.comingSoonText {
+  font-size: 1.1rem;
+  color: #ccd6f6;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.progressBadge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--chapter-color);
+  font-weight: 700;
+  margin-top: 10px;
+}

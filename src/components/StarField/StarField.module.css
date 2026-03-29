@@ -1,0 +1,139 @@
+/* StarField — camadas de estrelas usando box-shadow para performance */
+
+@keyframes twinkleA {
+  0%, 100% { opacity: 0.9; }
+  30%       { opacity: 0.2; }
+  60%       { opacity: 0.7; }
+}
+
+@keyframes twinkleB {
+  0%, 100% { opacity: 0.6; }
+  40%       { opacity: 0.1; }
+  70%       { opacity: 0.9; }
+}
+
+@keyframes twinkleC {
+  0%, 100% { opacity: 1; }
+  20%       { opacity: 0.3; }
+  80%       { opacity: 0.8; }
+}
+
+@keyframes nebulaDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-2%, 2%) scale(1.03); }
+}
+
+.starField {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Geração de estrelas via radial-gradient repetitiva */
+.starsSmall {
+  position: absolute;
+  inset: 0;
+  /* Padrão de 80 estrelas pequenas via box-shadow simulada com background */
+  background-image:
+    radial-gradient(1px 1px at  7%  12%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 14%  45%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 23%  78%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 31%  23%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 38%  67%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 42%   8%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 49%  55%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 57%  34%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 63%  89%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 71%  17%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 79%  61%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 85%  42%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 92%  75%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at  3%  92%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at  9%  30%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 18%  58%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 26%  14%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 35%  82%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 44%  40%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 52%  70%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 61%   5%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 68%  48%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 75%  93%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 83%  27%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 89%  63%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at 97%  19%, #a8b4cc 0%, transparent 100%),
+    radial-gradient(1px 1px at  5%  50%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 20%   3%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 40%  95%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 60%  25%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 80%  80%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 95%   7%, #fff 0%, transparent 100%);
+  animation: twinkleA 4s ease-in-out infinite;
+}
+
+.starsMedium {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at  11%  38%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  22%  71%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  33%   5%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  45%  52%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  55%  85%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  66%  20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  77%  60%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  88%  35%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  96%  90%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at   2%  15%, rgba(126,251,253,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  28%  88%, rgba(126,251,253,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  72%   3%, rgba(126,251,253,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at  50%  10%, rgba(255,209,102,0.6) 0%, transparent 100%);
+  animation: twinkleB 6s ease-in-out 1s infinite;
+}
+
+.starsLarge {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at  16%  22%, rgba(255,255,255,1) 0%, transparent 100%),
+    radial-gradient(2px 2px at  37%  65%, rgba(255,255,255,1) 0%, transparent 100%),
+    radial-gradient(2px 2px at  58%   9%, rgba(255,255,255,1) 0%, transparent 100%),
+    radial-gradient(2px 2px at  74%  48%, rgba(255,255,255,1) 0%, transparent 100%),
+    radial-gradient(2px 2px at  91%  77%, rgba(255,255,255,1) 0%, transparent 100%),
+    radial-gradient(3px 3px at  25%  43%, rgba(255,209,102,0.9) 0%, transparent 100%),
+    radial-gradient(3px 3px at  82%  16%, rgba(126,251,253,0.8) 0%, transparent 100%),
+    radial-gradient(3px 3px at   6%  73%, rgba(255,209,102,0.8) 0%, transparent 100%);
+  animation: twinkleC 5s ease-in-out 2s infinite;
+}
+
+/* Nebulosas sutis para profundidade */
+.nebula {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  top: -20%;
+  right: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(26, 35, 64, 0.6) 0%,
+    rgba(10, 14, 26, 0.3) 40%,
+    transparent 70%
+  );
+  animation: nebulaDrift 20s ease-in-out infinite;
+}
+
+.nebula2 {
+  position: absolute;
+  width: 50vmax;
+  height: 50vmax;
+  bottom: -15%;
+  left: -15%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(17, 24, 39, 0.5) 0%,
+    rgba(5, 8, 16, 0.2) 40%,
+    transparent 70%
+  );
+  animation: nebulaDrift 25s ease-in-out 5s infinite reverse;
+}

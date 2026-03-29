@@ -1,0 +1,430 @@
+.chapterContainer {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+  padding-bottom: 160px; /* Reduzido para ficar mais próximo do dock */
+}
+
+@media (max-width: 600px) {
+  .chapterContainer {
+    padding: 8px;
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+  }
+}
+
+/* DASHBOARD PRINCIPAL */
+.dashboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 0;
+  position: relative;
+  overflow-y: auto;
+  scrollbar-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .dashboard {
+    padding: 16px;
+    gap: 16px;
+    border-radius: 24px;
+    overflow: visible;
+  }
+}
+
+
+
+.sceneLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 600px) {
+  .sceneLayout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* BOXES DOS PLANETAS */
+.viewBox {
+  position: relative;
+  background: radial-gradient(circle at center, #0a0f1c 0%, #03050a 100%);
+  height: 260px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.6);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .viewBox {
+    height: 200px;
+  }
+}
+
+.viewLabel {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: #a8b4cc;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  z-index: 5;
+  background: rgba(0,0,0,0.4);
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* 1. VISÃO DO ESPAÇO (ORBITAL) */
+.orbitalScene {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 400px) {
+  .orbitalScene {
+    transform: scale(0.85);
+  }
+}
+
+.sunSource {
+  position: absolute;
+  top: 50%;
+  left: -50px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sunRays {
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at center, #ffb703 0%, #fb8500 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(8px);
+  position: relative;
+  animation: pulseSun 3s infinite alternate;
+}
+
+.sunRays::after {
+  content: "☀️";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 20px #ffb703);
+}
+
+.earthCenter {
+  width: 60px;
+  height: 60px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 30%, #48cae4, #0077b6, #03045e);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0, 119, 182, 0.6), inset -10px -10px 15px rgba(0,0,0,0.5);
+  z-index: 10;
+}
+
+.orbitLine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  width: 154px;
+  height: 54px;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+}
+
+.moonBody {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  background: #111;
+  border-radius: 50%;
+  box-shadow: inset -4px -4px 8px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.2);
+  transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0.1s;
+  overflow: hidden;
+}
+
+.moonLitSide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(255, 255, 255, 0.8);
+}
+
+/* 2. O QUE VEMOS NO CÉU (SKY VIEW) */
+.skyView {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 400px) {
+  .skyView {
+    transform: scale(0.85);
+  }
+}
+
+.mainMoon {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.2), inset -10px -10px 20px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.moonCraters {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle 8px at 30px 40px, rgba(0,0,0,0.1) 0%, transparent 100%),
+    radial-gradient(circle 12px at 80px 70px, rgba(0,0,0,0.1) 0%, transparent 100%),
+    radial-gradient(circle 6px at 60px 100px, rgba(0,0,0,0.1) 0%, transparent 100%);
+  opacity: 0.6;
+}
+
+.moonShadowOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(4, 8, 20, 0.95);
+  box-shadow: 0 0 20px rgba(4, 8, 20, 0.9);
+  transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+
+.moonShadowOverlay.nova { transform: translateX(0); }
+.moonShadowOverlay.cheia { transform: translateX(100%); }
+
+.moonShadowOverlay.crescente {
+  transform: translateX(50%);
+  border-radius: 50% 0 0 50%;
+  width: 100%;
+  height: 100%;
+}
+
+.moonShadowOverlay.minguante {
+  transform: translateX(-50%);
+  border-radius: 0 50% 50% 0;
+}
+
+/* CONTROLES DA DOCA (Phase Dock) - Estilo Constelações */
+.phaseDockContainer {
+  position: fixed;
+  bottom: 0px; 
+  left: 50%;
+  transform: translate(-50%, -105px); 
+  width: calc(100% - 48px);
+  max-width: 900px;
+  z-index: 950;
+  background: rgba(12, 18, 38, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInUp {
+  from { transform: translate(-50%, -60px); opacity: 0; }
+  to { transform: translate(-50%, -105px); opacity: 1; }
+}
+
+@media (max-width: 1024px) {
+  .phaseDockContainer {
+    bottom: 0px;
+    transform: translate(-50%, -100px);
+    width: calc(100% - 24px);
+    max-width: none;
+    padding: 6px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+.phaseDockTrack {
+  display: flex;
+  justify-content: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 16px;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+.phaseDockTrack::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .phaseDockTrack {
+    padding: 4px;
+    gap: 8px;
+  }
+}
+
+.phaseDockItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .phaseDockItem {
+    padding: 8px 14px;
+    gap: 6px;
+  }
+}
+
+.phaseDockItem::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.phaseDockItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.phaseDockItem:hover::before {
+  opacity: 1;
+}
+
+.phaseDockItem.active {
+  background: color-mix(in srgb, #ffea00 20%, #ffffff1a);
+  border-color: #ffea00;
+  color: #fff;
+  box-shadow: 0 8px 25px color-mix(in srgb, #ffea00 40%, transparent);
+  transform: translateY(-4px);
+}
+
+.phaseDockItem.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 35%;
+  height: 4px;
+  background: #ffea00;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 12px #ffea00;
+}
+
+.phaseIconWrapper {
+  font-size: 1.3rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.phaseDockItem.active .phaseIconWrapper {
+  transform: scale(1.25);
+  filter: drop-shadow(0 4px 10px rgba(255, 234, 0, 0.4));
+}
+
+.phaseDockLabel {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1024px) {
+  .phaseDockLabel {
+    font-size: 0.85rem;
+  }
+}
+
+/* ANIMAÇÕES */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseSun {
+  from { filter: blur(6px); opacity: 0.8; }
+  to { filter: blur(12px); opacity: 1; }
+}
+
+@keyframes floatAlien {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -6px); }
+}

@@ -1,0 +1,141 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(5, 8, 16, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.colorLine {
+  height: 3px;
+  background: var(--chapter-color, #FFD166);
+  opacity: 0.7;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .inner {
+    padding: 14px 24px;
+  }
+}
+
+/* === Botão voltar === */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-star-dim, #a8b4cc);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition:
+    color 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.backButton:hover {
+  color: var(--chapter-color, #FFD166);
+  border-color: var(--chapter-color, #FFD166);
+  transform: translateX(-2px);
+}
+
+.backArrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.backText {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .backText { display: inline; }
+}
+
+/* === Título central === */
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.chapterIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px var(--chapter-color, #FFD166));
+  flex-shrink: 0;
+}
+
+.titleStack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chapterOrder {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chapter-color, #FFD166);
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.chapterTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-weight: 800;
+  color: var(--color-star, #F0F4FF);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === Progresso circular === */
+.progressOrb {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressSvg {
+  display: block;
+  filter: drop-shadow(0 0 6px var(--chapter-color, #FFD166));
+}
+
+.progressText {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--chapter-color, #FFD166);
+  text-align: center;
+  line-height: 1;
+}

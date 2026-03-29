@@ -1,0 +1,286 @@
+.container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 140px; 
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 24px 24px 160px;
+    gap: 24px;
+  }
+}
+
+/* === Seção de introdução === */
+/* Seção de introdução (Removida em favor do player flutuante) */
+.introSection {
+  display: none;
+}
+
+/* === Área de conteúdo === */
+.contentArea {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  position: relative;
+  overflow: hidden; /* Garante que brilhos não vazem */
+  min-height: 400px; /* Base de segurança */
+}
+
+@media (min-width: 640px) {
+  .contentArea {
+    padding: 16px 20px;
+    min-height: 500px;
+  }
+}
+
+/* === Barra de ações === */
+.actionBar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px 32px;
+  background: linear-gradient(to top, 
+    rgba(5, 8, 16, 0.98) 0%, 
+    rgba(5, 8, 16, 0.85) 50%, 
+    transparent 100%
+  );
+  backdrop-filter: blur(12px);
+  z-index: 900;
+  pointer-events: none;
+  
+  /* Animação local para evitar conflito com translateX(-50%) */
+  opacity: 0;
+  animation: slide-up-centered 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards 400ms;
+}
+
+.actionBar > * {
+  pointer-events: auto;
+}
+
+@keyframes slide-up-centered {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 40px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Botões de navegação (anterior/próximo) */
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-star, #F0F4FF);
+  background: rgba(255, 255, 255, 0.05);
+  transition:
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 200ms ease,
+    background 200ms ease;
+  will-change: transform;
+}
+
+.navButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.navButton:not(:disabled):hover {
+  border-color: var(--chapter-color, #FFD166);
+  color: var(--chapter-color, #FFD166);
+  background: var(--chapter-color-bg, rgba(255,209,102,0.08));
+  transform: scale(1.02);
+}
+
+.actionFill {
+  flex: 1;
+  justify-content: center;
+}
+
+.prevButton:not(:disabled):hover {
+  transform: scale(1.02) translateX(-2px);
+}
+
+.nextButton {
+  margin-left: auto;
+}
+
+.nextButton:not(:disabled):hover {
+  transform: scale(1.02) translateX(2px);
+}
+
+/* Botões finais */
+.finalButtons {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.quizButton {
+  flex: 2;
+  background: var(--chapter-color-bg, rgba(255,209,102,0.12));
+  border-color: var(--chapter-color, #FFD166);
+  color: var(--chapter-color, #FFD166) !important;
+  justify-content: center;
+}
+
+.quizButton:hover {
+  background: var(--chapter-color, #FFD166) !important;
+  color: rgba(0, 0, 0, 0.8) !important;
+  transform: scale(1.02) translateY(-2px) !important;
+}
+
+.menuButton {
+  flex: 1;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.menuButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+@media (max-width: 480px) {
+  .finalButtons {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* === Botão de Lâmpada (Curiosidade) === */
+.bulbBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 0;
+}
+
+.bulbBtn:hover {
+  transform: scale(1.1) rotate(15deg);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--chapter-color, #FFD166);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.bulbIcon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 213, 79, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.bulbGlow {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--chapter-color, #FFD166) 40%, transparent) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.bulbActive {
+  background: color-mix(in srgb, var(--chapter-color, #FFD166) 20%, transparent);
+  border-color: var(--chapter-color, #FFD166);
+  animation: bulb-pulse 2s infinite ease-in-out;
+}
+
+.bulbActive .bulbGlow {
+  opacity: 1;
+}
+
+.bulbActive .bulbIcon {
+  filter: drop-shadow(0 0 15px var(--chapter-color, #FFD166));
+  transform: scale(1.1);
+}
+
+@keyframes bulb-pulse {
+  0% { 
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--chapter-color, #FFD166) 40%, transparent);
+  }
+  50% { 
+    box-shadow: 0 0 30px 10px transparent;
+  }
+  100% { 
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (max-width: 640px) {
+  .bulbBtn {
+    top: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+  }
+  .bulbIcon {
+    font-size: 24px;
+  }
+}
+
+/* === Alerta de Skip (Não viu todos os planetas) === */
+.skipAlert {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both, pulse-red 0.5s infinite alternate !important;
+  border-color: #ff4d4d !important;
+  color: #ff4d4d !important;
+  background: rgba(255, 77, 77, 0.15) !important;
+  transform-origin: center;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+@keyframes pulse-red {
+  from { 
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.6);
+    background: rgba(255, 77, 77, 0.2);
+  }
+  to { 
+    box-shadow: 0 0 15px 5px rgba(255, 77, 77, 0);
+    background: rgba(255, 77, 77, 0.1);
+  }
+}

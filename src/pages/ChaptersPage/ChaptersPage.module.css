@@ -1,0 +1,218 @@
+.page {
+  position: relative;
+  min-height: 100dvh;
+  background: linear-gradient(
+    175deg,
+    #050810 0%,
+    #0A0E1A 40%,
+    #0d1525 100%
+  );
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (min-width: 640px) {
+  .content {
+    padding: 32px 24px 56px;
+    gap: 36px;
+  }
+}
+
+/* === Header === */
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.narrationWrapper {
+  margin-bottom: 8px;
+  max-width: 600px;
+}
+
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-star-dim, #a8b4cc);
+  align-self: flex-start;
+  padding: 5px 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  transition: color 200ms, border-color 200ms, transform 200ms;
+}
+
+.homeLink:hover {
+  color: var(--color-moon, #FFD166);
+  border-color: var(--color-moon, #FFD166);
+  transform: translateX(-2px);
+}
+
+.headingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pageLabel {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-moon, #FFD166);
+  opacity: 0.8;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  font-weight: 900;
+  color: var(--color-star, #F0F4FF);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Pills de capítulos */
+.progressPills {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.pill {
+  width: 28px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--pill-color, #FFD166);
+  opacity: 0.35;
+  transition: opacity 200ms, width 200ms;
+}
+
+.pill:hover {
+  opacity: 1;
+  width: 40px;
+}
+
+/* === Grade de capítulos === */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 560px) {
+  .grid {
+    /* Card featured ocupa toda a largura (col 1/-1) via CSS do card */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    gap: 16px;
+  }
+}
+
+/* === Footer === */
+.footer {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: rgba(168, 180, 204, 0.45);
+  letter-spacing: 0.04em;
+  padding-top: 8px;
+}
+
+/* === Quiz Card === */
+.quizCard {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(76, 201, 240, 0.15) 0%, rgba(67, 97, 238, 0.1) 100%);
+  border: 1.5px dashed rgba(76, 201, 240, 0.3);
+  padding: 24px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-top: 24px;
+  animation: slideUp 0.6s ease-out backwards;
+}
+
+.quizCard:hover {
+  background: linear-gradient(135deg, rgba(76, 201, 240, 0.25) 0%, rgba(67, 97, 238, 0.2) 100%);
+  border-style: solid;
+  border-color: #4cc9f0;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(76, 201, 240, 0.15);
+}
+
+.quizIcon {
+  font-size: 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.quizContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quizTag {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #4cc9f0;
+  letter-spacing: 0.15em;
+}
+
+.quizTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.quizDesc {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: #a8b4cc;
+}
+
+.quizArrow {
+  font-size: 1.5rem;
+  color: #4cc9f0;
+  transition: transform 0.2s ease;
+}
+
+.quizCard:hover .quizArrow {
+  transform: translateX(6px);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

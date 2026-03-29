@@ -1,0 +1,29 @@
+.character {
+  filter: drop-shadow(0 0 24px rgba(255, 209, 102, 0.4));
+  will-change: transform;
+}
+
+.sparkle {
+  animation: float 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.sparkleSlow {
+  animation: float-slow 5s ease-in-out 1s infinite;
+  transform-origin: center;
+}
+
+.sparkleDelay {
+  animation: float 4s ease-in-out 2s infinite;
+  transform-origin: center;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(10deg); }
+}
