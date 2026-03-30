@@ -272,7 +272,7 @@
 @media (max-width: 1024px) {
   .planetDetail {
     grid-template-columns: 1fr;
-    padding: 20px;
+    padding: 16px;
     gap: 16px;
     margin-bottom: 80px;
   }
@@ -300,18 +300,28 @@
 
 @media (max-width: 640px) {
   .statsGrid {
-    grid-template-columns: repeat(3, 1fr); /* Volta para 3 colunas no mobile */
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    width: 100%;
   }
   
   .statCard {
-    padding: 10px 8px;
-    min-height: 60px;
-    border-radius: 12px;
+    padding: 8px 2px;
+    min-height: 50px;
+    border-radius: 10px;
+    gap: 0;
   }
 
   .statValue {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    line-height: 1.1;
+  }
+
+  .statLabel {
+    font-size: 0.5rem;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .statHint {
