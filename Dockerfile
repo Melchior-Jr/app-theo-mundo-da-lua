@@ -12,6 +12,12 @@ RUN npm ci
 # Copia o resto do código da aplicação
 COPY . .
 
+# Injeta as variáveis de ambiente necessárias para o build do Vite
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Faz o build (a saída geralmente vai para a pasta dist/ no Vite)
 RUN npm run build
 
