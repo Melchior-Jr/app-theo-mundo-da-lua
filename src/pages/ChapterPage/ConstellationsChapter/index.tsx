@@ -21,6 +21,14 @@ interface ConstellationData {
   lore: string
   stars: Star[]
   lines: string[]
+  shortName?: string
+}
+
+const INTRO_LORE: Record<string, string> = {
+  'O que são?': 'Imagine um jogo gigante de ligar os pontos no céu noturno! 🕵️‍♂️✨\n\nAs constelações são agrupamentos de estrelas que, quando ligadas por linhas imaginárias, formam figuras de animais, objetos ou heróis da mitologia. Elas nos ajudam a reconhecer e localizar estrelas mais facilmente no vasto universo!',
+  'Navegação': 'As estrelas foram o primeiro GPS da humanidade! 🧭⛵\n\nHá centenas de anos, os navegadores e exploradores olhavam para o céu para saber em qual direção estavam indo. O Cruzeiro do Sul, por exemplo, sempre aponta para o Polo Sul geográfico, guiando viajantes por todo o hemisfério!',
+  'Astronomia': 'O céu oficial está dividido em 88 "bairros" estelares! 🏢🔭\n\nA União Astronômica Internacional mapeou todo o céu em 88 constelações oficiais. Isso permite que astrônomos de todo o mundo falem a mesma "língua" ao descrever onde um planeta ou uma galáxia está localizado.',
+  'Zodíaco': 'O Zodíaco é o "caminho" que o Sol faz no céu durante o ano! ☀️🎠\n\nEle é formado por 12 constelações principais por onde o Sol parece passar quando olhamos da Terra. Cada uma delas marca uma época do ano e faz parte do grande relógio cósmico que os antigos usavam para organizar o tempo.'
 }
 
 const CONSTELLATIONS: ConstellationData[] = [
@@ -40,6 +48,7 @@ const CONSTELLATIONS: ConstellationData[] = [
   {
     id: 'tres-marias',
     name: 'Três Marias',
+    shortName: '3 Marias',
     color: '#FFB703',
     icon: '✨',
     audioId: 'const-marias',
@@ -53,15 +62,16 @@ const CONSTELLATIONS: ConstellationData[] = [
   {
     id: 'cruzeiro',
     name: 'Cruzeiro do Sul',
-    color: '#FFD166',
-    icon: '🇧🇷',
+    shortName: 'Cruzeiro',
+    icon: '✨',
+    color: '#A2D2FF',
     audioId: 'const-cruzeiro',
     mainStar: 'Acrux',
     starsCount: 5,
-    description: 'A bússola estelar dos navegadores do Hemisfério Sul.',
+    description: 'A mais famosa constelação do céu do sul, presente em nossa bandeira e usada por navegadores há séculos.',
     lore: 'Até hoje, viajantes e marinheiros olham para ela para saber onde fica o Polo Sul geográfico! 🧭',
     stars: [{ x: 50, y: 20 }, { x: 50, y: 80 }, { x: 20, y: 45 }, { x: 80, y: 45 }, { x: 60, y: 65 }],
-    lines: ['M 50 20 L 50 80', 'M 20 45 L 80 45']
+    lines: ['M 50 20 L 50 80 M 35 45 L 65 45']
   },
   {
     id: 'aries',
@@ -221,17 +231,34 @@ const CONSTELLATIONS: ConstellationData[] = [
   }
 ]
 
+const INTRO_COLORS: Record<string, string> = {
+  'O que são?': '#FFD166',
+  'Navegação': '#A2D2FF',
+  'Astronomia': '#BDE0FE',
+  'Zodíaco': '#FFB703'
+}
+
 export default function ConstellationsChapter() {
   const [selectedId, setSelectedId] = useState<ConstellationId | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [activeStatDetail, setActiveStatDetail] = useState<{ label: string; value: string } | null>(null)
+  const [activeIntroStat, setActiveIntroStat] = useState<{ label: string; value: string; hint: string } | null>(null)
   
   const { setActiveNarration, setThemeColor, canStartLocal, setCanStartLocal } = useNarrationSequence()
+
+  // Sincroniza com o botão de lâmpada (reset da tela inicial)
+  useEffect(() => {
+    if (!canStartLocal) {
+      setSelectedId(null)
+      setRevealed(false)
+      setActiveStatDetail(null)
+      setActiveIntroStat(null)
+    }
+  }, [canStartLocal])
 
   const activeConstellation = CONSTELLATIONS.find(c => c.id === selectedId)
 
   useEffect(() => {
-    // Se o usuário acabou de entrar e o canStartLocal ficou true (intro principal acabou)
     if (canStartLocal && !selectedId && revealed === false) {
       // Pequeno delay para respirar entre a intro do capítulo e o início do Orion
       const timer = setTimeout(() => {
@@ -332,10 +359,51 @@ export default function ConstellationsChapter() {
           ) : (
             <div className={styles.emptySky}>
               <div className={styles.starryBg} />
+              
+              {/* Sci-Fi Observatory HUD */}
+              <div className={styles.observatoryHUD}>
+                <div className={styles.gridOverlay} />
+                <div className={styles.compassMarkers}>
+                  <div className={styles.marker} data-dir="N">000°</div>
+                  <div className={styles.marker} data-dir="L">090°</div>
+                  <div className={styles.marker} data-dir="S">180°</div>
+                  <div className={styles.marker} data-dir="O">270°</div>
+                </div>
+                
+                <div className={styles.radarConcentric}>
+                  <div className={styles.radarRing} />
+                  <div className={styles.radarRing} />
+                  <div className={styles.radarRing} />
+                </div>
+                
+                <div className={styles.coordinateLabels}>
+                  <span className={styles.coordX}>RA: 05h 35m 17s</span>
+                  <span className={styles.coordY}>DEC: -05° 23' 28"</span>
+                </div>
+
+                <div className={styles.dataNodes}>
+                  <div className={styles.node} style={{ top: '20%', left: '30%' }} />
+                  <div className={styles.node} style={{ top: '60%', left: '70%' }} />
+                  <div className={styles.node} style={{ top: '40%', left: '80%' }} />
+                </div>
+
+                <div className={styles.viewfinder}>
+                  <div className={styles.corner} />
+                  <div className={styles.corner} />
+                  <div className={styles.corner} />
+                  <div className={styles.corner} />
+                </div>
+              </div>
+
               <div className={styles.selectPrompt}>
-                <span className={styles.telescopeIcon}>🔭</span>
-                <p>O céu está cheio de mistérios!</p>
-                <small>Escolha uma constelação no menu abaixo</small>
+                <div className={styles.floatingIcons}>
+                  <span className={styles.smallStar}>✨</span>
+                  <span className={styles.smallStar}>⭐</span>
+                </div>
+                <div className={styles.telescopeContainer}>
+                  <span className={styles.mainIcon}>🔭</span>
+                  <div className={styles.waveEffect} />
+                </div>
               </div>
             </div>
           )}
@@ -382,14 +450,35 @@ export default function ConstellationsChapter() {
               )}
             </>
           ) : (
-            <div className={styles.emptyInfo}>
-              <h2 className={styles.title}>Pronto para observar?</h2>
-              <p className={styles.description}>
-                As constelações são como mapas celestes. Cada uma tem uma história diferente para nos contar!
-              </p>
-              <div className={styles.introIllustration}>
-                ✨ 🗺️ ✨
+            <div className={styles.infoBox}>
+              <header className={styles.infoHeader}>
+                <h2 className={styles.planetTitle}>Exploração Estelar</h2>
+                <p className={styles.description}>
+                  Os antigos olhavam para o céu e imaginavam desenhos ligando as estrelas. 
+                  Hoje, usamos o telescópio para descobrir os segredos dessas figuras gigantes!
+                </p>
+              </header>
+
+              <div className={styles.statsGrid}>
+                {[
+                  { label: 'O que são?', value: 'Padrões de Estrelas', hint: 'Desenhos no céu noturno.' },
+                  { label: 'Navegação', value: 'GPS Natural', hint: 'Guia de antigos marinheiros.' },
+                  { label: 'Astronomia', value: '88 Oficiais', hint: 'O céu está todo mapeado!' },
+                  { label: 'Zodíaco', value: '12 Constelações', hint: 'O caminho do Sol no ano.' },
+                ].map((stat) => (
+                  <button 
+                    key={stat.label} 
+                    className={`${styles.statCard} ${styles.clickable}`}
+                    onClick={() => setActiveIntroStat(stat)}
+                  >
+                    <div className={styles.statLabel}>{stat.label}</div>
+                    <div className={styles.statValue}>{stat.value}</div>
+                    <div className={styles.statHint}>{stat.hint}</div>
+                  </button>
+                ))}
               </div>
+
+              {/* funFactCard de introdução removido conforme solicitação */}
             </div>
           )}
         </div>
@@ -407,7 +496,7 @@ export default function ConstellationsChapter() {
               style={{ '--c-color': c.color } as React.CSSProperties}
             >
               <div className={styles.dockCircle}>{c.icon}</div>
-              <span className={styles.dockLabel}>{c.name}</span>
+              <span className={styles.dockLabel}>{c.shortName || c.name}</span>
             </button>
           ))}
         </div>
@@ -431,6 +520,28 @@ export default function ConstellationsChapter() {
               {activeStatDetail.label === 'Estrela Principal' && `A estrela ${activeStatDetail.value} é incrivelmente brilhante! Ela é a âncora dessa constelação. Em noites escuras e sem nuvens, você consegue ver ela piscando forte lá do espaço sideral! 🌟`}
               {activeStatDetail.label === 'Total de Estrelas' && `Essa constelação foca em ${activeStatDetail.value} estrelas principais para poder desenhar a figura de ${activeConstellation.name} no céu! Mas lembre-se: existem muitos milhares de outras estrelas espalhadas nessa mesma direção! ✨`}
               {activeStatDetail.label === 'Curiosidades' && activeConstellation.lore}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalhes Iniciados (Exploração Geral) */}
+      {activeIntroStat && (
+        <div className={styles.statOverlay} onClick={() => setActiveIntroStat(null)}>
+          <div 
+            className={styles.statModal} 
+            onClick={e => e.stopPropagation()}
+            style={{ '--const-color': INTRO_COLORS[activeIntroStat.label] || '#ffd166' } as React.CSSProperties}
+          >
+            <button className={styles.modalClose} onClick={() => setActiveIntroStat(null)}>✕</button>
+            <header className={styles.modalHeader}>
+              <span className={styles.modalCategory}>Guia de Astronomia</span>
+              <h3 className={styles.modalTitle}>{activeIntroStat.label}</h3>
+            </header>
+            <div className={styles.modalContent}>
+              <p style={{ whiteSpace: 'pre-line' }}>
+                {INTRO_LORE[activeIntroStat.label]}
+              </p>
             </div>
           </div>
         </div>

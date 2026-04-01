@@ -1,0 +1,157 @@
+.tooltipRoot {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  animation: tooltipAppear 0.3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.tooltipContainer {
+  pointer-events: auto;
+  position: relative;
+  background: rgba(12, 18, 38, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  width: 220px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -100%) translateY(-20px);
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.tooltipIcon {
+  font-size: 1.2rem;
+}
+
+.tooltipTitle {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--accent-color, #FFD166);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: #fff;
+}
+
+.tooltipBody {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tooltipText {
+  margin: 0;
+}
+
+.tooltipPointer {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid rgba(12, 18, 38, 0.4);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes tooltipAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tooltip variation for hotspots (smaller) */
+.minTooltip {
+  width: auto;
+  min-width: 150px;
+  padding: 10px 14px;
+}
+
+.tooltipFooter {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.navBtn {
+  flex: 0 0 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.navBtn:hover {
+  background: var(--accent-color, #FFD166);
+  color: #1a2340;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px var(--accent-color, #FFD166);
+}
+
+.navStatus {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Modo Hotspot - Anexado ao 3D */
+.isHotspot {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  animation: none; /* Desativa animação de entrada fixa */
+}
+
+/* Ajuste o container para não ter o transform de translação do modo fixo */
+.isHotspot .tooltipContainer {
+  transform: translate(-50%, -100%) translateY(-20px);
+  pointer-events: auto;
+}

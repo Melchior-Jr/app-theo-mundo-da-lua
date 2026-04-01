@@ -173,6 +173,22 @@
     width: 100%;
   }
 }
+.mobileText {
+  display: none;
+}
+
+.desktopText {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .mobileText {
+    display: inline-block;
+  }
+  .desktopText {
+    display: none;
+  }
+}
 
 /* === Botão de Lâmpada (Curiosidade) === */
 .bulbBtn {

@@ -3,13 +3,14 @@
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  padding-bottom: 160px; /* Reduzido para ficar mais próximo do dock */
+  padding-bottom: 0px; /* Zerado para deixar o pai ditar o espaço */
+  height: auto;
 }
 
 .mainContent {
   display: flex;
   gap: 32px;
-  min-height: 450px;
+  min-height: auto; /* Deixa o conteúdo ditar a altura */
 }
 
 /* PAINEL DO CÉU (ESQUERDA) */
@@ -172,8 +173,13 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.statCard:nth-child(1),
+.statCard:nth-child(4) {
+  grid-column: span 2;
 }
 
 .statCard {
@@ -225,12 +231,9 @@
   color: #fff;
 }
 
-.statCard:nth-child(3) {
-  grid-column: span 2;
-}
 
 .funFactCard {
-  margin-top: 16px;
+  margin-top: 0;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
   padding: 16px;
   border-radius: 16px;
@@ -268,7 +271,7 @@
 /* NAVEGAÇÃO INFERIOR DOCK (ESTILO PLANETAS) */
 .constellationDock {
   position: fixed;
-  bottom: 0;
+  bottom: 85px; /* Elevado para não bater nos botões de navegação do Capítulo no Desktop */
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -277,7 +280,14 @@
   padding: 12px 20px;
   z-index: 950;
   pointer-events: none;
-  margin-bottom: 90px; /* Garante que fique acima da barra de navegação principal */
+}
+
+@media (max-width: 1024px) {
+  .constellationDock {
+    bottom: 0;
+    margin-bottom: 80px; /* Restaurado para o valor que estava perfeito antes */
+    padding: 10px;
+  }
 }
 
 .dockTrack {
@@ -499,10 +509,13 @@
     display: none;
   }
   
-  .constellationDock {
-    padding: 10px;
-    margin-bottom: 70px; /* Ajuste para não sobrepor o menu principal no mobile */
+  .infoPanel {
+    margin-top: -60px;
+    position: relative;
+    z-index: 10;
   }
+  
+
 
   .dockItem {
     min-width: 50px;
@@ -516,78 +529,320 @@
     font-size: 2rem;
   }
 
-  .badge,
-  .description {
+  .badge {
     display: none;
+  }
+
+  .description {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    opacity: 0.8;
   }
 
   .statsGrid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
   }
 
-  .statCard:nth-child(3) {
-    grid-column: 1 / -1;
+  .statCard:nth-child(1),
+  .statCard:nth-child(4) {
+    grid-column: span 3;
   }
+
+  .statCard:nth-child(2),
+  .statCard:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  .statCard {
+    padding: 12px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+
+  .statLabel {
+    font-size: 0.55rem;
+  }
+
+  .statValue {
+    font-size: 0.85rem;
+  }
+
+  .statHint {
+    display: none;
+  }
+
 
   .emptyInfo {
     display: none;
   }
 
-  .funFactCard {
-    display: none;
+
+}
+
+/* ESTADOS VAZIOS */
+.emptySky {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent; /* Removido o preenchimento para visual flutuante */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+}
+
+@media (min-width: 1025px) {
+  .emptySky {
+    height: 480px;
+    border-radius: 0; /* Removido arredondamento pois o HUD agora flutua livremente */
+    border: none; /* Removida a borda */
+    box-shadow: none; /* Removida a sombra interna */
   }
 }
 
-/* ESTADOS VAZIOS (INTRO) */
-.emptySky {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-  background: radial-gradient(circle at center, #1a1a0a 0%, #030814 100%);
+.observatoryHUD {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 209, 102, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 209, 102, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+}
+
+.compassMarkers {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.marker {
+  position: absolute;
+  color: var(--chapter-color, #ffd166);
+  font-family: monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  opacity: 0.3;
+}
+
+.marker[data-dir="N"] { top: 15px; }
+.marker[data-dir="L"] { right: 15px; }
+.marker[data-dir="S"] { bottom: 15px; }
+.marker[data-dir="O"] { left: 15px; }
+
+.marker::after {
+  content: attr(data-dir);
+  display: block;
+  text-align: center;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.radarConcentric {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.radarRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(255, 209, 102, 0.1);
+  border-radius: 50%;
+}
+
+.radarRing:nth-child(1) { width: 150px; height: 150px; animation: rotate 20s linear infinite; }
+.radarRing:nth-child(2) { width: 250px; height: 250px; animation: rotate 30s linear reverse infinite; }
+.radarRing:nth-child(3) { width: 350px; height: 350px; animation: rotate 40s linear infinite; }
+
+.coordinateLabels {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--chapter-color, #ffd166);
+  opacity: 0.4;
+  letter-spacing: 0.1em;
+}
+
+.dataNodes .node {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--chapter-color, #ffd166);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--chapter-color, #ffd166);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.viewfinder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 220px;
+}
+
+.viewfinder .corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--chapter-color, #ffd166);
+  opacity: 0.3;
+}
+
+.viewfinder .corner:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.viewfinder .corner:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.viewfinder .corner:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.viewfinder .corner:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
 .selectPrompt {
+  position: relative;
+  z-index: 40; /* Acima do HUD */
   text-align: center;
-  color: white;
-  animation: fadeIn 0.8s ease-out;
-  padding: 2rem;
 }
 
-.telescopeIcon {
-  font-size: 4rem;
+.telescopeContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.mainIcon {
+  font-size: 5rem;
   display: block;
+  filter: drop-shadow(0 0 20px var(--chapter-color, #ffd166));
+  animation: floatUI 4s ease-in-out infinite;
+}
+
+.waveEffect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--chapter-color, #ffd166);
+  border-radius: 50%;
+  animation: expandWave 3s ease-out infinite;
+}
+
+.glitchText {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 900;
   margin-bottom: 1rem;
-  filter: drop-shadow(0 0 15px #FFD166);
-  animation: float 3s ease-in-out infinite;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 .selectPrompt p {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
 }
 
-.selectPrompt small {
-  font-family: var(--font-body);
-  opacity: 0.7;
-  font-size: 1rem;
-}
-
-.emptyInfo {
-  height: 100%;
+.infoBox {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 2rem;
-  animation: fadeIn 1s ease-out;
+  gap: 20px;
+  margin-top: 40px;
+  animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.infoHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.planetBadge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: rgba(255, 209, 102, 0.1);
+  border: 1px solid rgba(255, 209, 102, 0.2);
+  border-radius: 6px;
+}
+
+.planetOrder {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffd166;
+}
+
+.planetTitle {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.statHint {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+@keyframes rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.8; scale: 1.2; }
+}
+
+@keyframes expandWave {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+@keyframes energyPulse {
+  0%, 100% { width: 5px; opacity: 0.2; }
+  50% { width: 40px; opacity: 0.6; }
+}
+
+@keyframes floatUI {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+@keyframes pulsePoint {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .introIllustration {
@@ -606,3 +861,16 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* OVERRIDES PARA ADAPTAÇÃO TOTAL DO TAMANHO (APENAS CONSTELAÇÕES) */
+:global([data-chapter-id="constelaçoes"]) {
+  padding-bottom: 120px !important; /* Espaço apenas para os botões de navegação */
+}
+
+/* Faz o box de conteúdo não esticar para preencher o vazio */
+:global([data-chapter-id="constelaçoes"] section[class*="_contentArea_"]) {
+  flex: none !important;
+  min-height: auto !important;
+  margin-bottom: 20px;
+}
+

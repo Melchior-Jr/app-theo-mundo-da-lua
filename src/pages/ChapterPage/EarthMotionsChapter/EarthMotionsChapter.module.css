@@ -533,6 +533,12 @@
   .title {
     font-size: 2rem;
   }
+
+  .infoPanel {
+    margin-top: -40px;
+    position: relative;
+    z-index: 5;
+  }
 }
 
 /* MODAL DE DETALHES (OVERLAY) */

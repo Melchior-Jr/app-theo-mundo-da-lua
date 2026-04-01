@@ -1,8 +1,37 @@
 .character {
   filter: drop-shadow(0 0 24px rgba(255, 209, 102, 0.4));
   will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Emotions */
+.celebrate {
+  animation: celebrateJump 0.8s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+.sad {
+  animation: sadTilt 2s infinite ease-in-out;
+  filter: grayscale(0.2) contrast(0.9);
+}
+
+.thinking {
+  animation: thinkingTilt 3s infinite ease-in-out;
+}
+
+.bounce {
+  animation: bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tilt {
+  animation: tilt 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.eyeSad {
+  transform: translateY(2px);
+  opacity: 0.8;
+}
+
+/* Sparkles */
 .sparkle {
   animation: float 3s ease-in-out infinite;
   transform-origin: center;
@@ -13,9 +42,30 @@
   transform-origin: center;
 }
 
-.sparkleDelay {
-  animation: float 4s ease-in-out 2s infinite;
-  transform-origin: center;
+@keyframes celebrateJump {
+  from { transform: translateY(0) scale(1) rotate(0); }
+  to { transform: translateY(-20px) scale(1.05) rotate(5deg); }
+}
+
+@keyframes sadTilt {
+  0%, 100% { transform: translateY(5px) rotate(-3deg); }
+  50% { transform: translateY(8px) rotate(3deg); }
+}
+
+@keyframes thinkingTilt {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15) translateY(-10px); }
+}
+
+@keyframes tilt {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg) translateX(-5px); }
+  75% { transform: rotate(10deg) translateX(5px); }
 }
 
 @keyframes float {

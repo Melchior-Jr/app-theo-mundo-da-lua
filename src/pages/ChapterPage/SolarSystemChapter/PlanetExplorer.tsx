@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { planets, Planet } from '@/data/planets'
 import PlanetViewer3D from '@/components/PlanetViewer3D'
-import { getNarrationById } from '@/data/narration'
+import FloatingTooltip from '@/components/FloatingTooltip'
+import { getNarrationById, getRandomLoadingNarration } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import styles from './PlanetExplorer.module.css'
 
@@ -26,6 +27,7 @@ export default function PlanetExplorer({}: Props) {
   const [isModelLoaded, setIsModelLoaded] = useState(false)
   const [activeStatDetail, setActiveStatDetail] = useState<{ id: string; label: string; value: string } | null>(null)
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; content: string; title: string } | null>(null)
   const detailRef = useRef<HTMLDivElement>(null)
   
   const { 
@@ -102,10 +104,11 @@ export default function PlanetExplorer({}: Props) {
     }
   }
 
+
   // Atualiza o Théo Global quando o planeta muda ou carrega
   useEffect(() => {
-    const globalLoading = getNarrationById('loading')!
-    const loadingNarration = { ...globalLoading, id: `loading-${selectedPlanet.id}` }
+    const randomLoading = getRandomLoadingNarration()
+    const loadingNarration = { ...randomLoading, id: `loading-${selectedPlanet.id}` }
     const planetNarration = getNarrationById(`planet-${selectedPlanet.id}`)
 
     if (isModelLoaded && planetNarration) {
@@ -119,18 +122,45 @@ export default function PlanetExplorer({}: Props) {
 
   useEffect(() => {
     setIsModelLoaded(false)
+    setTooltip(null) // Fecha tooltip ao mudar de planeta
   }, [selectedPlanet])
+  const handleModelLoad = useCallback(() => {
+    setIsModelLoaded(true)
+  }, [])
+
+  const handlePlanetClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    // Se a tooltip já estiver visível, fecha ela (comportamento de toggle)
+    if (tooltip) {
+      setTooltip(null)
+      return
+    }
+
+    const x = e.clientX
+    const y = e.clientY
+
+    setTooltip({
+      visible: true,
+      x,
+      y,
+      title: "Exploração Rápida",
+      content: selectedPlanet.funFact // Usa a curiosidade como conteúdo inicial da tooltip
+    })
+    setHasInteracted(true)
+  }
 
   return (
-    <div className={styles.explorer}>
+    <div className={styles.explorer} onClick={() => setTooltip(null)}>
       {/* Detalhe do Planeta Selecionado */}
       <div ref={detailRef} className={styles.planetDetail}>
-        <div className={styles.viewerContainer}>
+        <div className={styles.viewerContainer} onClick={handlePlanetClick}>
            <PlanetViewer3D 
              modelSrc={selectedPlanet.modelPath} 
              alt={selectedPlanet.name} 
              color={selectedPlanet.color}
-             onLoad={() => setIsModelLoaded(true)}
+             onLoad={handleModelLoad}
+             fieldOfView="32deg"
            />
            
            {/* Glow de fundo que muda com o planeta */}
@@ -238,6 +268,18 @@ export default function PlanetExplorer({}: Props) {
             </div>
           </div>
         </div>
+      )}
+      {/* Tooltip Flutuante */}
+      {tooltip && (
+        <FloatingTooltip 
+          isVisible={tooltip.visible}
+          x={tooltip.x}
+          y={tooltip.y}
+          title={tooltip.title}
+          content={tooltip.content}
+          onClose={() => setTooltip(null)}
+          color={selectedPlanet.color}
+        />
       )}
     </div>
   )

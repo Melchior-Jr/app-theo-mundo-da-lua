@@ -3,13 +3,21 @@ import styles from './TheoCharacter.module.css'
 interface TheoCharacterProps {
   size?: number
   className?: string
+  emotion?: 'default' | 'celebrate' | 'sad' | 'thinking' | 'bounce' | 'tilt'
 }
 
 /**
  * TheoCharacter — ilustração SVG do personagem Théo.
- * Astronauta menino com expressão aventureira.
+ * Astronauta menino com expressão aventureira e suporte a estados emocionais.
  */
-export default function TheoCharacter({ size = 280, className = '' }: TheoCharacterProps) {
+export default function TheoCharacter({ 
+  size = 280, 
+  className = '', 
+  emotion = 'default' 
+}: TheoCharacterProps) {
+  // Mapeamento de classes de emoção
+  const emotionClass = emotion !== 'default' ? styles[emotion] : ''
+
   return (
     <svg
       width={size}
@@ -19,7 +27,7 @@ export default function TheoCharacter({ size = 280, className = '' }: TheoCharac
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Théo, o astronauta aventureiro"
       role="img"
-      className={`${styles.character} ${className}`}
+      className={`${styles.character} ${emotionClass} ${className}`}
     >
       {/* Capacete - visor externo */}
       <circle cx="140" cy="110" r="75" fill="#1a2340" stroke="#FFD166" strokeWidth="4"/>
@@ -35,63 +43,48 @@ export default function TheoCharacter({ size = 280, className = '' }: TheoCharac
       <ellipse cx="118" cy="88" rx="6" ry="4" fill="rgba(255,255,255,0.2)"/>
 
       {/* Rosto de Théo dentro do visor */}
-      {/* Pele - Tom mais bronzeado/pardo conforme imagem */}
       <ellipse cx="140" cy="112" rx="36" ry="32" fill="#D29668"/>
 
-      {/* Cabelo - Escuro e bem cacheado (inspirado na imagem) */}
+      {/* Cabelo */}
       <g fill="#3B2314" stroke="#2B1B10" strokeWidth="0.5">
-        {/* Lado Esquerdo */}
         <circle cx="106" cy="100" r="14"/>
         <circle cx="102" cy="112" r="12"/>
         <circle cx="108" cy="88" r="14"/>
-        
-        {/* Lado Direito */}
         <circle cx="174" cy="100" r="14"/>
         <circle cx="178" cy="112" r="12"/>
         <circle cx="172" cy="88" r="14"/>
-        
-        {/* Topo e Testa */}
         <circle cx="140" cy="76" r="18"/>
         <circle cx="122" cy="80" r="15"/>
         <circle cx="158" cy="80" r="15"/>
-        
-        {/* Cachinhos na testa */}
         <circle cx="130" cy="90" r="6"/>
         <circle cx="140" cy="92" r="7"/>
         <circle cx="150" cy="90" r="6"/>
       </g>
 
       {/* Olhos */}
-      <ellipse cx="126" cy="108" rx="9" ry="10" fill="#fff"/>
-      <ellipse cx="154" cy="108" rx="9" ry="10" fill="#fff"/>
+      <g className={emotion === 'sad' ? styles.eyeSad : ''}>
+        <ellipse cx="126" cy="108" rx="9" ry="10" fill="#fff"/>
+        <ellipse cx="154" cy="108" rx="9" ry="10" fill="#fff"/>
+        <circle cx="128" cy="110" r="6" fill="#3D6BAF"/>
+        <circle cx="156" cy="110" r="6" fill="#3D6BAF"/>
+        <circle cx="129" cy="111" r="3.5" fill="#0A0E1A"/>
+        <circle cx="157" cy="111" r="3.5" fill="#0A0E1A"/>
+      </g>
 
-      {/* Íris */}
-      <circle cx="128" cy="110" r="6" fill="#3D6BAF"/>
-      <circle cx="156" cy="110" r="6" fill="#3D6BAF"/>
+      {/* Sorriso / Boca Dinâmica */}
+      {emotion === 'sad' ? (
+        <path d="M130 132 Q140 126 150 132" stroke="#8E5A35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+      ) : emotion === 'celebrate' ? (
+        <path d="M125 125 Q140 145 155 125" stroke="#8E5A35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      ) : (
+        <path d="M128 126 Q140 138 152 126" stroke="#8E5A35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+      )}
 
-      {/* Pupilas */}
-      <circle cx="129" cy="111" r="3.5" fill="#0A0E1A"/>
-      <circle cx="157" cy="111" r="3.5" fill="#0A0E1A"/>
-
-      {/* Reflexo nos olhos */}
-      <circle cx="131" cy="108" r="1.5" fill="#fff"/>
-      <circle cx="159" cy="108" r="1.5" fill="#fff"/>
-
-      {/* Sobrancelhas curiosas/levantadas */}
-      <path d="M117 97 Q126 93 135 97" stroke="#2B1B10" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-      <path d="M145 97 Q154 93 163 97" stroke="#2B1B10" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-
-      {/* Sorriso */}
-      <path d="M128 126 Q140 138 152 126" stroke="#8E5A35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-
-      {/* Bochechas coradas */}
+      {/* Bochechas */}
       <ellipse cx="115" cy="122" rx="9" ry="6" fill="rgba(255,107,53,0.25)"/>
       <ellipse cx="165" cy="122" rx="9" ry="6" fill="rgba(255,107,53,0.25)"/>
 
-      {/* Nariz */}
-      <ellipse cx="140" cy="118" rx="4" ry="3" fill="#B1774A"/>
-
-      {/* Corpo do traje espacial */}
+      {/* Corpo */}
       <path
         d="M80 190 C70 175 65 175 70 195 L75 230 Q80 245 140 245 Q200 245 205 230 L210 195 C215 175 210 175 200 190 C190 200 175 210 140 212 C105 210 90 200 80 190Z"
         fill="#1a2340"
@@ -99,7 +92,7 @@ export default function TheoCharacter({ size = 280, className = '' }: TheoCharac
         strokeWidth="2.5"
       />
 
-      {/* Detalhes do traje — painel de controle */}
+      {/* Painel de controle */}
       <rect x="118" y="215" width="44" height="22" rx="4" fill="#0A0E1A" stroke="#FFD166" strokeWidth="1.5"/>
       <circle cx="128" cy="226" r="4" fill="#E63946"/>
       <circle cx="140" cy="226" r="4" fill="#FFD166"/>
@@ -113,20 +106,14 @@ export default function TheoCharacter({ size = 280, className = '' }: TheoCharac
       <ellipse cx="50" cy="225" rx="14" ry="12" fill="#FFD166"/>
       <ellipse cx="230" cy="225" rx="14" ry="12" fill="#FFD166"/>
 
-      {/* Junta entre capacete e traje */}
-      <rect x="105" y="178" width="70" height="18" rx="6" fill="#263456" stroke="#FFD166" strokeWidth="2"/>
-
-      {/* Mochila de jato - mini planets flutuando */}
-      {/* Estrelinhas ao redor */}
+      {/* Sparkles */}
       <g className={styles.sparkle}>
         <path d="M48 160 L51 167 L58 170 L51 173 L48 180 L45 173 L38 170 L45 167Z" fill="#FFD166" opacity="0.9"/>
       </g>
       <g className={styles.sparkleSlow}>
         <path d="M220 145 L222 150 L227 152 L222 154 L220 159 L218 154 L213 152 L218 150Z" fill="#7EFBFD" opacity="0.8"/>
       </g>
-      <g className={styles.sparkleDelay}>
-        <path d="M60 240 L62 244 L66 246 L62 248 L60 252 L58 248 L54 246 L58 244Z" fill="#FF6B35" opacity="0.7"/>
-      </g>
     </svg>
   )
 }
+

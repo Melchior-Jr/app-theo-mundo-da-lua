@@ -30,4 +30,10 @@
   height: 100%;
   --progress-bar-color: var(--chapter-color, #FFD166);
   --progress-mask: rgba(255,255,255,0.0);
+  opacity: 0;
+  transition: opacity 1.5s ease-out;
+}
+
+.viewer.reveal {
+  opacity: 1;
 }

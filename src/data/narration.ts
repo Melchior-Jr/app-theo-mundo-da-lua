@@ -82,7 +82,7 @@ export const NARRATIONS: Narration[] = [
     pitch: 1.15,
   },
   {
-    id: 'loading',
+    id: 'loading-1',
     chapterId: 'system',
     title: 'Carregando...',
     text: 'Opa espera aí, estou carregando os trem aqui!!!',
@@ -92,11 +92,51 @@ export const NARRATIONS: Narration[] = [
     pitch: 1.15,
   },
   {
+    id: 'loading-2',
+    chapterId: 'system',
+    title: 'Carregando...',
+    text: 'Segura aí astronauta, os motores estão aquecendo!',
+    audioPath: '/audio/alerta de carregamento/alerta de carregamento - 02.MP3',
+    lang: 'pt-BR',
+    rate: 1.0,
+    pitch: 1.15,
+  },
+  {
+    id: 'loading-3',
+    chapterId: 'system',
+    title: 'Carregando...',
+    text: 'Calma, calma! Muita calma nessa hora, já vai carregar!',
+    audioPath: '/audio/alerta de carregamento/alerta de carregamento - 03.MP3',
+    lang: 'pt-BR',
+    rate: 1.0,
+    pitch: 1.15,
+  },
+  {
+    id: 'loading-4',
+    chapterId: 'system',
+    title: 'Carregando...',
+    text: 'Opa, espera um pouquinho que o sistema tá meio devagar hoje!',
+    audioPath: '/audio/alerta de carregamento/alerta de carregamento - 04.MP3',
+    lang: 'pt-BR',
+    rate: 1.0,
+    pitch: 1.15,
+  },
+  {
+    id: 'loading-5',
+    chapterId: 'system',
+    title: 'Carregando...',
+    text: 'Espera aí que eu tô arrumando a bagunça aqui dentro!',
+    audioPath: '/audio/alerta de carregamento/alerta de carregamento - 05.MP3',
+    lang: 'pt-BR',
+    rate: 1.0,
+    pitch: 1.15,
+  },
+  {
     id: 'planet-mercurio',
     chapterId: 'planet-detail',
     title: 'Mercúrio',
     text: 'Esse aqui é o Mercúrio, é o menor de todos os planetas e que fica mais perto do Sol! Lá é tipo um deserto… de noite é um frio congelante e de dia é um calor escaldante! Isso acontece porque lá não tem atmosfera para controlar a temperatura. Só que o mais estranho é que um dia lá dura mais do que um ano no próprio planeta… isso porque ele gira muito devagar em volta dele mesmo, porém a translação em volta do sol é muito rápida. Imagina ficar no mesmo dia durante um ano todo... eu ia tocar fogo na escola bem rapidinho!',
-    audioPath: '/audio/cap1-2-mercurio.mp3',
+    audioPath: '/audio/Cap 1.2 - Mercurio.MP3',
     lang: 'pt-BR',
     rate: 0.9,
     pitch: 1.15,
@@ -136,7 +176,7 @@ export const NARRATIONS: Narration[] = [
     chapterId: 'planet-detail',
     title: 'Júpiter',
     text: "Agora segura porque esse aqui é gigante... ele é o Robert Wadlow do sistema solar! 😳 Júpiter… o maior planeta do nosso Sistema Solar! Ele é tão grande, mas tããão Grande… que todos os outros planetas caberiam dentro dele! Porém, tem um detalhe… ele não é feito de terra igual a Terra, ele é um gigante gasoso! Ou seja… nem tem onde pisar! Ah… e lá tem uma tempestade gigante que está acontecendo há mais de 300 anos, seria talvez o dilúvio de júpiter?! É tipo um furacão que nunca acaba! Então assim… nem dá pra visitar direito… porque você ia afundar no planeta!",
-    audioPath: '/audio/Cap 1.2 - Jupter.MP3',
+    audioPath: '/audio/Cap 1.2 - Jupiter.MP3',
     lang: 'pt-BR',
     rate: 0.9,
     pitch: 1.15,
@@ -146,7 +186,7 @@ export const NARRATIONS: Narration[] = [
     chapterId: 'planet-detail',
     title: 'Saturno',
     text: "Depois desse gigante… olha esse aqui, todo estiloso da família! Esse é Saturno… o planeta dos anéis!💍 Mas não é um anel só… são vários e são feitos de gelo e pedra! E olha que doido… Saturno é tão leve, mas tão leve, que se existisse uma piscina gigante no Sistema Solar… ele estaria boiando 😳 Sério… um planeta boiando… não acredito que escrevi isso 😂 Saturno tem MAIS DE 140 luas! 😳 E uma delas, chamada Titã, tem até atmosfera! Mas não se engana não… ele também é um gigante gasoso, igual Júpiter! Ou seja… bonito por fora… mas sem chão pra pisar 😅",
-    audioPath: '/audio/Cap 1.2 - Saturno .MP3',
+    audioPath: '/audio/Cap 1.2 - Saturno.MP3',
     lang: 'pt-BR',
     rate: 0.9,
     pitch: 1.15,
@@ -496,4 +536,11 @@ export function getNarrationByChapter(
 /** Retorna a narração pelo ID exato da fala */
 export function getNarrationById(id: string): Narration | undefined {
   return NARRATIONS.find((n) => n.id === id)
+}
+
+/** Retorna uma narração de carregamento aleatória */
+export function getRandomLoadingNarration(): Narration {
+  const loadingIds = ['loading-1', 'loading-2', 'loading-3', 'loading-4', 'loading-5']
+  const randomId = loadingIds[Math.floor(Math.random() * loadingIds.length)]
+  return getNarrationById(randomId)!
 }

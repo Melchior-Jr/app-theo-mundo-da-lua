@@ -1,19 +1,38 @@
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { NarrationSequenceProvider, useNarrationSequence } from '@/context/NarrationSequenceContext'
 import NarrationPlayer from '@/components/NarrationPlayer'
+import SplashLoader from '@/components/SplashLoader'
 import { unlockAudio } from '@/hooks/useNarration'
 import styles from './AppShell.module.css'
 
 /**
  * AppShell — estrutura base da aplicação.
- * Envolve todas as páginas com o contexto visual espacial e de narração.
+ * Gerencia o roteamento e a Splash Screen inicial.
  */
 export default function AppShell() {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Desbloqueia o áudio — chamado pelo SplashLoader ao decolar
+  const handleAppStart = () => {
+    if (window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance('')
+      window.speechSynthesis.cancel() 
+      window.speechSynthesis.speak(u)
+    }
+    unlockAudio()
+    setIsLoaded(true)
+  }
+
   return (
-    <NarrationSequenceProvider>
-      <AppShellContent />
-    </NarrationSequenceProvider>
+    <>
+      {!isLoaded && <SplashLoader onReady={handleAppStart} />}
+      <NarrationSequenceProvider>
+        <div style={{ visibility: isLoaded ? 'visible' : 'hidden' }}>
+          <AppShellContent />
+        </div>
+      </NarrationSequenceProvider>
+    </>
   )
 }
 
@@ -22,29 +41,7 @@ function AppShellContent() {
   const location = useLocation()
   const isHome = location.pathname === '/'
   
-  // Durante a intro da página Earth Motions, o Théo aparece grande no centro do dashboard.
-  // O NarrationPlayer flutuante fica invisível (mas ativo) para não duplicar o personagem.
   const isEarthIntro = location.pathname.includes('movimentos-da-terra') && !canStartLocal
-
-  // Desbloqueia o áudio/voz globalmente na primeira interação
-  useEffect(() => {
-    const unlock = () => {
-      if (window.speechSynthesis) {
-        const u = new SpeechSynthesisUtterance('')
-        window.speechSynthesis.cancel() // Limpa antes
-        window.speechSynthesis.speak(u)
-      }
-      unlockAudio()
-      window.removeEventListener('click', unlock)
-      window.removeEventListener('touchstart', unlock)
-    }
-    window.addEventListener('click', unlock)
-    window.addEventListener('touchstart', unlock)
-    return () => {
-      window.removeEventListener('click', unlock)
-      window.removeEventListener('touchstart', unlock)
-    }
-  }, [])
 
   return (
     <div className={styles.shell}>

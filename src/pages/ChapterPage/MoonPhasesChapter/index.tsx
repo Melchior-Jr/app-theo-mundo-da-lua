@@ -1,30 +1,77 @@
 import { useState, useEffect } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import FloatingTooltip from '@/components/FloatingTooltip'
 import styles from './MoonPhasesChapter.module.css'
 
-type MoonPhaseId = 'nova' | 'crescente' | 'cheia' | 'minguante'
+type MoonPhaseId = 'nova' | 'quarto-crescente' | 'cheia' | 'quarto-minguante'
 
 interface MoonPhaseData {
   id: MoonPhaseId
   name: string
   audioId: string
   description: string
-  orbitRotation: number // Rotação da Lua na órbita (graus)
+  details: string
+  orbitRotation: number
+  stats: {
+    iluminacao: string
+    idade: string
+    visibilidade: string
+  }
 }
 
 const PHASES: MoonPhaseData[] = [
-  { id: 'nova', name: 'Lua Nova', audioId: 'moon-nova', description: 'A Lua está entre a Terra e o Sol.', orbitRotation: 0 },
-  { id: 'crescente', name: 'Quarto Crescente', audioId: 'moon-crescente', description: 'A Lua percorreu 1/4 da sua órbita.', orbitRotation: 90 },
-  { id: 'cheia', name: 'Lua Cheia', audioId: 'moon-cheia', description: 'A Terra está entre a Lua e o Sol.', orbitRotation: 180 },
-  { id: 'minguante', name: 'Quarto Minguante', audioId: 'moon-minguante', description: 'A Lua está quase completando sua volta.', orbitRotation: 270 },
+  { 
+    id: 'nova', 
+    name: 'Lua Nova', 
+    audioId: 'moon-nova', 
+    description: 'A Lua está entre a Terra e o Sol.',
+    details: 'Nesta fase, a face voltada para nós não recebe luz solar direta. É o melhor momento para observar estrelas!',
+    orbitRotation: 0,
+    stats: { iluminacao: '0%', idade: '0 dias', visibilidade: 'Invisível' }
+  },
+  { 
+    id: 'quarto-crescente', 
+    name: 'Crescente', 
+    audioId: 'moon-crescente', 
+    description: 'Vemos exatamente metade da Lua iluminada.',
+    details: 'A Lua percorreu exatamente 1/4 da sua órbita. Nos próximos dias ela ficará cada vez maior!',
+    orbitRotation: 90,
+    stats: { iluminacao: '50%', idade: '7.4 dias', visibilidade: 'Tarde/Noite' }
+  },
+  { 
+    id: 'cheia', 
+    name: 'Lua Cheia', 
+    audioId: 'moon-cheia', 
+    description: 'A Terra está entre a Lua e o Sol.',
+    details: 'Toda a face que vemos está iluminada. Ela nasce exatamente quando o Sol se põe!',
+    orbitRotation: 180,
+    stats: { iluminacao: '100%', idade: '14.8 dias', visibilidade: 'Noite toda' }
+  },
+  { 
+    id: 'quarto-minguante', 
+    name: 'Minguante', 
+    audioId: 'moon-minguante', 
+    description: 'Novamente vemos apenas metade da Lua.',
+    details: 'Desta vez, é o outro lado que está iluminado. Ela nasce por volta da meia-noite.',
+    orbitRotation: 270,
+    stats: { iluminacao: '50%', idade: '22.1 dias', visibilidade: 'Madrugada/Manhã' }
+  },
 ]
 
 export default function MoonPhasesChapter() {
   const [hasPlayedIntro, setHasPlayedIntro] = useState(false)
   const [phaseIdx, setPhaseIdx] = useState(0)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
+  const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; content: string; title: string } | null>(null)
   const { canStartLocal, setActiveNarration, setThemeColor } = useNarrationSequence()
   const currentPhase = PHASES[phaseIdx]
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Quando o áudio principal terminar (canStartLocal = true)
   // Toca a reprodução da Lua Nova automaticamente
@@ -40,6 +87,7 @@ export default function MoonPhasesChapter() {
   // Trata a seleção de fase
   const handlePhaseClick = (idx: number) => {
     setPhaseIdx(idx)
+    setTooltip(null) // Fecha tooltip ao mudar de fase
     const phase = PHASES[idx]
     const nar = getNarrationById(phase.audioId)
     if (nar) {
@@ -47,28 +95,91 @@ export default function MoonPhasesChapter() {
     }
   }
 
+  const handleSceneClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const x = e.clientX
+    const y = e.clientY
+    
+    setTooltip({
+      visible: true,
+      x,
+      y,
+      title: "Exploração Lunar",
+      content: currentPhase.details
+    })
+  }
+
   return (
     <div className={styles.chapterContainer}>
       {/* ESPAÇO DE RENDERIZAÇÃO 3D E ANIMAÇÕES */}
       <div className={styles.dashboard}>
-        <MoonPhaseScene currentPhase={currentPhase} />
+        {/* CABEÇALHO INFORMATIVO */}
+        <div className={styles.infoSection}>
+          <h1 className={styles.phaseTitle}>{currentPhase.name}</h1>
+          <p className={styles.phaseDescription}>{currentPhase.description}</p>
+        </div>
+
+        <div className={styles.scenesContainer} onClick={handleSceneClick}>
+          <MoonPhaseScene currentPhase={currentPhase} />
+        </div>
+
+        {/* CARTÕES DE DETALHES (GLASSMORPHISM) */}
+        <div className={styles.detailsGrid}>
+          <div className={styles.detailCard}>
+            <span className={styles.cardLabel}>Iluminação</span>
+            <span className={styles.cardValue}>{currentPhase.stats.iluminacao}</span>
+          </div>
+          <div className={styles.detailCard}>
+            <span className={styles.cardLabel}>Idade da Lua</span>
+            <span className={styles.cardValue}>{currentPhase.stats.idade}</span>
+          </div>
+          <div className={styles.detailCard}>
+            <span className={styles.cardLabel}>Melhor Horário</span>
+            <span className={styles.cardValue}>{currentPhase.stats.visibilidade}</span>
+          </div>
+        </div>
+
+        {/* CURIOSIDADE DO THÉO (DESKTOP) */}
+        {!isMobile && (
+          <div className={styles.factCard}>
+            <div className={styles.factIcon}>💡</div>
+            <div className={styles.factContent}>
+              <span className={styles.factLabel}>Curiosidade do Théo</span>
+              <p className={styles.factText}>{currentPhase.details}</p>
+            </div>
+          </div>
+        )}
+
+        {/* TOOLTIP DINÂMICA (MOBILE & DESKTOP CLICKS) */}
+        {tooltip && (
+          <FloatingTooltip 
+            isVisible={tooltip.visible}
+            x={tooltip.x}
+            y={tooltip.y}
+            title={tooltip.title}
+            content={tooltip.content}
+            onClose={() => setTooltip(null)}
+            color="#ffea00"
+          />
+        )}
       </div>
 
-      {/* CONTROLES (DOCK DE FASES) - Agora movido para fora do dashboard para overlay fixo */}
-      <nav className={styles.phaseDockContainer}>
-        <div className={styles.phaseDockTrack}>
+      {/* DOCK DE SELEÇÃO (ESTILO CONSTELAÇÕES/PLANETAS) */}
+      <nav className={styles.phaseDock}>
+        <div className={styles.dockTrack}>
           {PHASES.map((phase, idx) => {
             const emojis = ['🌑', '🌓', '🌕', '🌗']
             return (
               <button
                 key={phase.id}
-                className={`${styles.phaseDockItem} ${idx === phaseIdx ? styles.active : ''}`}
+                id={`moon-dock-${phase.id}`}
+                className={`${styles.dockItem} ${idx === phaseIdx ? styles.active : ''}`}
                 onClick={() => handlePhaseClick(idx)}
               >
-                <div className={styles.phaseIconWrapper}>
+                <div className={styles.dockCircle}>
                   {emojis[idx]}
                 </div>
-                <span className={styles.phaseDockLabel}>{phase.name.replace('Quarto ', '')}</span>
+                <span className={styles.dockLabel}>{phase.name}</span>
               </button>
             )
           })}

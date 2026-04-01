@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import '@google/model-viewer'
 import TheoSpinner from '@/components/TheoSpinner'
 import styles from './PlanetViewer3D.module.css'
@@ -15,6 +15,7 @@ interface PlanetViewer3DProps {
   lockVertical?: boolean
   rotationSpeed?: string
   exposure?: number
+  fieldOfView?: string
 }
 
 export default function PlanetViewer3D({ 
@@ -28,31 +29,51 @@ export default function PlanetViewer3D({
   tilt = 0,
   lockVertical = false,
   rotationSpeed = "9deg",
-  exposure = 1
+  exposure = 1,
+  fieldOfView = "30deg"
 }: PlanetViewer3DProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const viewerRef = useRef<any>(null)
+  const onLoadRef = useRef(onLoad)
+
+  // Sincroniza a ref com a prop para que handleLoad tenha acesso ao callback mais recente
+  useEffect(() => {
+    onLoadRef.current = onLoad
+  }, [onLoad])
+
+  // Reset do loader ao trocar de planeta
+  useEffect(() => {
+    setIsLoaded(false)
+  }, [modelSrc])
 
   useEffect(() => {
     const viewerNode = viewerRef.current
     if (!viewerNode) return
 
     const handleLoad = () => {
-      setIsLoaded(true)
-      if (onLoad) onLoad()
+      // Pequeno delay para garantir que o model-viewer processou o carregamento interno
+      requestAnimationFrame(() => {
+        setIsLoaded(true)
+        // Quando usamos reveal="manual", precisamos dispensar o poster explicitamente para mostrar o 3D
+        if (viewerNode && typeof viewerNode.dismissPoster === 'function') {
+          viewerNode.dismissPoster()
+        }
+        if (onLoadRef.current) onLoadRef.current()
+      })
     }
 
-    // Se já estiver carregado (cache), dispara imediatamente
+    // Monitora o carregamento
+    viewerNode.addEventListener('load', handleLoad)
+    
+    // Se o elemento já estiver pronto (cache), chama o handler manual
     if (viewerNode.loaded) {
       handleLoad()
-    } else {
-      viewerNode.addEventListener('load', handleLoad)
     }
 
     return () => {
       viewerNode.removeEventListener('load', handleLoad)
     }
-  }, [modelSrc, onLoad])
+  }, [modelSrc]) // Depende de modelSrc porque o elemento pode mudar sua prontidão
 
   // Efeito para garantir que a velocidade de rotação mude dinamicamente
   useEffect(() => {
@@ -67,39 +88,44 @@ export default function PlanetViewer3D({
       {/* Fallback de Carregamento enquanto o 3D/GLB é baixado */}
       {!isLoaded && (
         <div className={styles.spinnerOverlay} style={{ '--chapter-color': color } as React.CSSProperties}>
-          <TheoSpinner label={`Puxando ${alt} com força gravitacional...`} silent={true} />
+          <TheoSpinner label={`Buscando segredos de ${alt}...`} silent={true} />
         </div>
       )}
 
       {/* 
-        Google Model-Viewer 
-        Usado para visualização 3D. Sistema de Realidade Aumentada removido a pedido do usuário.
+          Google Model-Viewer 
+          Usamos uma 'key' baseada no modelSrc para forçar a reconstrução do elemento 
+          quando o planeta muda. Isso limpa estados residuais e garante que o evento 'load' 
+          dispare de forma confiável para cada novo modelo.
       */}
-      <model-viewer
-        key={modelSrc}
-        ref={viewerRef}
-        src={modelSrc}
-        alt={alt}
-        auto-rotate={autoRotate}
-        auto-rotate-delay="0"
-        interaction-prompt="none"
-        disable-pan
-        disable-zoom
-        camera-controls={cameraControls}
-        camera-orbit={cameraOrbit}
-        min-phi={lockVertical ? "75deg" : undefined}
-        max-phi={lockVertical ? "75deg" : undefined}
-        rotation-per-second={rotationSpeed}
-        shadow-intensity="0"
-        exposure={String(exposure)}
-        className={styles.viewer}
-        style={{
+      {React.createElement('model-viewer' as any, {
+        key: modelSrc, // CHAVE CRÍTICA: Força reset completo do WebComponent
+        ref: viewerRef,
+        src: modelSrc,
+        alt: alt,
+        'auto-rotate': autoRotate,
+        'auto-rotate-delay': "0",
+        'interaction-prompt': "none",
+        'disable-pan': true,
+        'disable-zoom': true,
+        'camera-controls': cameraControls,
+        'camera-orbit': cameraOrbit,
+        'min-phi': lockVertical ? "75deg" : undefined,
+        'max-phi': lockVertical ? "75deg" : undefined,
+        'rotation-per-second': rotationSpeed,
+        'shadow-intensity': "0",
+        exposure: String(exposure),
+        'field-of-view': fieldOfView,
+        loading: "eager",
+        reveal: "auto", // Mudado para auto para maior compatibilidade, controlado pelo CSS opacity
+        className: `${styles.viewer} ${isLoaded ? styles.reveal : ''}`,
+        style: {
           '--poster-color': 'transparent',
           width: '100%',
           height: '100%',
           transform: tilt ? `rotateZ(${tilt}deg)` : 'none'
-        } as React.CSSProperties}
-      />
+        } as React.CSSProperties
+      })}
     </div>
   )
 }

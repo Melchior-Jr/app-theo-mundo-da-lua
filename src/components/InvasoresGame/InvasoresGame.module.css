@@ -1,0 +1,421 @@
+.gameWrapper {
+  position: relative;
+  width: 95vw;
+  max-width: 800px;
+  height: auto;
+  aspect-ratio: 4/3;
+  background: #05070a;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 100px rgba(0, 229, 255, 0.1);
+  margin: 0 auto;
+  font-family: 'Outfit', sans-serif;
+  user-select: none;
+}
+
+.gameContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+/* HUD */
+.hudTop {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.hudLeft {
+  display: flex;
+  gap: 15px;
+}
+
+.statBox {
+  background: rgba(13, 13, 30, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 8px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+}
+
+.statLabel {
+  font-size: 0.65rem;
+  color: #4facfe;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.statValue {
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 900;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* PERGUNTA BANNER */
+.hudCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+  margin: 0 20px;
+}
+
+.questionBanner {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 61, 113, 0.95);
+  padding: 12px 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 20px rgba(255, 61, 113, 0.3);
+  animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  z-index: 60;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.questionIcon {
+  font-size: 1.5rem;
+  color: #fff;
+  animation: pulseRocket 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulseRocket {
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.2); filter: brightness(1.5); }
+}
+
+.questionBanner p {
+  margin: 0;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+/* VIDAS */
+.hudRight {
+  display: flex;
+  gap: 5px;
+}
+
+.lives {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+}
+
+.heartActive { color: #ff3d71; font-size: 1rem; filter: drop-shadow(0 0 5px #ff3d71); }
+.heartDead { color: rgba(255, 255, 255, 0.1); font-size: 1rem; }
+
+.pauseBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s;
+  margin-left: 10px;
+}
+
+.pauseBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.mobileBackBtn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .gameWrapper {
+    width: 100vw;
+    height: 100svh;
+    border-radius: 0;
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .canvas {
+    height: 100%;
+    width: 100%;
+    object-position: center bottom; /* Move o foco para baixo onde o jogador está */
+    background: #000;
+  }
+
+  .hudTop {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    gap: 5px;
+  }
+
+  .hudLeft {
+    gap: 5px;
+    align-items: center;
+  }
+
+  .mobileBackBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    pointer-events: auto;
+    text-decoration: none;
+  }
+
+  .statBox { 
+    min-width: 50px; 
+    padding: 4px 8px; 
+  }
+  
+  .statLabel { font-size: 0.5rem; }
+  .statValue { font-size: 0.8rem; }
+
+  .hudRight {
+    gap: 5px;
+    align-items: center;
+  }
+
+  .lives {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  .pauseBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    margin-left: 5px;
+  }
+
+  .questionBanner { 
+    top: auto;
+    bottom: 150px; 
+    left: 50%;
+    width: 90%;
+    transform: translateX(-50%);
+    white-space: normal;
+    text-align: center;
+    padding: 10px 15px;
+    animation: slideUpMobile 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes slideUpMobile {
+    from { transform: translateX(-50%) translateY(50px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+  
+  .questionBanner p { font-size: 0.8rem; }
+}
+
+/* MODAIS / OVERLAYS */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 40px;
+  border-radius: 32px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.arcadeTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00e5ff, #00ffa3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.gameOverTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ff3d71;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(255, 61, 113, 0.5);
+}
+
+.manual { color: rgba(255, 255, 255, 0.7); font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px; }
+
+.controlsHint {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 20px;
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.mainBtn {
+  background: linear-gradient(135deg, #00e5ff, #00ffa3);
+  border: none;
+  padding: 18px 40px;
+  border-radius: 16px;
+  color: #05070a;
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mainBtn:hover { transform: scale(1.05) translateY(-5px); box-shadow: 0 15px 30px rgba(0, 229, 255, 0.4); }
+
+.finalScore { margin-bottom: 30px; }
+.finalScore span { font-size: 0.9rem; color: #4facfe; font-weight: 800; letter-spacing: 2px; }
+.finalScore h2 { font-size: 4rem; margin: 0; color: #fff; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+
+.resultsGrid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 15px; 
+  margin-bottom: 35px; 
+}
+
+.resItem { 
+  background: rgba(255, 255, 255, 0.05); 
+  padding: 15px 10px; 
+  border-radius: 20px; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 8px; 
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s;
+}
+
+.resItem:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.resData { display: flex; flex-direction: column; align-items: center; }
+.resLabel { font-size: 0.6rem; color: rgba(255,255,255,0.5); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.resValue { font-size: 1.3rem; color: #fff; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+.resEmoji { font-size: 1.5rem; }
+.resIcon { font-size: 1.5rem; color: #ffd600; }
+
+/* SHIELD INDICATOR */
+.shieldIndicator {
+  background: rgba(0, 229, 255, 0.15);
+  border: 1.5px solid rgba(0, 229, 255, 0.6);
+  padding: 6px 12px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: glowShield 1s infinite alternate ease-in-out;
+  margin-top: 5px;
+}
+
+@keyframes glowShield {
+  from { box-shadow: 0 0 5px rgba(0, 229, 255, 0.3); border-color: rgba(0, 229, 255, 0.4); }
+  to { box-shadow: 0 0 15px rgba(0, 229, 255, 0.6); border-color: rgba(0, 229, 255, 0.8); }
+}
+
+.shieldZap { font-size: 1.1rem; }
+.shieldLabel { font-size: 0.65rem; font-weight: 950; color: #fff; letter-spacing: 1px; }
+
+.actions { display: flex; gap: 15px; justify-content: center; }
+
+.retryBtn, .homeBtn {
+  padding: 14px 25px;
+  border-radius: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.retryBtn { background: #00ffa3; color: #05070a; border: none; }
+.homeBtn { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+.retryBtn:hover { filter: brightness(1.1); transform: scale(1.05); }
+.homeBtn:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Touch Area Indicator */
+.touchArea {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to top, rgba(0, 229, 255, 0.1), transparent);
+  pointer-events: none;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .touchArea { display: block; }
+}

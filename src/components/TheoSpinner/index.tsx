@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import TheoCharacter from '@/components/TheoCharacter'
-import { getNarrationById } from '@/data/narration'
+import { getRandomLoadingNarration } from '@/data/narration'
 import { useNarration } from '@/hooks/useNarration'
 import styles from './TheoSpinner.module.css'
 
@@ -10,10 +10,10 @@ interface TheoSpinnerProps {
 }
 
 export default function TheoSpinner({ 
-  label = 'Carrregando o universo...',
+  label = 'Carregando o universo...',
   silent = false 
 }: TheoSpinnerProps) {
-  const loadingNarration = getNarrationById('loading')
+  const [loadingNarration] = useState(() => getRandomLoadingNarration())
   const { play, stop } = useNarration((loadingNarration && !silent) ? loadingNarration : null)
 
   useEffect(() => {

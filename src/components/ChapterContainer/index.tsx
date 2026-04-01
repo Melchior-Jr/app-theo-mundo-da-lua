@@ -101,6 +101,7 @@ export default function ChapterContainer({
   return (
     <div
       className={styles.container}
+      data-chapter-id={chapter.id}
       style={{
         '--chapter-color': chapter.color,
         '--chapter-color-dim': chapter.colorDim,
@@ -156,7 +157,8 @@ export default function ChapterContainer({
               onClick={() => navigate('/jogos')}
               aria-label="Ir para a Central de Jogos"
             >
-              <span>Central de Jogos</span>
+              <span className={styles.desktopText}>Central de Jogos</span>
+              <span className={styles.mobileText}>Jogos</span>
               <span aria-hidden="true">🎮</span>
             </button>
           </div>

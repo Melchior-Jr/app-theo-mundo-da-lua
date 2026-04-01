@@ -1,0 +1,138 @@
+# 🎙️ RELATÓRIO DE NARRAÇÃO COMPLETO: QUIZ INTERGALÁCTICO DO THÉO
+
+Este documento contém TODO o roteiro para gravação das vozes do Théo.
+Salve os arquivos na pasta: `public/audio/Quiz Intergaláctico/`
+
+---
+
+## 🎒 PARTE 1: NARRATIVAS DE SISTEMA (Falas Aleatórias)
+
+### 🎬 1. ABERTURA DO JOGO (Primeiro acesso)
+- **Intro_01:** "Fala astronauta! 👨‍🚀 Preparado pra embarcar na nave? 🚀✨ Aqui você vai testar seu cérebro e ver se é bom mesmo nesse trem de astronomia! 😎 Bora começar essa missão!"
+- **Intro_Tutorial:** "o jogo aqui é o seguinte, conforme você vai jogando vai liberando novas missões e marcando uns pontos. aah também tem como desafiar o seu colega, é bem massa."
+
+### 🧭 2. ESCOLHA DE NÍVEL
+- **Lvl_Select_01:** "Bem vindo de volta, escolhe ai uma missão ai"
+- **Lvl_Select_02:** "olha você ai de novo, qual vai ser a missão agora?"
+- **Lvl_Select_03:** "Bora jogar? não vai arregar em"
+- **Lvl_Select_04:** "Pronto pra mais uma rodada de conhecimento espacial?"
+
+### ❓ 3. INÍCIO DA PERGUNTA (Tocar antes de ler a questão)
+- **QStart_01:** "lá vem pergunta"
+- **QStart_02:** "Aqui vai uma pergunta"
+- **QStart_03:** "Responde essa"
+- **QStart_04:** "Olha a pergunta vindo aí!"
+- **QStart_05:** "Essa eu quero ver se você sabe..."
+
+### ⏳ 4. DURANTE A PERGUNTA (Pressão lúdica)
+- **Timer_01:** "Desenrola vai!"
+- **Timer_02:** "Ta acabando o tempo!"
+- **Timer_03:** "Vai Vai Vai Vai!"
+
+---
+
+## 🔥 PARTE 2: REAÇÕES RÁPIDAS (Acertos e Erros)
+
+### ✅ ACERTO
+- **Hit_01:** "Boooa!"
+- **Hit_02:** "Isso!"
+- **Hit_03:** "Vai pra NASA!"
+- **Hit_04:** "Acertou boniiito"
+- **Hit_05:** "Mandou beem"
+
+### ❌ ERRO
+- **Miss_01:** "tava no mundo da lua né"
+- **Miss_02:** "errou"
+- **Miss_03:** "iiiiih"
+- **Miss_04:** "Errou de novo?"
+- **Miss_05:** "Viiish"
+
+### 🔥 COMBO / SEQUÊNCIA
+- **Combo_01:** "Eita peste, é só acerto!"
+- **Combo_02:** "É doído é, ce num erra não?"
+- **Combo_03:** "ohohohoh, é só acerto mesmo!"
+
+---
+
+## ❓ PARTE 3: LEITURA DAS QUESTÕES (Arquivos .MP3)
+
+### 🌌 NÍVEL 1: O SOL E O SISTEMA
+- **l1-c1-q1:** "Qual é o nome da nossa galáxia, onde fica o Sistema Solar?"
+- **l1-c1-q2:** "O Sol é o objeto mais pesado de todo o nosso Sistema Solar. Verdade ou mentira?"
+- **l1-c1-q3:** "Quantos planetas existem oficialmente no nosso Sistema Solar?"
+- **l1-c1-q4:** "Sem o Sol, a Terra seria um planeta escuro e congelado. Isso é verdadeiro ou falso?"
+- **l1-c1-q5:** "O Sol é uma... o quê? Que fornece luz e calor para a Terra."
+
+### 🪐 NÍVEL 2: PLANETAS E CURIOSIDADES
+- **l2-c1-q1:** "Qual destes planetas NÃO é feito de rocha?"
+- **l2-c1-q2:** "Dá uma olhada nesse planeta aí... qual é o nome dessa belezinha com uma mancha vermelha?"
+- **l2-c1-q3:** "Esses anéis incríveis de Saturno são feitos principalmente de quê?"
+- **l2-c1-q4:** "Qual é o planeta mais quente de todos, mesmo não sendo o que fica mais perto do Sol?"
+- **l2-c1-q5:** "Qual planeta é conhecido como o Planeta Vermelho?"
+
+### 🌍 NÍVEL 3: MOVIMENTOS DA TERRA
+- **l3-c1-q1:** "Como chamamos o movimento da Terra que dura 24 horas?"
+- **l3-c1-q2:** "O movimento da Terra em volta do Sol dura quanto tempo?"
+- **l3-c1-q3:** "O que causa as quatro estações do ano na Terra?"
+- **l3-c1-q4:** "A que velocidade a Terra gira sobre o seu próprio eixo?"
+- **l3-c1-q5:** "Qual o nome do movimento da Terra em volta do Sol?"
+
+### 🌔 NÍVEL 4: A LUA E SUAS FASES
+- **l4-c1-q1:** "Qual destas NÃO é uma fase da Lua?"
+- **l4-c1-q2:** "Quanto tempo a Lua leva para completar todas as suas fases?"
+- **l4-c1-q3:** "A Lua brilha porque tem luz própria ou porque reflete a luz do Sol?"
+- **l4-c1-q4:** "Em qual fase a Lua fica totalmente escondida no céu noturno?"
+
+### ✨ NÍVEL 5: ESTRELAS E CONSTELAÇÕES
+- **l5-c1-q1:** "O que são as constelações que vemos no céu à noite?"
+- **l5-c1-q2:** "Qual constelação famosa tem o formato de uma cruz e serve para nos guiar?"
+- **l5-c1-q3:** "O famoso 'Cinturão de Órion' é conhecido popularmente como o quê?"
+- **l5-c1-q4:** "As constelações do Zodíaco são quantas no total?"
+- **l5-c1-q5:** "Diferentes partes do mundo veem diferentes constelações. Isso é verdade ou mentira?"
+
+---
+
+## 👂 PARTE 4: FEEDBACKS / EXPLICAÇÕES (Arquivo lX-cX-qX-exp.mp3)
+
+### 🌌 NÍVEL 1 (EXPLICAÇÕES)
+- **l1-c1-q1-exp:** "A Via Láctea parece uma mancha de leite no céu, e é lá que moramos!"
+- **l1-c1-q2-exp:** "O Sol é tão grande e pesado que ele atrai todos os planetas para girarem em volta dele!"
+- **l1-c1-q3-exp:** "Antigamente eram 9, mas agora o coitado do Plutão não é mais um planeta principal!"
+- **l1-c1-q4-exp:** "O Sol é a nossa bateria natural! Ele dá energia para as plantas e calor para nós."
+- **l1-c1-q5-exp:** "Exatamente! Sem essa estrela gigante, a gente estaria num frio danado!"
+
+### 🪐 NÍVEL 2 (EXPLICAÇÕES)
+- **l2-c1-q1-exp:** "Saturno é um gigante gasoso. Se você tentasse pisar nele, iria afundar!"
+- **l2-c1-q2-exp:** "Essa é a Grande Mancha Vermelha de Júpiter, uma tempestade gigante!"
+- **l2-c1-q3-exp:** "São bilhões de pedacinhos de gelo e rocha orbitando o planeta como uma joia gigante!"
+- **l2-c1-q4-exp:** "Vênus tem tantas nuvens que prendem o calor, que ele frita qualquer coisa!"
+- **l2-c1-q5-exp:** "Marte tem esse nome porque sua superfície é cheia de ferrugem!"
+
+### 🌍 NÍVEL 3 (EXPLICAÇÕES)
+- **l3-c1-q1-exp:** "É a Rotação que faz o dia e a noite enquanto a Terra gira como um pião!"
+- **l3-c1-q2-exp:** "Isso aí! Um ano inteirinho para a Terra dar a volta completa no Sol."
+- **l3-c1-q3-exp:** "Por causa do eixo inclinado, a luz do Sol bate diferente na Terra durante o ano!"
+- **l3-c1-q4-exp:** "A Terra gira a incríveis 1.670 quilômetros por hora, mas nem sentimos!"
+
+### 🌔 NÍVEL 4 (EXPLICAÇÕES)
+- **l4-c1-q1-exp:** "Eclipse é um evento especial, não é uma fase normal da Lua de todo mês!"
+- **l4-c1-q2-exp:** "Quase um mês inteiro! Por isso cada fase dura mais ou menos uma semana."
+- **l4-c1-q3-exp:** "A Lua funciona como um espelho gigante para a luz do Sol lá no espaço!"
+- **l4-c1-q4-exp:** "Na Lua Nova, a parte iluminada está virada de costas para a gente aqui na Terra."
+
+### ✨ NÍVEL 5 (EXPLICAÇÕES)
+- **l5-c1-q1-exp:** "São desenhos imaginários que os antigos inventaram ligando os pontos de luz no céu!"
+- **l5-c1-q2-exp:** "O Cruzeiro do Sul é o GPS natural de quem mora aqui no Hemisfério Sul!"
+- **l5-c1-q3-exp:** "As Três Marias são as estrelas mais famosas e fáceis de achar no céu!"
+- **l5-c1-q4-exp:** "São 12 constelações que o Sol parece 'visitar' durante o ano todo!"
+- **l5-c1-q5-exp:** "Exato! Como a Terra é redonda, quem está embaixo vê estrelas diferentes de quem está em cima!"
+
+---
+
+## 🎤 PARTE 5: FINALIZAÇÃO E RESULTADOS
+
+### 🏆 VITÓRIA
+- **Win_01:** "Aí sim!! missão cumprida! 🚀✨ Você mandou muito bem! Já pode pedir seu certificado de astronauta 😂"
+
+### 💀 GAME OVER
+- **GameOver_01:** "Ih rapaiz, as vidas acabaram! Volta pra base, estuda mais um pouco e vem tentar de novo!"
