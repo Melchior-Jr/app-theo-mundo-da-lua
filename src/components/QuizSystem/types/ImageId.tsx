@@ -1,4 +1,4 @@
-import { QuizQuestion } from '@/data/quizQuestions'
+import { QuizQuestion } from '@/types/quiz'
 import styles from '../QuizSystem.module.css'
 
 interface TypeProps {
@@ -17,7 +17,7 @@ export default function ImageId({ question, onAnswer, disabled }: TypeProps) {
       )}
       
       <div className={styles.optionsGrid}>
-        {question.options?.map((option, idx) => (
+        {question.options?.map((option: string, idx: number) => (
           <button
             key={idx}
             className={styles.optionBtn}

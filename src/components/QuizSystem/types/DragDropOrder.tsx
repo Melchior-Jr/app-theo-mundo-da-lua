@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { QuizQuestion } from '@/data/quizQuestions'
+import { QuizQuestion } from '@/types/quiz'
 import styles from '../QuizSystem.module.css'
 import { IoReorderThree } from 'react-icons/io5'
 import {

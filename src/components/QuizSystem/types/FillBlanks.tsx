@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { QuizQuestion } from '@/data/quizQuestions'
+import { QuizQuestion } from '@/types/quiz'
 import styles from '../QuizSystem.module.css'
 
 interface TypeProps {
