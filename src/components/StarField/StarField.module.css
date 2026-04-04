@@ -137,3 +137,10 @@
   );
   animation: nebulaDrift 25s ease-in-out 5s infinite reverse;
 }
+
+@media (max-width: 1000px) {
+  .nebula, .nebula2 {
+    opacity: 0.5; /* Reduz pela metade a intensidade no mobile */
+    filter: blur(100px); /* Suaviza ainda mais as bordas */
+  }
+}

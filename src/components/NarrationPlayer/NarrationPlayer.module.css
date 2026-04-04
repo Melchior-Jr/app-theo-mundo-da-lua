@@ -165,13 +165,47 @@
   position: fixed;
   z-index: 1000;
   width: auto;
-  animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   display: flex;
   flex-direction: column;
   align-items: center;
   transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
   user-select: none;
   touch-action: none;
+}
+
+.notSticky {
+  position: absolute !important;
+}
+
+/* Animações por quadrante para vagar rumo ao centro sem sair da tela */
+.posBottomRight:not(.dragging) { animation: slideInUp 0.6s forwards, wanderBR 15s ease-in-out 0.6s infinite alternate; }
+.posBottomLeft:not(.dragging)  { animation: slideInUp 0.6s forwards, wanderBL 15s ease-in-out 0.6s infinite alternate; }
+.posTopRight:not(.dragging)    { animation: slideInUp 0.6s forwards, wanderTR 15s ease-in-out 0.6s infinite alternate; }
+.posTopLeft:not(.dragging)     { animation: slideInUp 0.6s forwards, wanderTL 15s ease-in-out 0.6s infinite alternate; }
+
+@keyframes wanderBR {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-30vw, -40vh) rotate(-8deg); }
+  100% { transform: translate(-10vw, -20vh) rotate(5deg); }
+}
+
+@keyframes wanderBL {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(30vw, -40vh) rotate(8deg); }
+  100% { transform: translate(10vw, -20vh) rotate(-5deg); }
+}
+
+@keyframes wanderTR {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-30vw, 40vh) rotate(-8deg); }
+  100% { transform: translate(-10vw, 20vh) rotate(5deg); }
+}
+
+@keyframes wanderTL {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(30vw, 40vh) rotate(8deg); }
+  100% { transform: translate(10vw, 20vh) rotate(-5deg); }
 }
 
 /* Posições */

@@ -12,6 +12,7 @@ interface NarrationPlayerProps {
   autoPlay?: boolean
   onFinish?: () => void
   floating?: boolean
+  sticky?: boolean // Determina se usa fixed (true) ou absolute (false)
   hidden?: boolean  // Oculta visualmente sem parar o áudio
 }
 
@@ -26,6 +27,7 @@ export default function NarrationPlayer({
   autoPlay = false,
   onFinish,
   floating = false,
+  sticky = true,
   hidden = false,
 }: NarrationPlayerProps) {
   const { 
@@ -83,6 +85,17 @@ export default function NarrationPlayer({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+  // Efeito para rastrear o mouse (Eye-Tracking)
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normaliza a posição para o Théo, considerando o scroll
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Auto-play opcional ou quando a narração muda
   useEffect(() => {
@@ -243,6 +256,7 @@ export default function NarrationPlayer({
       className={`
         ${styles.playerContainer} 
         ${floating ? styles.isFloating : ''} 
+        ${floating && !sticky ? styles.notSticky : ''} 
         ${floating ? positionClass : ''}
         ${isDragging && hasMoved ? styles.dragging : ''}
         ${hidden ? styles.hiddenPlayer : ''}
@@ -306,7 +320,10 @@ export default function NarrationPlayer({
               </div>
             )}
 
-            <TheoCharacter size={floating ? 100 : (isSpeaking ? 160 : 120)} />
+            <TheoCharacter 
+              size={floating ? 100 : (isSpeaking ? 160 : 120)} 
+              lookAt={mousePos}
+            />
             
             {/* Camada de toque invisível para garantir captura de clique */}
             <div 

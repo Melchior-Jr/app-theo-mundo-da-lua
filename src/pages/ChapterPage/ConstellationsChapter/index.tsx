@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { Star, Info, Share2 } from 'lucide-react'
+import ShareButton from '@/components/ShareButton'
 import styles from './ConstellationsChapter.module.css'
 
 type ConstellationId = 

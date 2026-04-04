@@ -4,6 +4,7 @@ import { getCaption } from '@/data/subtitles'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import TheoCharacter from '@/components/TheoCharacter'
 import PlanetViewer3D from '@/components/PlanetViewer3D'
+import ShareButton from '@/components/ShareButton'
 import styles from './EarthMotionsChapter.module.css'
 
 interface MotionData {
@@ -459,6 +460,10 @@ export default function EarthMotionsChapter() {
             <header className={styles.infoHeader}>
               <h2 className={styles.title}>{currentData.title}</h2>
               <p className={styles.description}>{currentData.description}</p>
+              <ShareButton 
+                title={`Aprendendo sobre ${currentData.title} com o Théo! 🚀`}
+                text={`Dá uma olhada no movimento de ${currentData.title} da Terra que eu acabei de aprender no Théo no Mundo da Lua!`}
+              />
             </header>
 
             <div className={styles.metaGrid}>

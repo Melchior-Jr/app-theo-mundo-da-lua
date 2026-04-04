@@ -1,0 +1,55 @@
+{
+  "hash": "fc6e4891",
+  "configHash": "8d6ee66c",
+  "lockfileHash": "f9661648",
+  "browserHash": "bdead7c5",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "76c465c1",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "313fc7c5",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "763391a2",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "ebd47002",
+      "needsInterop": false
+    },
+    "react-icons/fa": {
+      "src": "../../node_modules/react-icons/fa/index.mjs",
+      "file": "react-icons_fa.js",
+      "fileHash": "a374fa0d",
+      "needsInterop": false
+    },
+    "@google/model-viewer": {
+      "src": "../../node_modules/@google/model-viewer/lib/model-viewer.js",
+      "file": "@google_model-viewer.js",
+      "fileHash": "833f332d",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-TUX7A2JK": {
+      "file": "chunk-TUX7A2JK.js"
+    },
+    "chunk-4SFRHSJ3": {
+      "file": "chunk-4SFRHSJ3.js"
+    },
+    "chunk-EQCVQC35": {
+      "file": "chunk-EQCVQC35.js"
+    }
+  }
+}

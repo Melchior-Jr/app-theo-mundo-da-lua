@@ -13,10 +13,33 @@ interface TheoCharacterProps {
 export default function TheoCharacter({ 
   size = 280, 
   className = '', 
-  emotion = 'default' 
-}: TheoCharacterProps) {
+  emotion = 'default',
+  lookAt = { x: 0, y: 0 }
+}: TheoCharacterProps & { lookAt?: { x: number, y: number } }) {
   // Mapeamento de classes de emoção
   const emotionClass = emotion !== 'default' ? styles[emotion] : ''
+
+  // Lógica de eye-tracking (limita o movimento da pupila dentro do globo ocular)
+  const calculateEyeRotation = (baseX: number, baseY: number) => {
+    if (!lookAt.x && !lookAt.y) return { x: baseX, y: baseY };
+    
+    // Suavização do movimento
+    const dx = lookAt.x - baseX;
+    const dy = lookAt.y - baseY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const maxRange = 5; // Limite de movimento da pupila
+    
+    const limitedDist = Math.min(distance * 0.05, maxRange);
+    const angle = Math.atan2(dy, dx);
+    
+    return {
+      x: baseX + Math.cos(angle) * limitedDist,
+      y: baseY + Math.sin(angle) * limitedDist
+    };
+  };
+
+  const leftPupil = calculateEyeRotation(128, 110);
+  const rightPupil = calculateEyeRotation(156, 110);
 
   return (
     <svg
@@ -61,14 +84,22 @@ export default function TheoCharacter({
         <circle cx="150" cy="90" r="6"/>
       </g>
 
-      {/* Olhos */}
+      {/* Olhos com Eye-Tracking */}
       <g className={emotion === 'sad' ? styles.eyeSad : ''}>
         <ellipse cx="126" cy="108" rx="9" ry="10" fill="#fff"/>
         <ellipse cx="154" cy="108" rx="9" ry="10" fill="#fff"/>
-        <circle cx="128" cy="110" r="6" fill="#3D6BAF"/>
-        <circle cx="156" cy="110" r="6" fill="#3D6BAF"/>
-        <circle cx="129" cy="111" r="3.5" fill="#0A0E1A"/>
-        <circle cx="157" cy="111" r="3.5" fill="#0A0E1A"/>
+        
+        {/* Íris */}
+        <circle cx={leftPupil.x} cy={leftPupil.y} r="6" fill="#3D6BAF" />
+        <circle cx={rightPupil.x} cy={rightPupil.y} r="6" fill="#3D6BAF" />
+        
+        {/* Pupila */}
+        <circle cx={leftPupil.x + 1} cy={leftPupil.y + 1} r="3.5" fill="#0A0E1A" />
+        <circle cx={rightPupil.x + 1} cy={rightPupil.y + 1} r="3.5" fill="#0A0E1A" />
+        
+        {/* Brilho do olho */}
+        <circle cx={leftPupil.x + 3} cy={leftPupil.y - 2} r="1.5" fill="#fff" opacity="0.8" />
+        <circle cx={rightPupil.x + 3} cy={rightPupil.y - 2} r="1.5" fill="#fff" opacity="0.8" />
       </g>
 
       {/* Sorriso / Boca Dinâmica */}

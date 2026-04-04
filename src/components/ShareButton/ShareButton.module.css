@@ -1,0 +1,57 @@
+.shareGroup {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.shareButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.shareButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 209, 102, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.shareButton:active {
+  transform: scale(0.98);
+}
+
+.whatsapp {
+  border-color: rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.15);
+  border-color: #25D366;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .shareGroup {
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}

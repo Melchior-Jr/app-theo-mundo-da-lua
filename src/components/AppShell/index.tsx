@@ -11,7 +11,9 @@ import styles from './AppShell.module.css'
  * Gerencia o roteamento e a Splash Screen inicial.
  */
 export default function AppShell() {
-  const [isLoaded, setIsLoaded] = useState(false)
+  const location = useLocation()
+  const isLandingPage = location.pathname === '/'
+  const [isLoaded, setIsLoaded] = useState(isLandingPage)
 
   // Desbloqueia o áudio — chamado pelo SplashLoader ao decolar
   const handleAppStart = () => {
@@ -26,9 +28,9 @@ export default function AppShell() {
 
   return (
     <>
-      {!isLoaded && <SplashLoader onReady={handleAppStart} />}
+      {!isLoaded && !isLandingPage && <SplashLoader onReady={handleAppStart} />}
       <NarrationSequenceProvider>
-        <div style={{ visibility: isLoaded ? 'visible' : 'hidden' }}>
+        <div style={{ visibility: (isLoaded || isLandingPage) ? 'visible' : 'hidden' }}>
           <AppShellContent />
         </div>
       </NarrationSequenceProvider>
