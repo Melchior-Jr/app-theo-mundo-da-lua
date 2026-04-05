@@ -23,7 +23,8 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     status: 'playing',
     lastAnswerCorrect: null,
     correctCount: 0,
-    hasMistakes: false
+    hasMistakes: false,
+    maxCombo: 0
   })
 
   const [introAudio, setIntroAudio] = useState<HTMLAudioElement | null>(null)
@@ -60,6 +61,7 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
       const newLives = isCorrect ? prev.lives : Math.max(0, prev.lives - 1)
       const newCorrectCount = isCorrect ? prev.correctCount + 1 : prev.correctCount
       const newHasMistakes = prev.hasMistakes || !isCorrect
+      const newMaxCombo = Math.max(prev.maxCombo, currentCombo)
 
       // Vitória Imediata (Duelo)
       if (maxTargetScore !== undefined && newCorrectCount > maxTargetScore && isCorrect) {
@@ -73,7 +75,8 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
           status: 'finished', 
           lastAnswerCorrect: isCorrect, 
           correctCount: newCorrectCount, 
-          hasMistakes: newHasMistakes 
+          hasMistakes: newHasMistakes,
+          maxCombo: newMaxCombo
         }
       }
 
@@ -85,7 +88,8 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
         status: 'feedback',
         lastAnswerCorrect: isCorrect,
         correctCount: newCorrectCount,
-        hasMistakes: newHasMistakes
+        hasMistakes: newHasMistakes,
+        maxCombo: newMaxCombo
       }
     })
   }, [maxTargetScore, playTrack, introAudio, state])
@@ -153,7 +157,8 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
       status: 'playing',
       lastAnswerCorrect: null,
       correctCount: 0,
-      hasMistakes: false
+      hasMistakes: false,
+      maxCombo: 0
     })
   }, [isDuel])
 

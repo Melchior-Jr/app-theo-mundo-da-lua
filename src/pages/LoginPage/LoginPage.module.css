@@ -1,0 +1,640 @@
+/* ═══════════════════════════════════════════════════════════════
+   LoginPage.module.css — Portal da Estação
+   Design System: Neon Sideral
+   Versão 2.0 — UX refinado com hierarquia, microinterações e acessibilidade
+═══════════════════════════════════════════════════════════════ */
+
+/* ─── BASE ───────────────────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  background: radial-gradient(circle at 70% 30%, #0d1b3e 0%, #060c1a 55%, #02040a 100%);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── STARS ──────────────────────────────────────────────────── */
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+  opacity: var(--min, 0.1);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--min, 0.1); transform: scale(1); }
+  50%       { opacity: var(--max, 0.6); transform: scale(1.4); }
+}
+
+/* ─── NEBULAE ────────────────────────────────────────────────── */
+.nebula1,
+.nebula2 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nebula1 {
+  width: 550px;
+  height: 550px;
+  background: rgba(75, 123, 237, 0.07);
+  top: -180px;
+  left: -180px;
+}
+
+.nebula2 {
+  width: 420px;
+  height: 420px;
+  background: rgba(255, 209, 102, 0.05);
+  bottom: -120px;
+  right: -120px;
+}
+
+/* ─── LAYOUT SPLIT ───────────────────────────────────────────── */
+.layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 40px;
+  gap: 64px;
+  align-items: center;
+}
+
+/* ─── HERO (desktop) ─────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.logoBrand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.logoMoon {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moon {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border-radius: 50%;
+  box-shadow: 7px 5px 0 0 #FFD166;
+  transform: rotate(-15deg);
+  filter: drop-shadow(0 0 10px rgba(247, 199, 98, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
+.moonGlow {
+  position: absolute;
+  inset: 0;
+  background: rgba(247, 199, 98, 0.2);
+  border-radius: 50%;
+  filter: blur(10px);
+  animation: pulseMoon 3s ease-in-out infinite;
+}
+
+@keyframes pulseMoon {
+  0%, 100% { transform: scale(1);   opacity: 0.5; }
+  50%       { transform: scale(1.4); opacity: 0.85; }
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  font-weight: 850;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.theo       { color: #FFD166; text-shadow: 0 0 20px rgba(247,199,98,0.5); }
+.noMundo    { color: #fff; }
+.daLua      { color: #8bf9ff; text-shadow: 0 0 12px rgba(139,249,255,0.45); }
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  background: rgba(139, 249, 255, 0.07);
+  border: 1px solid rgba(139, 249, 255, 0.2);
+  color: #8bf9ff;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(3rem, 5.5vw, 4.5rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin: 0;
+  gap: 0.05em;
+}
+
+.heroTheo {
+  color: #FFD166;
+  text-shadow:
+    0 0 40px rgba(255, 209, 102, 0.5),
+    0 0 80px rgba(255, 209, 102, 0.2);
+}
+
+.heroNoMundo {
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(255, 255, 255, 0.1);
+}
+
+.heroDaLua {
+  color: #8bf9ff;
+  text-shadow:
+    0 0 30px rgba(139, 249, 255, 0.6),
+    0 0 60px rgba(139, 249, 255, 0.2);
+}
+
+.heroSub {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 400px;
+  margin: 0;
+}
+
+.heroStats {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.statNum {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #FFD166;
+  text-shadow: 0 0 15px rgba(255, 209, 102, 0.3);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+}
+
+/* ─── AUTH CARD ──────────────────────────────────────────────── */
+.card {
+  background: rgba(18, 18, 46, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  padding: 2.8rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  backdrop-filter: blur(24px);
+  animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Linha de glow topo */
+.cardGlow {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #FFD166 50%, transparent);
+  box-shadow: 0 0 16px 1px rgba(255, 209, 102, 0.5);
+}
+
+/* ─── LOGO MOBILE ────────────────────────────────────────────── */
+.logoBrandMobile {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.02em;
+  text-decoration: none;
+  width: fit-content;
+  margin-bottom: 1.8rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* ─── CARD HEADER ────────────────────────────────────────────── */
+.cardHeader {
+  margin-bottom: 1.8rem;
+  text-align: center;
+}
+
+.cardTitle {
+  font-size: 1.65rem;
+  font-weight: 850;
+  color: #fff;
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.cardSub {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* ─── GOOGLE BUTTON ──────────────────────────────────────────── */
+.googleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  margin-bottom: 0;
+}
+
+.googleBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.googleBtn:active { transform: scale(0.98); }
+
+.googleBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── DIVIDER ────────────────────────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.4rem 0;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ─── FORM ───────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 0.9rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inputGroup label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 209, 102, 0.85);
+  letter-spacing: 0.04em;
+}
+
+/* ─── INPUT ──────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.9rem;
+  color: #f0f0f0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.input:focus {
+  border-color: rgba(75, 123, 237, 0.8);
+  background: rgba(75, 123, 237, 0.08);
+  box-shadow: 0 0 0 3px rgba(75, 123, 237, 0.18), 0 0 12px rgba(75, 123, 237, 0.12);
+}
+
+/* Estado de erro inline (senhas não coincidem) */
+.inputError {
+  border-color: rgba(239, 71, 111, 0.7) !important;
+  background: rgba(239, 71, 111, 0.06) !important;
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffb3c6;
+  margin-top: -0.2rem;
+}
+
+/* ─── PASSWORD FIELD ─────────────────────────────────────────── */
+.passwordLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgotLink {
+  background: none;
+  border: none;
+  color: rgba(139, 249, 255, 0.7);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.forgotLink:hover { color: #8bf9ff; }
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputPassword {
+  padding-right: 3rem;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+
+.eyeBtn:hover { color: rgba(255, 255, 255, 0.7); }
+
+/* ─── FEEDBACKS ──────────────────────────────────────────────── */
+.feedbackError,
+.feedbackSuccess {
+  border-radius: 0.9rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+  animation: fadeSlideIn 0.25s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.feedbackError {
+  background: rgba(239, 71, 111, 0.1);
+  border: 1px solid rgba(239, 71, 111, 0.3);
+  color: #ffb3c6;
+}
+
+.feedbackSuccess {
+  background: rgba(6, 214, 160, 0.1);
+  border: 1px solid rgba(6, 214, 160, 0.3);
+  color: #a3f4d9;
+}
+
+/* ─── PRIMARY CTA ────────────────────────────────────────────── */
+.primaryBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+  padding: 1.05rem 1.5rem;
+  background: #FFD166;
+  color: #0A0A1F;
+  border: none;
+  border-radius: 1.1rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: 0 6px 24px rgba(255, 209, 102, 0.35);
+}
+
+.primaryBtn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 10px 32px rgba(255, 209, 102, 0.5);
+}
+
+.primaryBtn:active:not(:disabled) {
+  transform: scale(0.977);
+  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.3);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── SPINNER ────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(10, 10, 31, 0.25);
+  border-top-color: #0A0A1F;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── SWITCH TEXT ────────────────────────────────────────────── */
+.switchText {
+  margin-top: 1.4rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.switchLink {
+  background: none;
+  border: none;
+  color: #FFD166;
+  font-family: 'Outfit', sans-serif;
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.switchLink:hover {
+  color: #ffe599;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+.pageFooter {
+  position: absolute;
+  bottom: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVIDADE MOBILE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 2rem 1.5rem;
+    min-height: unset;
+    gap: 0;
+    align-items: flex-start;
+    padding-top: 3rem;
+    padding-bottom: 4rem;
+  }
+
+  /* Oculta hero lateral no mobile */
+  .hero {
+    display: none;
+  }
+
+  .logoBrandMobile {
+    display: flex;
+    margin: 0 auto 1.8rem;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .card {
+    padding: 2rem 1.5rem;
+    border-radius: 1.5rem;
+    animation: none;
+  }
+
+  .cardTitle {
+    font-size: 1.4rem;
+  }
+
+  /* Inputs maiores (thumb-friendly) */
+  .input {
+    padding: 1rem 1rem;
+    font-size: 1rem;
+  }
+
+  .inputPassword {
+    padding-right: 3rem;
+  }
+
+  /* Botão grande */
+  .primaryBtn {
+    padding: 1.15rem;
+    font-size: 1.1rem;
+  }
+
+  .googleBtn {
+    padding: 1rem;
+  }
+
+  .inputGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pageFooter {
+    display: none;
+  }
+}

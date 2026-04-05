@@ -225,3 +225,38 @@
   0%, 100% { opacity: 0.8; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
 }
+
+/* === Estado de Concluído === */
+.completedBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #06d6a0 0%, #05a57c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 5px 12px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #002e21;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+  animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.completedIcon {
+  font-size: 0.85rem;
+}
+
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.card:hover .completedBadge {
+  filter: brightness(1.1);
+}

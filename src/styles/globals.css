@@ -77,6 +77,14 @@
 }
 
 /* --- Base --- */
+html, 
+body, 
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 html {
   font-size: 16px;
   scroll-behavior: smooth;
@@ -88,14 +96,11 @@ body {
   background-color: var(--color-void);
   color: var(--color-star);
   line-height: 1.6;
-  min-height: 100dvh;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }

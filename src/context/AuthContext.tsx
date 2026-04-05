@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Session, User } from '@supabase/supabase-js'
 
+import { TrophyService } from '@/services/trophyService'
+
 interface AuthContextType {
   session: Session | null
   user: User | null
@@ -33,6 +35,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Auto-trigger "First Steps" trophy
+  useEffect(() => {
+    if (user?.id) {
+       TrophyService.updateProgress(user.id, 'prog_first_action', 1, true)
+    }
+  }, [user])
 
   const signOut = async () => {
     await supabase.auth.signOut()

@@ -5,8 +5,11 @@ import { InvasoresEngine } from './engine';
 import { INVASORES_QUESTIONS } from './questions';
 import styles from './InvasoresGame.module.css';
 import { useSound } from '@/context/SoundContext';
+import { useAuth } from '@/context/AuthContext';
+import { TrophyService } from '@/services/trophyService';
 
 const InvasoresGame: React.FC = () => {
+  const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<InvasoresEngine | null>(null);
   const [gameState, setGameState] = useState<'START' | 'PLAYING' | 'PAUSED' | 'QUESTION_ACTIVE' | 'GAMEOVER'>('START');
@@ -27,8 +30,19 @@ const InvasoresGame: React.FC = () => {
       playSFX?.('fail');
     };
 
-    engine.onResult = (result) => {
+    engine.onResult = async (result) => {
+        if (!user) return;
         console.log('Game Result:', result);
+        
+        // 1. Caçador de Aliens (Incremental)
+        if (result.aliens_destroyed > 0) {
+          await TrophyService.updateProgress(user.id, 'game_kills_50', result.aliens_destroyed);
+        }
+
+        // 2. Sobrevivente Espacial (Meta: 60s)
+        if (result.duration >= 60) {
+          await TrophyService.updateProgress(user.id, 'game_survival_60s', result.duration, true);
+        }
     };
 
     // Responsive Canvas

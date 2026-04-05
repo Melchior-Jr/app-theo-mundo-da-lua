@@ -7,6 +7,8 @@ interface ChapterCardProps {
   featured?: boolean
   animationDelay?: number
   isLocked?: boolean // Prop para indicar se o capítulo está em desenvolvimento
+  isCompleted?: boolean // Prop para indicar se o capítulo foi concluído
+  onClick?: (e: React.MouseEvent) => void
 }
 
 /**
@@ -18,6 +20,8 @@ export default function ChapterCard({
   featured = false,
   animationDelay = 0,
   isLocked = false,
+  isCompleted = false,
+  onClick,
 }: ChapterCardProps) {
   const navigate = useNavigate()
 
@@ -30,13 +34,27 @@ export default function ChapterCard({
         '--chapter-color-dim': chapter.colorDim,
         '--chapter-color-bg': chapter.colorBg,
       } as React.CSSProperties}
-      onClick={() => navigate(chapter.path)}
+      onClick={(e) => {
+        if (onClick) {
+          onClick(e)
+          if (e.defaultPrevented) return
+        }
+        navigate(chapter.path)
+      }}
       role="button"
       tabIndex={0}
       aria-label={`Ir para ${chapter.title}`}
       onKeyDown={(e) => e.key === 'Enter' && navigate(chapter.path)}
       id={`chapter-card-${chapter.id}`}
     >
+      {/* Selo de Concluído */}
+      {isCompleted && (
+        <div className={styles.completedBadge} title="Capítulo Concluído">
+          <span className={styles.completedIcon}>✅</span>
+          <span>CONCLUÍDO</span>
+        </div>
+      )}
+
       {/* Selo de Bloqueado */}
       {isLocked && (
         <div className={styles.lockedBadge}>

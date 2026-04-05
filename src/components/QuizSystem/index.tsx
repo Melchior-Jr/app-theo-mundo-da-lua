@@ -11,6 +11,7 @@ import FeedbackLayer from './FeedbackLayer.tsx'
 import QuizResult from './QuizResult.tsx'
 import StarField from '@/components/StarField'
 import QuizStartScreen from './QuizStartScreen.tsx'
+import { TrophyService } from '@/services/trophyService'
 
 interface QuizSystemProps {
   level?: number
@@ -400,48 +401,32 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
       })
       if (gameErr) throw gameErr;
 
-      // 5. Trophy Unlocks
-      if (isChallengeFinished && currentChallenge === 3) {
-        const TROPHY_PRIMEIROS_PASSOS = 'c91a8deb-2b0f-492b-972b-497c8173f90c' // primeiros_passos
-        const TROPHY_MESTRE_QUIZ = 'f6ed3b81-3f4c-4f66-8ef7-2d786faa56e4' // mestre_do_quiz
-        let newTrophiesCount = 0
+      // 5. Trophy Progress & Unlocks
+      // Utilize existing isChallengeFinished and isPerfect from above scope (lines 356-357)
+      
+      // Update: First Correct (if correctCount > 0)
+      if (engine.correctCount > 0) {
+        await TrophyService.updateProgress(user.id, 'quiz_first_correct', 1, false)
+      }
 
-        // Check Primeiros Passos (Level 1 completed)
-        if (currentLevel === 1) {
-          const { data: hasT1 } = await supabase
-            .from('player_player_trophies') // Fix: table name might be player_trophies
-            .select('trophy_id')
-            .match({ player_id: user.id, trophy_id: TROPHY_PRIMEIROS_PASSOS })
-            .maybeSingle()
-          
-          if (!hasT1) {
-            await supabase.from('player_trophies').insert({ player_id: user.id, trophy_id: TROPHY_PRIMEIROS_PASSOS })
-            newTrophiesCount++
-            console.log('[QuizSystem] Novo Troféu: Primeiros Passos!');
-          }
-        }
+      // Update: Streak (if combo >= 5)
+      if (engine.maxCombo >= 5) {
+        await TrophyService.updateProgress(user.id, 'quiz_streak_5', 1, true)
+      }
 
-        // Check Mestre do Quiz (Level 5 completed)
-        if (currentLevel === 5) {
-          const { data: hasT2 } = await supabase
-            .from('player_trophies')
-            .select('trophy_id')
-            .match({ player_id: user.id, trophy_id: TROPHY_MESTRE_QUIZ })
-            .maybeSingle()
-          
-          if (!hasT2) {
-            await supabase.from('player_trophies').insert({ player_id: user.id, trophy_id: TROPHY_MESTRE_QUIZ })
-            newTrophiesCount++
-            console.log('[QuizSystem] Novo Troféu: Mestre do Quiz!');
-          }
-        }
+      // Update: Total Correct (Incremental)
+      if (engine.correctCount > 0) {
+        await TrophyService.updateProgress(user.id, 'quiz_total_20', engine.correctCount, false)
+      }
 
-        if (newTrophiesCount > 0) {
-          const currentTotalTrophies = currentGlobal?.total_trophies || 0
-          await supabase.from('player_global_stats')
-            .update({ total_trophies: currentTotalTrophies + newTrophiesCount })
-            .eq('player_id', user.id)
-        }
+      // Update: Perfect Score (meta: 1)
+      if (isPerfect) {
+        await TrophyService.updateProgress(user.id, 'quiz_perfect_score', 1, true)
+      }
+
+      // Check Progression: Level 5 Reached (Astrônomo Júnior)
+      if (currentLevel >= 5) {
+        await TrophyService.updateProgress(user.id, 'prog_level_5', 1, true)
       }
 
       console.log('[QuizSystem] Tudo gravado com sucesso! 🚀');

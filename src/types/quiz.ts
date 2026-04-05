@@ -50,4 +50,5 @@ export interface QuizState {
   lastAnswerCorrect: boolean | null
   correctCount: number
   hasMistakes: boolean
+  maxCombo: number
 }

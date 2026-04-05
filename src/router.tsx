@@ -1,15 +1,19 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import AppShell from '@/components/AppShell'
 
 // Lazy loading das páginas para melhor performance
-const HomePage = lazy(() => import('@/pages/HomePage'))
+// HomePage movida para o projeto Landing. Agora a raiz é apenas o App.
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const ChaptersPage = lazy(() => import('@/pages/ChaptersPage'))
 const ChapterPage = lazy(() => import('@/pages/ChapterPage'))
 const QuizPage = lazy(() => import('@/pages/QuizPage'))
 const GamesPage = lazy(() => import('@/pages/GamesPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const RankingPage = lazy(() => import('@/pages/RankingPage'))
 const InvasoresPage = lazy(() => import('@/pages/InvasoresPage'))
+const TrophyRoomPage = lazy(() => import('@/pages/TrophyRoom'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 // Fallback de carregamento simples para o Suspense
@@ -51,7 +55,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: <Navigate to="/login" replace />,
+      },
+      {
+        path: 'login',
+        element: <LoginPage />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPasswordPage />,
       },
       {
         path: 'capitulos',
@@ -74,8 +86,16 @@ export const router = createBrowserRouter([
         element: <ProfilePage />,
       },
       {
+        path: 'ranking',
+        element: <RankingPage />,
+      },
+      {
         path: 'jogos/invasores',
         element: <InvasoresPage />,
+      },
+      {
+        path: 'trofeus',
+        element: <TrophyRoomPage />,
       },
       {
         path: '*',

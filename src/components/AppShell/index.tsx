@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { NarrationSequenceProvider, useNarrationSequence } from '@/context/NarrationSequenceContext'
 import NarrationPlayer from '@/components/NarrationPlayer'
@@ -12,8 +12,31 @@ import styles from './AppShell.module.css'
  */
 export default function AppShell() {
   const location = useLocation()
-  const isLandingPage = location.pathname === '/'
-  const [isLoaded, setIsLoaded] = useState(isLandingPage)
+  
+  // List of routes that SHOULD show the splash (heavy pages: games/lessons)
+  const isHeavyPage = [
+    '/quiz',
+    '/jogos/invasores'
+  ].includes(location.pathname) || (location.pathname.startsWith('/capitulos/') && location.pathname !== '/capitulos')
+
+  // List of routes that NEVER show the splash (hubs/public)
+  const isSimplePage = ['/', '/login', '/reset-password', '/jogos', '/ranking', '/perfil', '/capitulos', '/trofeus'].includes(location.pathname)
+
+  const [isLoaded, setIsLoaded] = useState(isSimplePage && !isHeavyPage)
+
+  // Auto-load if we are on a simple page
+  useEffect(() => {
+    if (isSimplePage) {
+      setIsLoaded(true)
+    } else if (isHeavyPage) {
+       // Reset loaded state when entering a heavy page to trigger splash again if desired
+       // OR keep it true if already loaded once? User said "when entering", so let's reset it.
+       // Actually, we probably only want it on initial entry to the app or direct navigation.
+       // But if they navigation from /jogos to /quiz, it should show.
+       // To trigger splash again, we flip isLoaded back to false.
+       setIsLoaded(false)
+    }
+  }, [location.pathname, isHeavyPage, isSimplePage])
 
   // Desbloqueia o áudio — chamado pelo SplashLoader ao decolar
   const handleAppStart = () => {
@@ -26,11 +49,18 @@ export default function AppShell() {
     setIsLoaded(true)
   }
 
+  // Show splash if not loaded AND it's a heavy page
+  const showSplash = !isLoaded && isHeavyPage
+
   return (
     <>
-      {!isLoaded && !isLandingPage && <SplashLoader onReady={handleAppStart} />}
+      {showSplash && <SplashLoader onReady={handleAppStart} />}
       <NarrationSequenceProvider>
-        <div style={{ visibility: (isLoaded || isLandingPage) ? 'visible' : 'hidden' }}>
+        <div style={{ 
+          visibility: (isLoaded || isSimplePage) ? 'visible' : 'hidden',
+          height: '100%',
+          width: '100%'
+        }}>
           <AppShellContent />
         </div>
       </NarrationSequenceProvider>
@@ -41,7 +71,7 @@ export default function AppShell() {
 function AppShellContent() {
   const { activeNarration, themeColor, onNarrationFinish, funFact, canStartLocal } = useNarrationSequence()
   const location = useLocation()
-  const isHome = location.pathname === '/'
+  const isHomeOrLogin = ['/', '/login', '/reset-password'].includes(location.pathname)
   
   const isEarthIntro = location.pathname.includes('movimentos-da-terra') && !canStartLocal
 
@@ -51,8 +81,8 @@ function AppShellContent() {
         <Outlet />
       </main>
 
-      {/* Théo Flutuante — Guia Global para todas as páginas exceto a Home */}
-      {!isHome && activeNarration && (
+      {/* Théo Flutuante — Guia Global para todas as páginas exceto a Home/Login */}
+      {!isHomeOrLogin && activeNarration && (
         <NarrationPlayer 
           narration={activeNarration} 
           curiosity={funFact || undefined}

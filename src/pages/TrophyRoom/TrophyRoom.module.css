@@ -1,0 +1,359 @@
+/* ═══════════════════════════════════════════════════════════════
+   TrophyRoom.module.css — Sala de Troféus
+   Design System: Neon Sideral
+   Premium Aesthetic: Glassmorphism, Dark Mode, Vibrant Colors
+═══════════════════════════════════════════════════════════════ */
+
+/* ─── BASE ───────────────────────────────────────────────────── */
+.page {
+  height: 100%;
+  width: 100%;
+  background: radial-gradient(circle at 70% 20%, #0d1b3e 0%, #060c1a 55%, #02040a 100%);
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ─── NEBULAE ────────────────────────────────────────────────── */
+.nebula1, .nebula2 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+.nebula1 {
+  width: 600px; height: 600px;
+  background: rgba(75, 123, 237, 0.06);
+  top: -200px; left: -200px;
+}
+.nebula2 {
+  width: 450px; height: 450px;
+  background: rgba(255, 209, 102, 0.05);
+  bottom: -150px; right: -150px;
+}
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 12, 26, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 0.87rem;
+  font-weight: 600;
+  transition: color 0.2s;
+  width: 140px;
+}
+.backBtn:hover { color: #8BF9FF; }
+
+.navTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.navIcon { color: #FFD166; filter: drop-shadow(0 0 8px rgba(255,209,102,0.5)); }
+
+/* ─── CONTENT ────────────────────────────────────────────────── */
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 8rem;
+}
+
+/* ─── HERO ───────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  margin-bottom: 4rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.25);
+  color: #FFD166;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+
+.heroTitle {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0 0 1rem;
+}
+
+.heroTitle span {
+  color: #FFD166;
+  text-shadow: 0 0 50px rgba(255,209,102,0.45);
+}
+
+.heroSub {
+  color: rgba(255,255,255,0.45);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0 0 2.5rem;
+}
+
+/* ─── PROGRESS BAR ────────────────────────────────────────────── */
+.progressContainer {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 1.2rem 1.8rem;
+  border-radius: 1.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.progressText {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 0.8rem;
+}
+
+.progressBar {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4b7bed, #FFD166, #8BF9FF);
+  background-size: 300% 100%;
+  border-radius: 10px;
+  transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: progressGlow 4s linear infinite;
+}
+
+@keyframes progressGlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* ─── TABS ────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 3rem;
+  background: rgba(18, 18, 46, 0.4);
+  padding: 0.4rem;
+  border-radius: 50px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+}
+
+.tabBtn {
+  padding: 0.7rem 1.6rem;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.87rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.tabBtn:hover { color: #fff; }
+
+.tabActive {
+  background: #FFD166;
+  color: #0A0F1E;
+  box-shadow: 0 4px 15px rgba(255,209,102,0.3);
+}
+
+/* ─── GRID ────────────────────────────────────────────────────── */
+.trophyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.trophyCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.8rem;
+  padding: 2rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: trophyIn 0.5s ease backwards;
+}
+
+@keyframes trophyIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.trophyCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-8px);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+/* Locked state */
+.locked {
+  filter: grayscale(0.8) opacity(0.65);
+  background: rgba(255, 255, 255, 0.015);
+}
+.locked:hover { transform: translateY(-4px); filter: grayscale(0.6) opacity(0.8); }
+
+.trophyIconWrap {
+  width: 70px;
+  height: 70px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.trophyCard:not(.locked) .trophyIconWrap {
+  background: color-mix(in srgb, var(--c) 15%, rgba(0,0,0,0.3));
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c) 20%, transparent);
+}
+
+.itemIcon { color: #fff; opacity: 0.85; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+.trophyCard:not(.locked) .itemIcon { color: var(--c); filter: drop-shadow(0 0 12px var(--c)); opacity: 1; }
+
+.lockOverlay {
+  position: absolute;
+  inset: -2px;
+  background: rgba(2, 4, 15, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.trophyBody { flex: 1; display: flex; flex-direction: column; z-index: 1; }
+
+.trophyHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; }
+.trophyTitle  { font-size: 1.2rem; font-weight: 850; color: #fff; margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
+.unlockedIcon { color: #06D6A0; filter: drop-shadow(0 0 8px rgba(6,214,160,0.5)); }
+
+.trophyDesc {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+}
+
+.trophyRequirement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  color: #8BF9FF;
+  border: 1px solid rgba(139,249,255,0.1);
+  margin-bottom: 1.2rem;
+}
+
+.trophyFooter { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+.rewardTag {
+  background: #FFD166; color: #0A0F1E;
+  font-size: 0.68rem; font-weight: 900;
+  padding: 3px 10px; border-radius: 50px;
+  text-transform: uppercase;
+}
+.categoryTag {
+  font-size: 0.68rem; font-weight: 800;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Glass Reflection */
+.glassReflection {
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.03), transparent);
+  transform: rotate(35deg);
+  pointer-events: none;
+}
+
+/* ─── LOADING ────────────────────────────────────────────────── */
+.loading { padding: 5rem 0; text-align: center; color: rgba(255,255,255,0.3); font-size: 1rem; }
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+.footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 3rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.2);
+}
+.footerStatus { display: flex; align-items: center; gap: 8px; }
+.statusDot { width: 7px; height: 7px; background: #06D6A0; border-radius: 50%; box-shadow: 0 0 10px #06D6A0; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav { padding: 1rem; }
+  .backBtn span { display: none; }
+  .content { padding-top: 1.5rem; }
+  .heroTitle { font-size: 2.8rem; }
+  .tabs { flex-direction: row; gap: 0.4rem; padding: 0.3rem; }
+  .tabBtn { padding: 0.6rem 0.8rem; font-size: 0.72rem; }
+  .trophyGrid { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; text-align: center; gap: 0.5rem; }
+}
