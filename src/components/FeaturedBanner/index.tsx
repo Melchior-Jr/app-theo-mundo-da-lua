@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Play } from 'lucide-react'
 import styles from './FeaturedBanner.module.css'
 
 interface FeaturedBannerProps {
