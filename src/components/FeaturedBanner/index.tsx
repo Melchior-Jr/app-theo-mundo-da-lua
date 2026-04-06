@@ -13,6 +13,7 @@ interface FeaturedBannerProps {
   onSecondaryClick?: () => void
   onCtaClick?: () => void
   Art?: React.ElementType
+  CtaIcon?: React.ElementType
   children?: React.ReactNode
 }
 
@@ -27,6 +28,7 @@ export default function FeaturedBanner({
   onSecondaryClick,
   onCtaClick,
   Art,
+  CtaIcon,
   children
 }: FeaturedBannerProps) {
   return (
@@ -44,7 +46,10 @@ export default function FeaturedBanner({
         
         <div className={styles.actions}>
           <Link to={ctaPath} className={styles.cta} onClick={onCtaClick}>
-             {ctaText} <div className={styles.ctaIcon}>✨</div>
+            {ctaText} 
+            <div className={styles.ctaIcon}>
+              {CtaIcon ? <CtaIcon size={18} /> : '✨'}
+            </div>
           </Link>
           {secondaryText && (
             <button className={styles.secondary} onClick={onSecondaryClick}>

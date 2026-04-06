@@ -614,6 +614,13 @@
   margin: 0;
 }
 
+.shareActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
 .modalContent {
   color: #ccd6f6;
   line-height: 1.6;

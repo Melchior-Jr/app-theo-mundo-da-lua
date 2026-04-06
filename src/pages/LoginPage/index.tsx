@@ -189,12 +189,12 @@ export default function LoginPage() {
 
           <div className={styles.heroStats}>
             <div className={styles.stat}>
-              <span className={styles.statNum}>8+</span>
-              <span className={styles.statLabel}>Capítulos</span>
+              <span className={styles.statNum}>4+</span>
+              <span className={styles.statLabel}>Mini-Games</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statNum}>100+</span>
-              <span className={styles.statLabel}>Descobertas</span>
+              <span className={styles.statLabel}>Perguntas no Quiz</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statNum}>3D</span>

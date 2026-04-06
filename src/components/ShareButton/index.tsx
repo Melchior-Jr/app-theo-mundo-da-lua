@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Share2, Check, ExternalLink } from 'lucide-react'
+import { getProductionUrl, copyToClipboardFallback } from '@/utils/shareUtils'
 import styles from './ShareButton.module.css'
 
 interface ShareButtonProps {
@@ -10,38 +11,49 @@ interface ShareButtonProps {
   onShare?: () => void
 }
 
-export default function ShareButton({ title, text, url = window.location.href, className = '', onShare }: ShareButtonProps) {
+export default function ShareButton({ title, text, url, className = '', onShare }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const handleShare = async () => {
-    const shareData = {
-      title,
-      text: `${text}\n\nEspia só o que aprendi com o Théo:`,
-      url
-    }
+    // Força o domínio de produção e limpa duplicidades
+    const productionUrl = getProductionUrl(url);
 
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData)
+    const shareText = `${text}\n\nEspia só o que aprendi com o Théo:\n${productionUrl}`
+    
+    try {
+      if (navigator.share) {
+        // Envia campos separados para a API cuidar da formatação sem duplicidade
+        await navigator.share({
+          title,
+          text: text, // Apenas o texto
+          url: productionUrl // O link vai aqui
+        })
         if (onShare) onShare()
-      } catch (err) {
-        console.log('Share failed:', err)
+      } else {
+        // Fallback: Clipboard nativo (requer HTTPS)
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareText)
+          handleCopySuccess()
+        } else {
+          // Fallback final para ambientes não-seguros (HTTP local no celular)
+          const success = copyToClipboardFallback(shareText)
+          if (success) handleCopySuccess()
+        }
       }
-    } else {
-      // Fallback: Copy to clipboard
-      try {
-        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`)
-        setCopied(true)
-        if (onShare) onShare()
-        setTimeout(() => setCopied(false), 3000)
-      } catch (err) {
-        console.error('Clipboard failed', err)
-      }
+    } catch (err) {
+      console.log('Share error:', err)
     }
   }
 
+  const handleCopySuccess = () => {
+    setCopied(true)
+    if (onShare) onShare()
+    setTimeout(() => setCopied(false), 3000)
+  }
+
   const shareOnWhatsApp = () => {
-    const encodedText = encodeURIComponent(`${title}\n\n${text}\n\n${url}`)
+    const productionUrl = getProductionUrl(url);
+    const encodedText = encodeURIComponent(`${title}\n\n${text}\n\nConfira aqui: ${productionUrl}`)
     window.open(`https://wa.me/?text=${encodedText}`, '_blank')
     if (onShare) onShare()
   }

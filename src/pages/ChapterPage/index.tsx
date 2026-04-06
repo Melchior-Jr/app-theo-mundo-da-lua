@@ -7,6 +7,7 @@ import { getChapterById, getAdjacentChapters } from '@/data/chapters'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { useProgress } from '@/hooks/useProgress'
+import { useAuth } from '@/context/AuthContext'
 import SolarSystemChapter from './SolarSystemChapter'
 import EarthMotionsChapter from './EarthMotionsChapter'
 import ConstellationsChapter from './ConstellationsChapter'
@@ -16,6 +17,7 @@ import styles from './ChapterPage.module.css'
 export default function ChapterPage() {
   const { chapterId, subStep: urlSubStep } = useParams<{ chapterId: string; subStep?: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const chapter = getChapterById(chapterId ?? '')
   const { previous, next } = chapter
@@ -48,6 +50,11 @@ export default function ChapterPage() {
   }, [chapterId, urlSubStep, progress, loadingProgress])
 
   const handlePrevious = () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
     if (chapterId === 'sistema-solar' && subStep === 'explorer') {
       navigate(`/capitulos/sistema-solar/overview`)
       return
@@ -60,6 +67,11 @@ export default function ChapterPage() {
   }
 
   const handleNext = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
     if (chapterId === 'sistema-solar' && subStep === 'overview') {
       await saveProgress(chapterId, 'explorer')
       navigate(`/capitulos/sistema-solar/explorer`)

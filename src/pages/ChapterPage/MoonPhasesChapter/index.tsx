@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { useProgress } from '@/hooks/useProgress'
 import FloatingTooltip from '@/components/FloatingTooltip'
-import ShareButton from '@/components/ShareButton'
+import KnowledgeShare from '@/components/KnowledgeShare'
 import styles from './MoonPhasesChapter.module.css'
 
 type MoonPhaseId = 'nova' | 'quarto-crescente' | 'cheia' | 'quarto-minguante'
@@ -62,6 +62,7 @@ const PHASES: MoonPhaseData[] = [
 ]
 
 export default function MoonPhasesChapter() {
+  const dashboardRef = useRef<HTMLDivElement>(null)
   const [hasPlayedIntro, setHasPlayedIntro] = useState(false)
   const [phaseIdx, setPhaseIdx] = useState(0)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
@@ -121,15 +122,18 @@ export default function MoonPhasesChapter() {
   return (
     <div className={styles.chapterContainer}>
       {/* ESPAÇO DE RENDERIZAÇÃO 3D E ANIMAÇÕES */}
-      <div className={styles.dashboard}>
+      <div className={styles.dashboard} ref={dashboardRef}>
         <header className={styles.infoHeader}>
           <div className={styles.headerTop}>
             <div className={styles.badge}>Destaque da Noite</div>
-            <ShareButton 
-              title={`Aprendendo as Fases da Lua com o Théo! ✨🌕`}
-              text={`Olha só que incrível a fase ${currentPhase.name} que eu aprendi agora no Théo no Mundo da Lua! 🌑🌓🌕🌗`}
-              onShare={() => saveExploration(`share-moon-phase-${currentPhase.id}`, 50)}
-            />
+              <div className={styles.shareActions}>
+                <KnowledgeShare 
+                  title={`Aprendendo as Fases da Lua com o Théo! ✨🌕`}
+                  text={`Olha só que incrível a fase ${currentPhase.name} que eu aprendi agora no Théo no Mundo da Lua! 🌑🌓🌕🌗`}
+                  themeColor="#ffea00"
+                  onShare={() => saveExploration(`share-moon-${currentPhase.id}`, 50)}
+                />
+              </div>
           </div>
           <h2 className={styles.title}>{currentPhase.name}</h2>
           <p className={styles.description}>{currentPhase.description}</p>

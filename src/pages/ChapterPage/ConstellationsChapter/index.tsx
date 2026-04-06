@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { useProgress } from '@/hooks/useProgress'
-import { Star } from 'lucide-react'
-import ShareButton from '@/components/ShareButton'
+import KnowledgeShare from '@/components/KnowledgeShare'
 import styles from './ConstellationsChapter.module.css'
 
 type ConstellationId = 
@@ -242,6 +241,7 @@ const INTRO_COLORS: Record<string, string> = {
 }
 
 export default function ConstellationsChapter() {
+  const constellationRef = useRef<HTMLDivElement>(null)
   const [selectedId, setSelectedId] = useState<ConstellationId | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [activeStatDetail, setActiveStatDetail] = useState<{ label: string; value: string } | null>(null)
@@ -420,17 +420,20 @@ export default function ConstellationsChapter() {
           )}
         </div>
         {/* Painel de Informações */}
-        <div className={styles.infoPanel}>
+        <div className={styles.infoPanel} ref={constellationRef}>
           {activeConstellation ? (
             <>
               <header className={styles.infoHeader}>
                 <div className={styles.headerTop}>
                   <div className={styles.badge}>Constelação</div>
-                  <ShareButton 
-                    title={`Mapeei a Constelação de ${activeConstellation.name}! ✨🌌`}
-                    text={`Acabei de descobrir a história da constelação de ${activeConstellation.name} no Théo no Mundo da Lua! O céu está ficando incrível!`}
-                    onShare={() => saveExploration(`share-constellation-${selectedId}`, 50)}
-                  />
+                  <div className={styles.shareActions}>
+                    <KnowledgeShare 
+                      title={`Descobrindo as Estrelas com o Théo! ✨⭐`}
+                      text={`Olha que legal a constelação de ${activeConstellation.name} que eu descobri hoje! 🔭✨`}
+                      themeColor={activeConstellation.color}
+                      onShare={() => saveExploration(`share-constellation-${activeConstellation.id}`, 75)}
+                    />
+                  </div>
                 </div>
                 <h2 className={styles.title}>{activeConstellation.name}</h2>
                 {activeConstellation.shortName && (

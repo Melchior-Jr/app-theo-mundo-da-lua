@@ -71,6 +71,12 @@
   width: 100%;
 }
 
+.shareActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .planetBadge {
   align-self: flex-start;
 }

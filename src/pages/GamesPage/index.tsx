@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, Bell, Settings } from 'lucide-react'
+import { Menu, X, Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, Bell, Settings, GraduationCap } from 'lucide-react'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
 import StarField from '@/components/StarField'
 import { useAuth } from '@/context/AuthContext'
@@ -83,13 +83,25 @@ function ProgressArt() {
   return (
     <div className={styles.journeyGallery}>
       <div className={styles.nebulaCloud} />
-      <div className={styles.starClusterSmall} />
 
       <div className={styles.mainGroup}>
-        <div className={styles.heroPlanetEarth} />
-        <div className={styles.heroSaturn} />
-        <div className={styles.heroMoon} />
-        <div className={styles.heroRocketShip} />
+        <div className={styles.artSun}>
+          <span className={styles.emojiIcon} aria-hidden="true">☀️</span>
+        </div>
+        <div className={styles.artEarth}>
+          <span className={styles.emojiIcon} aria-hidden="true">🌍</span>
+        </div>
+        <div className={styles.artMoon}>
+          <span className={styles.emojiIcon} aria-hidden="true">🌙</span>
+        </div>
+        <div className={styles.artRocket}>
+          <span className={styles.emojiIcon} aria-hidden="true">🚀</span>
+        </div>
+        <div className={styles.artStars}>
+          <span className={`${styles.emojiIcon} ${styles.star1}`} aria-hidden="true">⭐</span>
+          <span className={`${styles.emojiIcon} ${styles.star2}`} aria-hidden="true">✨</span>
+          <span className={`${styles.emojiIcon} ${styles.star3}`} aria-hidden="true">⭐</span>
+        </div>
       </div>
     </div>
   )
@@ -262,7 +274,7 @@ export default function GamesPage() {
       )
       .on(
         'postgres_changes' as any,
-        { event: 'UPDATE', scheme: 'public', table: 'quiz_challenges', filter: `challenger_id=eq.${user.id}` },
+        { event: '*', scheme: 'public', table: 'quiz_challenges', filter: `challenger_id=eq.${user.id}` },
         () => NotificationService.countUnread(user.id).then(setUnreadCount)
       )
       .subscribe()
@@ -532,6 +544,7 @@ export default function GamesPage() {
           subtitle="Embarque na aventura de Théo e descubra os segredos do universo em 4 capítulos épicos!"
           ctaText="IR PARA AULA"
           ctaPath="/capitulos"
+          CtaIcon={GraduationCap}
           Art={ProgressArt}
           onCtaClick={() => playSFX('click')}
         >
@@ -686,9 +699,8 @@ export default function GamesPage() {
               </div>
               <p className={styles.shareText}>Ajude o Théo a levar o conhecimento para mais crianças!</p>
               <ShareButton 
-                title="Explorando o Espaço com o Théo! 🚀"
-                text="Vem aprender sobre o Universo de um jeito super divertido no Théo no Mundo da Lua! Ganhei muitos pontos explorando os planetas!"
-                url="https://theonomundodalua.com"
+                title="Venha explorar o Universo com o Théo!"
+                text="O Théo no Mundo da Lua é incrível para aprender sobre o espaço! 🚀🌕"
                 onShare={() => saveExploration('share-platform-bonus', 50)}
               />
             </div>

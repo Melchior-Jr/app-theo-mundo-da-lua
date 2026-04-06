@@ -5,7 +5,7 @@ import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { useProgress } from '@/hooks/useProgress'
 import TheoCharacter from '@/components/TheoCharacter'
 import PlanetViewer3D from '@/components/PlanetViewer3D'
-import ShareButton from '@/components/ShareButton'
+import KnowledgeShare from '@/components/KnowledgeShare'
 import styles from './EarthMotionsChapter.module.css'
 
 interface MotionData {
@@ -21,6 +21,7 @@ interface MotionData {
 export default function EarthMotionsChapter() {
   // Estado inicial: nenhum movimento selecionado (Terra parada para a Intro)
   const [mode, setMode] = useState<'rotacao' | 'translaçao' | null>(null)
+  const dashboardRef = useRef<HTMLDivElement>(null)
   
   // Estado de controle de velocidade e toque
   const [rotationSpeed, setRotationSpeed] = useState(40)
@@ -243,7 +244,7 @@ export default function EarthMotionsChapter() {
         </div>
       </div>
 
-      <div className={styles.dashboard}>
+      <div className={styles.dashboard} ref={dashboardRef}>
         {/* OVERLAY DO THÉO CENTRALIZADO — visível apenas durante a intro */}
         <div className={`${styles.theoIntroOverlay} ${!mode ? styles.theoIntroVisible : styles.theoIntroHidden}`}>
           {/* Balão de Fala (Speech Bubble) */}
@@ -469,11 +470,14 @@ export default function EarthMotionsChapter() {
             <header className={styles.infoHeader}>
               <h2 className={styles.title}>{currentData.title}</h2>
               <p className={styles.description}>{currentData.description}</p>
-              <ShareButton 
-                title={`Aprendendo sobre ${currentData.title} com o Théo! 🚀`}
-                text={`Dá uma olhada no movimento de ${currentData.title} da Terra que eu acabei de aprender no Théo no Mundo da Lua!`}
-                onShare={() => saveExploration(`share-chapter-${mode}`, 50)}
-              />
+              <div className={styles.shareActions}>
+                <KnowledgeShare 
+                  title={`Aprendendo sobre ${currentData.title} com o Théo! 🚀`}
+                  text={`Dá uma olhada no movimento de ${currentData.title} da Terra que eu acabei de aprender no Théo no Mundo da Lua!`}
+                  themeColor="var(--theme-color)"
+                  onShare={() => saveExploration(`share-motion-${mode}`, 50)}
+                />
+              </div>
             </header>
 
             <div className={styles.metaGrid}>

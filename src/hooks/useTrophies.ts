@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { usePlayer } from '@/context/PlayerContext'
+import { useAchievement } from '@/context/AchievementContext'
 import { TROPHIES } from '@/data/trophies'
 
 export interface UserTrophy {
@@ -12,27 +14,13 @@ export interface UserTrophy {
 
 export function useTrophies() {
   const { user } = useAuth()
-  const [userTrophies, setUserTrophies] = useState<UserTrophy[]>([])
-  const [loading, setLoading] = useState(false)
+  const { userTrophies, loading, refreshData } = usePlayer()
+  const { showAchievement } = useAchievement()
 
   // Busca o progresso do usuário no banco
   const fetchProgress = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('user_trophies')
-        .select('*')
-        .eq('user_id', user.id)
-
-      if (error) throw error
-      setUserTrophies(data || [])
-    } catch (err) {
-      console.error('Error fetching trophies:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
+    await refreshData()
+  }, [refreshData])
 
   // Atualiza ou incrementa o progresso de um troféu
   const updateTrophyProgress = useCallback(async (trophyId: string, amountOrValue: number, isDirectValue = false) => {
@@ -85,8 +73,15 @@ export function useTrophies() {
           })
           .eq('player_id', user.id)
 
-        // TODO: Disparar evento global de UI para notificação (toast/modal)
-        console.log(`🏆 Troféu desbloqueado: ${trophyDef.name}! +${trophyDef.rewardXp} XP`)
+        // Disparar o modal visual de conquista
+        showAchievement({
+          id: trophyId,
+          type: 'trophy',
+          title: 'Troféu Desbloqueado! 🏆',
+          description: trophyDef.name,
+          icon: trophyDef.icon,
+          xpBonus: trophyDef.rewardXp
+        })
       }
 
       // Atualiza estado local

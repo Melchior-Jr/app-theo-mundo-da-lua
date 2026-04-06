@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
+import StarField from '@/components/StarField'
 import TheoCharacter from '@/components/TheoCharacter'
 import styles from './SplashLoader.module.css'
 
 interface Props {
   onReady: () => void
+  loading?: boolean
 }
 
 /**
  * SplashLoader — Tela de carregamento Premium unificada.
  * Combina o personagem Théo com HUD Sci-Fi e animações espaciais.
  */
-export default function SplashLoader({ onReady }: Props) {
+export default function SplashLoader({ onReady, loading }: Props) {
   const [progress, setProgress] = useState(0)
   const [isFinishing, setIsFinishing] = useState(false)
   const [canStart, setCanStart] = useState(false)
@@ -41,19 +43,8 @@ export default function SplashLoader({ onReady }: Props) {
 
   return (
     <div className={`${styles.overlay} ${isFinishing ? styles.launching : ''}`}>
-      {/* HUD & Background */}
-      <div className={styles.gridOverlay} />
-
-      <div className={styles.starField}>
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className={styles.star} style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            opacity: 0.2 + Math.random() * 0.8
-          } as React.CSSProperties} />
-        ))}
-      </div>
+      {/* Fundo padrão da aplicação */}
+      <StarField />
 
       <div className={styles.content}>
         {/* Personagem Théo & Orbiting Rocket */}
@@ -90,11 +81,11 @@ export default function SplashLoader({ onReady }: Props) {
 
         {/* Botão de Início (Garante interação do usuário para o áudio) */}
         <button 
-          className={`${styles.startButton} ${canStart ? styles.active : ''}`}
+          className={`${styles.startButton} ${canStart && !loading ? styles.active : ''}`}
           onClick={handleStart}
-          disabled={!canStart}
+          disabled={!canStart || loading}
         >
-          {canStart ? 'INICIAR MISSÃO!' : `CARREGANDO ${Math.floor(progress)}%`}
+          {loading ? 'SINCRONIZANDO DADOS...' : canStart ? 'INICIAR MISSÃO!' : `CARREGANDO ${Math.floor(progress)}%`}
         </button>
       </div>
     </div>

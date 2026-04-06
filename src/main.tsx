@@ -4,6 +4,8 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from '@/router'
 import { AuthProvider } from '@/context/AuthContext'
 import { SoundProvider } from '@/context/SoundContext'
+import { AchievementProvider } from '@/context/AchievementContext'
+import { PlayerProvider } from '@/context/PlayerContext'
 import '@google/model-viewer'
 import '@/styles/globals.css'
 
@@ -11,7 +13,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
       <SoundProvider>
-        <RouterProvider router={router} />
+        <AchievementProvider>
+          <PlayerProvider>
+            <RouterProvider router={router} />
+          </PlayerProvider>
+        </AchievementProvider>
       </SoundProvider>
     </AuthProvider>
   </React.StrictMode>

@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useRef } from 'react'
+import KnowledgeShare from '@/components/KnowledgeShare'
 import styles from './FloatingTooltip.module.css'
 
 interface FloatingTooltipProps {
@@ -30,6 +31,7 @@ export default function FloatingTooltip({
   color = '#FFD166',
   isHotspot = false
 }: FloatingTooltipProps) {
+  const tooltipRef = useRef<HTMLDivElement>(null)
   if (!isVisible) return null
 
   return (
@@ -42,11 +44,19 @@ export default function FloatingTooltip({
         '--accent-color': color 
       } as React.CSSProperties}
     >
-      <div className={styles.tooltipContainer}>
+      <div className={styles.tooltipContainer} ref={tooltipRef}>
         <div className={styles.tooltipHeader}>
           <span className={styles.tooltipIcon}>✨</span>
           <h4 className={styles.tooltipTitle}>{title}</h4>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">✕</button>
+          <div className={styles.headerActions} data-html2canvas-ignore>
+            <KnowledgeShare 
+              title={`Curiosidade Espacial: ${title}! ✨`}
+              text={`Olha que legal isso que eu descobri: ${content}`}
+              themeColor={color}
+              size={18}
+            />
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">✕</button>
+          </div>
         </div>
         <div className={styles.tooltipBody}>
           <p className={styles.tooltipText}>{content}</p>

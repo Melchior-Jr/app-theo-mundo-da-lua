@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { usePlayer } from '@/context/PlayerContext'
 import { SettingsModal } from '@/components/SettingsModal'
 import { useSound } from '@/context/SoundContext'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
@@ -21,11 +22,15 @@ export default function ProfilePage() {
   const { session, user, signOut } = useAuth()
   const navigate = useNavigate()
   
-  const [player, setPlayer] = useState<any>(null)
-  const [globalStats, setGlobalStats] = useState<any>(null)
-  const [userTrophies, setUserTrophies] = useState<any[]>([])
-  const [gameStats, setGameStats] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { 
+    playerData: player, 
+    playerStats: globalStats, 
+    userTrophies, 
+    gameStats, 
+    loading, 
+    refreshData 
+  } = usePlayer()
+  
   const [uploading, setUploading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -188,57 +193,31 @@ export default function ProfilePage() {
   }, [session, user])
 
   const fetchProfileData = async () => {
-    setLoading(true)
-    try {
-      // 1. Fetch Player Data
-      const { data: profile } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', user?.id)
-        .single()
-      
-      if (profile) {
-        setPlayer(profile)
-        setFormData({
-          full_name: profile.full_name || '',
-          username: profile.username || '',
-          school: profile.school || '',
-          class_name: profile.class_name || '',
-          birth_date: profile.birth_date || ''
-        })
-      }
-
-      // 2. Fetch Global Stats
-      const { data: stats } = await supabase
-        .from('player_global_stats')
-        .select('*')
-        .eq('player_id', user?.id)
-        .single()
-      
-      if (stats) setGlobalStats(stats)
-
-      // 3. Fetch Trophies Progress
-      const { data: ut } = await supabase
-        .from('user_trophies')
-        .select('*')
-        .eq('user_id', user?.id)
-      
-      if (ut) setUserTrophies(ut)
-
-      // 4. Fetch Game Performance
-      const { data: gs } = await supabase
-        .from('player_game_stats')
-        .select('*, games(*)')
-        .eq('player_id', user?.id)
-      
-      if (gs) setGameStats(gs)
-
-    } catch (err) {
-      console.error('Erro ao sincronizar perfil:', err)
-    } finally {
-      setLoading(false)
+    // Agora os dados vêm do contexto, mas mantemos a função para compatibilidade
+    // e para sincronizar o form ao montar.
+    if (player) {
+      setFormData({
+        full_name: player.full_name || '',
+        username: player.username || '',
+        school: player.school || '',
+        class_name: player.class_name || '',
+        birth_date: player.birth_date || ''
+      })
     }
   }
+
+  // Sincronizar form quando playerData estiver pronto no contexto
+  useEffect(() => {
+    if (player) {
+      setFormData({
+        full_name: player.full_name || '',
+        username: player.username || '',
+        school: player.school || '',
+        class_name: player.class_name || '',
+        birth_date: player.birth_date || ''
+      })
+    }
+  }, [player])
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -260,7 +239,7 @@ export default function ProfilePage() {
       if (error) throw error
 
       setMessage({ type: 'success', text: 'Dados sincronizados com sucesso! 🚀' })
-      fetchProfileData()
+      refreshData()
       setTimeout(() => {
         setIsEditing(false)
         setMessage({ type: '', text: '' })
@@ -294,7 +273,7 @@ export default function ProfilePage() {
         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', user?.id)
 
-      fetchProfileData()
+      refreshData()
       setMessage({ type: 'success', text: 'Seu visual de astronauta foi atualizado!' })
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     } catch (err: any) {

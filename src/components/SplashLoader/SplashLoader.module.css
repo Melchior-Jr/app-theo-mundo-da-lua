@@ -5,7 +5,12 @@
   align-items: center;
   justify-content: center;
   z-index: 9999; /* Acima de TUDO */
-  background: radial-gradient(circle at 50% 50%, #0D1B2A 0%, #01010A 100%);
+  background: linear-gradient(
+    175deg,
+    #050810 0%,
+    #0A0E1A 40%,
+    #0d1525 100%
+  );
   color: #fff;
   transition: all 1s cubic-bezier(0.8, 0, 0.2, 1);
   overflow: hidden;
@@ -19,17 +24,7 @@
   pointer-events: none;
 }
 
-.gridOverlay {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(139, 249, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 249, 255, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  background-position: center center;
-  pointer-events: none;
-  z-index: 1;
-}
+/* Conteúdo Central */
 
 .content {
   position: relative;
@@ -229,27 +224,7 @@
   background: rgba(75, 123, 237, 0.3);
 }
 
-/* Estrelas Fundo */
-.starField {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #fff;
-  animation: twinkle 4s infinite;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.5); }
-}
+/* Transição de Fechamento */
 
 
 /* Transição de Fechamento */

@@ -4,9 +4,8 @@ import { Settings, Bell } from 'lucide-react'
 import StarField from '@/components/StarField'
 import ChapterCard from '@/components/ChapterCard'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
-import { useProgress } from '@/hooks/useProgress'
+import { usePlayer } from '@/context/PlayerContext'
 import { useAuth } from '@/context/AuthContext'
-import { supabase } from '@/lib/supabase'
 import { CHAPTERS } from '@/data/chapters'
 import { getNarrationById } from '@/data/narration'
 import { calcLevel } from '@/utils/playerUtils'
@@ -18,18 +17,22 @@ import styles from './ChaptersPage.module.css'
 
 export default function ChaptersPage() {
   const { session, user } = useAuth()
-  const { playBGMusic, playSFX } = useSound()
-  const narration = getNarrationById('chapters-selection')
-  const { setActiveNarration, isGlobalLoading } = useNarrationSequence()
-  const { progress, exploration } = useProgress()
+  const { 
+    playerData, 
+    playerStats, 
+    progress,
+    explorationLogs 
+  } = usePlayer()
 
-  const [playerData, setPlayerData]   = useState<any>(null)
-  const [playerStats, setPlayerStats] = useState<any>(null)
   const [scrolled, setScrolled]       = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+
+  const { playBGMusic, playSFX } = useSound()
+  const narration = getNarrationById('chapters-selection')
+  const { setActiveNarration, isGlobalLoading } = useNarrationSequence()
 
   useEffect(() => {
     if (isGlobalLoading) return
@@ -48,19 +51,6 @@ export default function ChaptersPage() {
       NotificationService.countUnread(user.id, 'jornada').then(setUnreadCount)
     }
   }, [user])
-
-  useEffect(() => {
-    if (user?.id) fetchPlayerData()
-    else { setPlayerData(null); setPlayerStats(null) }
-  }, [user])
-
-  const fetchPlayerData = async () => {
-    try {
-      const { data: profile } = await supabase.from('players').select('*').eq('id', user?.id).single()
-      const { data: stats }   = await supabase.from('player_global_stats').select('*').eq('player_id', user?.id).single()
-      setPlayerData(profile); setPlayerStats(stats)
-    } catch (e) { console.error(e) }
-  }
 
   const level = calcLevel(playerStats?.galactic_xp)
 
@@ -174,14 +164,14 @@ export default function ChaptersPage() {
 
         <div className={styles.grid}>
           {CHAPTERS.map((chapter, i) => {
-            const isCompleted = progress.some(p => p.chapter_id === chapter.id && p.completed)
+            const isCompleted = progress.some((p: any) => p.chapter_id === chapter.id && p.completed)
             
             // Calcula XP Ganho (Conclusão + Exploração)
             const chapterCompletionXP = isCompleted ? chapter.xpAward : 0
             
             // Filtra logs de exploração que pertencem a este capítulo
-            const explorationXP = exploration
-              .filter(log => {
+            const explorationXP = explorationLogs
+              .filter((log: any) => {
                 const id = log.exploration_id
                 if (chapter.id === 'sistema-solar') 
                   return id.startsWith('view-planet-') || id.startsWith('interact-3d-') || id.startsWith('stat-detail-')
@@ -193,7 +183,7 @@ export default function ChaptersPage() {
                   return id.startsWith('view-moon-phase-') || id.startsWith('moon-detail-scene-') || id.startsWith('moon-detail-time-')
                 return false
               })
-              .reduce((sum, log) => sum + (log.xp_awarded || 0), 0)
+              .reduce((sum: number, log: any) => sum + (log.xp_awarded || 10), 0)
 
             const totalEarned = chapterCompletionXP + explorationXP
 
@@ -215,7 +205,7 @@ export default function ChaptersPage() {
                 xpEarned={totalEarned}
                 xpTotal={XP_TOTAL_MAX[chapter.id] || chapter.xpAward}
                 onClick={(e) => {
-                  if (!session) {
+                  if (!user) {
                     e.preventDefault()
                     setShowAuth(true)
                   }

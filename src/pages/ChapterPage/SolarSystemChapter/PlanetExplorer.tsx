@@ -6,7 +6,7 @@ import FloatingTooltip from '@/components/FloatingTooltip'
 import { getNarrationById, getRandomLoadingNarration } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { useProgress } from '@/hooks/useProgress'
-import ShareButton from '@/components/ShareButton'
+import KnowledgeShare from '@/components/KnowledgeShare'
 import styles from './PlanetExplorer.module.css'
 
 interface Props {}
@@ -186,11 +186,14 @@ export default function PlanetExplorer({}: Props) {
               <div className={styles.planetBadge}>
                 <span className={styles.planetOrder}>{selectedPlanet.order}º Parada</span>
               </div>
-              <ShareButton 
-                title={`Explorando ${selectedPlanet.name} com o Théo! 🚀`}
-                text={`Olha só o que eu descobri sobre o planeta ${selectedPlanet.name} no Théo no Mundo da Lua! 🪐`}
-                onShare={() => saveExploration(`share-planet-${selectedPlanet.id}`, 50)}
-              />
+              <div className={styles.shareActions}>
+                <KnowledgeShare 
+                  title={`Explorando ${selectedPlanet.name} com o Théo! 🚀`}
+                  text={`Olha só o que eu descobri sobre o planeta ${selectedPlanet.name} no Théo no Mundo da Lua! 🪐`}
+                  themeColor={selectedPlanet.color}
+                  onShare={() => saveExploration(`share-planet-${selectedPlanet.id}`, 50)}
+                />
+              </div>
             </div>
             <h2 className={styles.planetTitle}>{selectedPlanet.name}</h2>
           </header>
