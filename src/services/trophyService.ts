@@ -69,7 +69,7 @@ export const TrophyService = {
       await supabase
         .from('player_global_stats')
         .update({
-          galactic_xp: currentXp + trophy.rewardXp,
+          galactic_xp: currentXp + trophy.rewardXp + 250, // Added requested 250 XP per trophy
           total_trophies: currentTotal + 1
         })
         .eq('player_id', userId)

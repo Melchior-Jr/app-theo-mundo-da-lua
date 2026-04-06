@@ -12,6 +12,7 @@ import QuizResult from './QuizResult.tsx'
 import StarField from '@/components/StarField'
 import QuizStartScreen from './QuizStartScreen.tsx'
 import { TrophyService } from '@/services/trophyService'
+import { ProgressionService } from '@/services/progressionService'
 
 interface QuizSystemProps {
   level?: number
@@ -291,7 +292,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
     let finalXp = engine.xp
     // Bonus de Revisão
     if (currentChallenge === 4 && engine.status === 'finished') {
-       finalXp += 50
+       finalXp += 150
     }
     const score = finalXp * 10
     const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253'
@@ -429,6 +430,9 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
         await TrophyService.updateProgress(user.id, 'prog_level_5', 1, true)
       }
 
+      // 6. Update Daily Streak & Awards
+      await ProgressionService.updateDailyStreak(user.id);
+
       console.log('[QuizSystem] Tudo gravado com sucesso! 🚀');
 
     } catch (err) {
@@ -562,6 +566,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
         correctAnswers={(totalXp + engine.xp) / 10}
         onRetry={() => setIsStarted(false)}
         onExit={handleExit}
+        onShare={() => user && ProgressionService.recordShare(user.id, 'quiz')}
       />
     )
   }

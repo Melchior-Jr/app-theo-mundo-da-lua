@@ -12,25 +12,31 @@ import { getNarrationById } from '@/data/narration'
 import { calcLevel } from '@/utils/playerUtils'
 import { NotificationDropdown } from '@/components/NotificationDropdown'
 import { NotificationService } from '@/services/notificationService'
+import { SettingsModal } from '@/components/SettingsModal'
+import { useSound } from '@/context/SoundContext'
 import styles from './ChaptersPage.module.css'
 
 export default function ChaptersPage() {
   const { session, user } = useAuth()
-  const [featured, ...rest] = CHAPTERS
+  const { playBGMusic, playSFX } = useSound()
   const narration = getNarrationById('chapters-selection')
-  const { setActiveNarration } = useNarrationSequence()
-  const { progress } = useProgress()
+  const { setActiveNarration, isGlobalLoading } = useNarrationSequence()
+  const { progress, exploration } = useProgress()
 
   const [playerData, setPlayerData]   = useState<any>(null)
   const [playerStats, setPlayerStats] = useState<any>(null)
   const [scrolled, setScrolled]       = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
+    if (isGlobalLoading) return
+
     if (narration) setActiveNarration(narration)
-  }, [narration, setActiveNarration])
+    playBGMusic()
+  }, [narration, setActiveNarration, playBGMusic, isGlobalLoading])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const top = e.currentTarget.scrollTop
@@ -64,7 +70,7 @@ export default function ChaptersPage() {
 
       <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
         <div className={styles.navbarContainer}>
-          <Link to="/" className={styles.logo}>
+          <Link to="/" className={styles.logo} onClick={() => playSFX('click')}>
             {!scrolled ? (
               <div className={styles.logoMoon}><div className={styles.moon}></div><div className={styles.glow}></div></div>
             ) : (
@@ -76,36 +82,17 @@ export default function ChaptersPage() {
             )}
           </Link>
           
-          <div className={styles.navActions}>
-            {session && (
-              <div className={styles.mobileBell} style={{ position: 'relative' }}>
-                <button 
-                  className={styles.bellBtn} 
-                  title="Notificações"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell size={18} />
-                  {unreadCount > 0 && <div className={styles.bellDot} />}
-                </button>
-                
-                <NotificationDropdown 
-                  userId={user?.id || ''}
-                  isOpen={showNotifications}
-                  onClose={() => setShowNotifications(false)}
-                  onUnreadChange={setUnreadCount}
-                />
-              </div>
-            )}
-          </div>
-
           <div className={styles.navLinks}>
             {session && (
-              <div className={styles.userWidget}>
-                <div className={styles.desktopBell} style={{ position: 'relative' }}>
+              <>
+                <div className={styles.mobileBell} style={{ position: 'relative' }}>
                   <button 
                     className={styles.bellBtn} 
                     title="Notificações"
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={() => {
+                      playSFX('click')
+                      setShowNotifications(!showNotifications)
+                    }}
                   >
                     <Bell size={18} />
                     {unreadCount > 0 && <div className={styles.bellDot} />}
@@ -118,23 +105,54 @@ export default function ChaptersPage() {
                     onUnreadChange={setUnreadCount}
                   />
                 </div>
-                <div className={styles.userCard}>
-                  <div className={styles.userAvatarWrap}>
-                    {playerData?.avatar_url ? <img src={playerData.avatar_url} className={styles.userAvatar} /> : <div className={styles.userAvatarFallback}>{playerData?.username?.charAt(0) || '?'}</div>}
-                  </div>
-                  <div className={styles.userInfo}>
-                    <span className={styles.userName}>{playerData?.username || 'Astronauta'}</span>
-                    <div className={styles.userMeta}>
-                      <span className={styles.userLevel}>NIV. {level}</span>
-                      <span className={styles.userXp}>{playerStats?.galactic_xp || 0} XP</span>
-                    </div>
-                  </div>
-                </div>
 
-                <button className={styles.settingsBtn} title="Configurações">
-                  <Settings size={18} />
-                </button>
-              </div>
+                <div className={styles.userWidget}>
+                  <div className={styles.desktopBell} style={{ position: 'relative' }}>
+                    <button 
+                      className={styles.bellBtn} 
+                      title="Notificações"
+                      onClick={() => {
+                        playSFX('click')
+                        setShowNotifications(!showNotifications)
+                      }}
+                    >
+                      <Bell size={18} />
+                      {unreadCount > 0 && <div className={styles.bellDot} />}
+                    </button>
+                    
+                    <NotificationDropdown 
+                      userId={user?.id || ''}
+                      isOpen={showNotifications}
+                      onClose={() => setShowNotifications(false)}
+                      onUnreadChange={setUnreadCount}
+                    />
+                  </div>
+
+                  <button 
+                    className={styles.settingsBtn} 
+                    title="Configurações"
+                    onClick={() => {
+                      playSFX('click')
+                      setShowSettings(true)
+                    }}
+                  >
+                    <Settings size={18} />
+                  </button>
+
+                  <Link to="/perfil" className={styles.userCard} onClick={() => playSFX('click')}>
+                    <div className={styles.userAvatarWrap}>
+                      {playerData?.avatar_url ? <img src={playerData.avatar_url} className={styles.userAvatar} /> : <div className={styles.userAvatarFallback}>{playerData?.username?.charAt(0) || '?'}</div>}
+                    </div>
+                    <div className={styles.userInfo}>
+                      <span className={styles.userName}>{playerData?.username || 'Astronauta'}</span>
+                      <div className={styles.userMeta}>
+                        <span className={styles.userLevel}>NIV. {level}</span>
+                        <span className={styles.userXp}>{playerStats?.galactic_xp || 0} XP</span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -155,34 +173,63 @@ export default function ChaptersPage() {
         </header>
 
         <div className={styles.grid}>
-          <ChapterCard 
-            chapter={featured} 
-            featured 
-            animationDelay={150} 
-            isCompleted={progress.some(p => p.chapter_id === featured.id && p.completed)} 
-            onClick={(e) => {
-              if (!session) {
-                e.preventDefault()
-                setShowAuth(true)
-              }
-            }}
-          />
-          {rest.map((chapter, i) => (
-            <ChapterCard 
-              key={chapter.id} 
-              chapter={chapter} 
-              animationDelay={250 + i * 80} 
-              isCompleted={progress.some(p => p.chapter_id === chapter.id && p.completed)} 
-              onClick={(e) => {
-                if (!session) {
-                  e.preventDefault()
-                  setShowAuth(true)
-                }
-              }}
-            />
-          ))}
+          {CHAPTERS.map((chapter, i) => {
+            const isCompleted = progress.some(p => p.chapter_id === chapter.id && p.completed)
+            
+            // Calcula XP Ganho (Conclusão + Exploração)
+            const chapterCompletionXP = isCompleted ? chapter.xpAward : 0
+            
+            // Filtra logs de exploração que pertencem a este capítulo
+            const explorationXP = exploration
+              .filter(log => {
+                const id = log.exploration_id
+                if (chapter.id === 'sistema-solar') 
+                  return id.startsWith('view-planet-') || id.startsWith('interact-3d-') || id.startsWith('stat-detail-')
+                if (chapter.id === 'movimentos-da-terra')
+                  return id.startsWith('view-motion-') || id.startsWith('interact-motion-3d-') || id.startsWith('motion-detail-')
+                if (chapter.id === 'constelaçoes')
+                  return id.startsWith('view-constellation-') || id.startsWith('reveal-constellation-') || id.startsWith('const-detail-') || id.startsWith('const-intro-guide-')
+                if (chapter.id === 'fases-da-lua')
+                  return id.startsWith('view-moon-phase-') || id.startsWith('moon-detail-scene-') || id.startsWith('moon-detail-time-')
+                return false
+              })
+              .reduce((sum, log) => sum + (log.xp_awarded || 0), 0)
 
-          <Link to="/jogos" className={styles.quizCard} style={{ animationDelay: '600ms' }}>
+            const totalEarned = chapterCompletionXP + explorationXP
+
+            // Define o XP total potencial (baseado no mapeamento de interação)
+            const XP_TOTAL_MAX: Record<string, number> = {
+              'sistema-solar': 1000,
+              'movimentos-da-terra': 700,
+              'constelaçoes': 1300,
+              'fases-da-lua': 1000
+            }
+
+            return (
+              <ChapterCard 
+                key={chapter.id} 
+                chapter={chapter} 
+                featured={i === 0}
+                animationDelay={150 + i * 100} 
+                isCompleted={isCompleted} 
+                xpEarned={totalEarned}
+                xpTotal={XP_TOTAL_MAX[chapter.id] || chapter.xpAward}
+                onClick={(e) => {
+                  if (!session) {
+                    e.preventDefault()
+                    setShowAuth(true)
+                  }
+                }}
+              />
+            )
+          })}
+
+          <Link 
+            to="/jogos" 
+            className={styles.quizCard} 
+            style={{ animationDelay: '600ms' }}
+            onClick={() => playSFX('click')}
+          >
             <div className={styles.quizIcon}>🎮</div>
             <div className={styles.quizContent}>
               <span className={styles.quizTag}>CENTRAL DE JOGOS</span>
@@ -210,6 +257,11 @@ export default function ChaptersPage() {
           </div>
         </div>
       )}
+
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </div>
   )
 }

@@ -129,8 +129,69 @@
   max-width: 480px;
 }
 
-/* === CTA === */
+/* === CTA e Recompensas === */
 .cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  transition: border-color 300ms ease;
+}
+
+.card:hover .cta {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.rewards {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.star {
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 5px #FFD166);
+  animation: starPulse 2s infinite ease-in-out;
+}
+
+@keyframes starPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px #FFD166); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #FFD166); }
+}
+
+.xpText {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.xpGained {
+  color: #FFD166;
+}
+
+.xpSeparator {
+  opacity: 0.3;
+  margin: 0 1px;
+}
+
+.xpAvailable {
+  color: var(--color-star-dim, #a8b4cc);
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.ctaButton {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -141,13 +202,11 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0;
-  transition:
-    opacity 250ms ease,
-    transform 250ms ease;
+  transition: all 250ms ease;
   transform: translateX(-4px);
 }
 
-.card:hover .cta {
+.card:hover .ctaButton {
   opacity: 1;
   transform: translateX(0);
 }
@@ -226,37 +285,29 @@
   50% { opacity: 1; transform: scale(1.05); }
 }
 
-/* === Estado de Concluído === */
-.completedBadge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #06d6a0 0%, #05a57c 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 5px 12px;
-  border-radius: 99px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 10;
-  font-family: var(--font-display);
-  font-size: 0.7rem;
+/* === Estado de Concluído Integrado (Sem mudar a cor do card) === */
+.orderCompleted {
+  /* Mantém a cor original do capítulo, mas adiciona o pulso de sucesso */
+  animation: successPulse 3s infinite ease-in-out;
+}
+
+.check {
+  font-size: 0.8rem;
+  margin-right: 4px;
+}
+
+.statusText {
+  color: #06d6a0; /* Somente o texto da condição é verde */
   font-weight: 900;
-  color: #002e21;
-  letter-spacing: 0.05em;
-  box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
-  animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-left: 2px;
 }
 
-.completedIcon {
-  font-size: 0.85rem;
+@keyframes successPulse {
+  0%, 100% { border-color: rgba(6, 214, 160, 0.4); box-shadow: 0 0 5px rgba(6, 214, 160, 0); }
+  50% { border-color: rgba(6, 214, 160, 1); box-shadow: 0 0 12px rgba(6, 214, 160, 0.2); }
 }
 
-@keyframes bounceIn {
-  from { opacity: 0; transform: scale(0.3); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.card:hover .completedBadge {
-  filter: brightness(1.1);
+.completed:hover {
+  border-color: #06d6a0;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(6, 214, 160, 0.3);
 }

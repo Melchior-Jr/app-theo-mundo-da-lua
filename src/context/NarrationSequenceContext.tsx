@@ -31,6 +31,8 @@ interface NarrationSequenceContextType {
   setSkipAttempts: (n: number) => void
   nextButtonEffect: boolean
   setNextButtonEffect: (val: boolean) => void
+  isGlobalLoading: boolean
+  setIsGlobalLoading: (loading: boolean) => void
 }
 
 const NarrationSequenceContext = createContext<NarrationSequenceContextType | undefined>(undefined)
@@ -49,6 +51,7 @@ export function NarrationSequenceProvider({ children }: { children: ReactNode })
   const [viewedPlanets, setViewedPlanets] = useState<string[]>([])
   const [skipAttempts, setSkipAttempts] = useState(0)
   const [nextButtonEffect, setNextButtonEffect] = useState(false)
+  const [isGlobalLoading, setIsGlobalLoading] = useState(true)
 
   const location = useLocation()
 
@@ -104,7 +107,9 @@ export function NarrationSequenceProvider({ children }: { children: ReactNode })
       skipAttempts,
       setSkipAttempts,
       nextButtonEffect,
-      setNextButtonEffect
+      setNextButtonEffect,
+      isGlobalLoading,
+      setIsGlobalLoading
     }}>
       {children}
     </NarrationSequenceContext.Provider>
@@ -140,6 +145,8 @@ export function useNarrationSequence() {
       setSkipAttempts: () => {},
       nextButtonEffect: false,
       setNextButtonEffect: () => {},
+      isGlobalLoading: true,
+      setIsGlobalLoading: () => {},
     }
   }
   return context

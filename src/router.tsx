@@ -11,38 +11,13 @@ const ChapterPage = lazy(() => import('@/pages/ChapterPage'))
 const QuizPage = lazy(() => import('@/pages/QuizPage'))
 const GamesPage = lazy(() => import('@/pages/GamesPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const InstallPage = lazy(() => import('@/pages/InstallPage'))
 const RankingPage = lazy(() => import('@/pages/RankingPage'))
 const InvasoresPage = lazy(() => import('@/pages/InvasoresPage'))
 const TrophyRoomPage = lazy(() => import('@/pages/TrophyRoom'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
-// Fallback de carregamento simples para o Suspense
-const PageLoader = () => (
-  <div style={{ 
-    height: '100vh', 
-    width: '100vw', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    background: '#0A0E1A',
-    color: '#fff',
-    fontFamily: 'Poppins, sans-serif'
-  }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ 
-        width: '40px', 
-        height: '40px', 
-        border: '3px solid rgba(255,255,255,0.1)', 
-        borderTopColor: '#4b7bed', 
-        borderRadius: '50%', 
-        animation: 'spin 1s linear infinite',
-        margin: '0 auto 15px'
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p>Decolando...</p>
-    </div>
-  </div>
-)
+import PageLoader from '@/components/PageLoader'
 
 export const router = createBrowserRouter([
   {
@@ -84,6 +59,10 @@ export const router = createBrowserRouter([
       {
         path: 'perfil',
         element: <ProfilePage />,
+      },
+      {
+        path: 'install',
+        element: <InstallPage />,
       },
       {
         path: 'ranking',

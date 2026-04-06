@@ -3,6 +3,7 @@ import { FaHeart, FaTrophy, FaRocket, FaRedo, FaHome, FaPause, FaPlay, FaArrowLe
 import { Link } from 'react-router-dom';
 import { InvasoresEngine } from './engine';
 import { INVASORES_QUESTIONS } from './questions';
+import { supabase } from '@/lib/supabase';
 import styles from './InvasoresGame.module.css';
 import { useSound } from '@/context/SoundContext';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +16,44 @@ const InvasoresGame: React.FC = () => {
   const [gameState, setGameState] = useState<'START' | 'PLAYING' | 'PAUSED' | 'QUESTION_ACTIVE' | 'GAMEOVER'>('START');
   const [hud, setHud] = useState({ score: 0, lives: 3, combo: 0, question: '', shield: false });
   const containerRef = useRef<HTMLDivElement>(null);
-  const { playSFX } = useSound();
+  const { playSFX, playTrack, stopBGMusic, playBGMusic, isMuted } = useSound();
+  const gameMusicRef = useRef<HTMLAudioElement | null>(null);
+
+  // Controle da Música de Fundo (Global e do Jogo)
+  useEffect(() => {
+    // Para a música ambiente global ao entrar no componente
+    stopBGMusic();
+    return () => {
+      // Retoma a música ambiente global ao sair (unmount)
+      playBGMusic();
+      if (gameMusicRef.current) {
+        gameMusicRef.current.pause();
+        gameMusicRef.current = null;
+      }
+    };
+  }, [stopBGMusic, playBGMusic]);
+
+  // Sincronização da música com o estado do jogo
+  useEffect(() => {
+    const shouldPlay = gameState === 'PLAYING' || gameState === 'QUESTION_ACTIVE';
+    
+    if (shouldPlay && !isMuted) {
+      if (!gameMusicRef.current) {
+        const audio = playTrack('/audio/sfx/bg-Sound-invasores.mp3', 0.05); // Volume de fundo suave
+        if (audio) {
+          audio.loop = true;
+          gameMusicRef.current = audio;
+        }
+      } else if (gameMusicRef.current.paused) {
+        gameMusicRef.current.play().catch(() => {});
+      }
+    } else {
+      // Se não for para tocar ou estiver mutado, pausamos a trilha do jogo
+      if (gameMusicRef.current && !gameMusicRef.current.paused) {
+        gameMusicRef.current.pause();
+      }
+    }
+  }, [gameState, playTrack, isMuted]);
 
   // Inicializar Engine
   useEffect(() => {
@@ -34,12 +72,52 @@ const InvasoresGame: React.FC = () => {
         if (!user) return;
         console.log('Game Result:', result);
         
-        // 1. Caçador de Aliens (Incremental)
+        // --- NOVO: PERSISTÊNCIA DE PONTUÇÃO/XP ---
+        const INVASORES_GAME_ID = 'invasores-do-conhecimento';
+        const score = result.score;
+        const xpGain = Math.floor(score / 10);
+
+        try {
+            // 1. Session
+            await supabase.from('game_sessions').insert({
+                player_id: user.id,
+                game_id: INVASORES_GAME_ID,
+                score: score,
+                completed: true,
+                metadata: result
+            });
+
+            // 2. Global Stats (upsert)
+            const { data: global } = await supabase.from('player_global_stats').select('*').eq('player_id', user.id).maybeSingle();
+            await supabase.from('player_global_stats').upsert({
+                player_id: user.id,
+                total_score: (global?.total_score || 0) + score,
+                galactic_xp: (global?.galactic_xp || 0) + xpGain,
+                total_sessions: (global?.total_sessions || 0) + 1,
+                updated_at: new Date().toISOString()
+            });
+
+            // 3. Game Stats (upsert)
+            const { data: game } = await supabase.from('player_game_stats').select('*').match({ player_id: user.id, game_id: INVASORES_GAME_ID }).maybeSingle();
+            await supabase.from('player_game_stats').upsert({
+                player_id: user.id,
+                game_id: INVASORES_GAME_ID,
+                total_score: (game?.total_score || 0) + score,
+                best_score: Math.max(game?.best_score || 0, score),
+                sessions_count: (game?.sessions_count || 0) + 1,
+                last_played_at: new Date().toISOString()
+            });
+            console.log('[Invasores] Progresso salvo com sucesso! 🚀');
+        } catch (e) {
+            console.error('[Invasores] Erro ao salvar progresso:', e);
+        }
+
+        // 1. Caçador de Aliens (Incremental - Trophies)
         if (result.aliens_destroyed > 0) {
           await TrophyService.updateProgress(user.id, 'game_kills_50', result.aliens_destroyed);
         }
 
-        // 2. Sobrevivente Espacial (Meta: 60s)
+        // 2. Sobrevivente Espacial (Meta: 60s - Trophies)
         if (result.duration >= 60) {
           await TrophyService.updateProgress(user.id, 'game_survival_60s', result.duration, true);
         }

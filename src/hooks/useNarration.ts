@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Narration } from '@/data/narration'
+import { useSound } from '@/context/SoundContext'
 
 // Instância global para aproveitar o desbloqueio do AutoPlay em mobiles/safari
 const globalAudio = new Audio()
@@ -15,6 +16,13 @@ export function useNarration(
   narration: Narration | null, 
   onFinish?: () => void
 ) {
+  const { 
+    narrationVolume, 
+    isMuted, 
+    narrationRate, 
+    registerActiveTrack, 
+    unregisterActiveTrack 
+  } = useSound()
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -27,6 +35,7 @@ export function useNarration(
     if (activeAudioRef.current) {
       activeAudioRef.current.pause()
       activeAudioRef.current.currentTime = 0
+      unregisterActiveTrack(activeAudioRef.current)
       activeAudioRef.current = null
     }
     if (window.speechSynthesis) {
@@ -62,11 +71,16 @@ export function useNarration(
         audio.src = newSrc
       }
 
+      // Aplica volume e velocidade global
+      audio.volume = isMuted ? 0 : narrationVolume
+      audio.playbackRate = narrationRate
+
       activeAudioRef.current = audio
       
       audio.onended = () => {
         setIsPlaying(false)
         setCurrentTime(0)
+        unregisterActiveTrack(audio)
         onFinish?.()
       }
 
@@ -80,6 +94,7 @@ export function useNarration(
         setCurrentTime(0)
       }
 
+      registerActiveTrack(audio)
       audio.play().then(() => {
         setIsPlaying(true)
       }).catch(err => {
@@ -95,8 +110,9 @@ export function useNarration(
       activeUtteranceRef.current = utterance
       
       utterance.lang = 'pt-BR'
-      utterance.rate = 1.0
+      utterance.rate = narrationRate
       utterance.pitch = 1.2 // Voz levemente mais aguda para o Théo
+      utterance.volume = isMuted ? 0 : narrationVolume
 
       utterance.onend = () => {
         setIsPlaying(false)
@@ -113,7 +129,7 @@ export function useNarration(
       window.speechSynthesis.cancel()
       window.speechSynthesis.speak(utterance)
     }
-  }, [narration, stop, onFinish])
+  }, [narration, stop, onFinish, narrationVolume, isMuted, narrationRate])
 
   const pause = useCallback(() => {
     if (activeAudioRef.current) {
@@ -133,6 +149,33 @@ export function useNarration(
       window.speechSynthesis.resume()
       setIsPaused(false)
     }
+  }, [])
+
+  // Sincroniza volume e velocidade em tempo real (caso mude durante a fala)
+  useEffect(() => {
+    if (activeAudioRef.current) {
+      activeAudioRef.current.volume = isMuted ? 0 : narrationVolume
+      activeAudioRef.current.playbackRate = narrationRate
+    }
+    if (activeUtteranceRef.current) {
+      activeUtteranceRef.current.volume = isMuted ? 0 : narrationVolume
+      activeUtteranceRef.current.rate = narrationRate
+    }
+  }, [narrationVolume, isMuted, narrationRate])
+
+  // Sincroniza o estado de pausa local com o áudio real
+  // Isso é útil quando o SoundContext pausa o áudio via visibilidade
+  useEffect(() => {
+    const checkStatus = () => {
+      if (activeAudioRef.current) {
+        setIsPaused(activeAudioRef.current.paused)
+      } else if (window.speechSynthesis) {
+        setIsPaused(window.speechSynthesis.paused)
+      }
+    }
+
+    const interval = setInterval(checkStatus, 500)
+    return () => clearInterval(interval)
   }, [])
 
   // Limpa tudo ao mudar de narração ou desmontar

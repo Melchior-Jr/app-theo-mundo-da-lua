@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useSound } from '@/context/SoundContext'
 import type { Chapter } from '@/data/chapters'
 import styles from './ChapterCard.module.css'
 
@@ -6,8 +7,10 @@ interface ChapterCardProps {
   chapter: Chapter
   featured?: boolean
   animationDelay?: number
-  isLocked?: boolean // Prop para indicar se o capítulo está em desenvolvimento
-  isCompleted?: boolean // Prop para indicar se o capítulo foi concluído
+  isLocked?: boolean
+  isCompleted?: boolean
+  xpEarned?: number
+  xpTotal?: number
   onClick?: (e: React.MouseEvent) => void
 }
 
@@ -21,40 +24,38 @@ export default function ChapterCard({
   animationDelay = 0,
   isLocked = false,
   isCompleted = false,
+  xpEarned,
+  xpTotal,
   onClick,
 }: ChapterCardProps) {
   const navigate = useNavigate()
+  const { playSFX } = useSound()
+
+  const handleAction = (e: React.MouseEvent | React.KeyboardEvent) => {
+    playSFX('click')
+    if ('button' in e && onClick) {
+      onClick(e as React.MouseEvent)
+      if (e.defaultPrevented) return
+    }
+    navigate(chapter.path)
+  }
 
   return (
     <article
-      className={`${styles.card} ${featured ? styles.featured : ''} ${isLocked ? styles.locked : ''} opacity-0 animate-slide-up`}
+      className={`${styles.card} ${featured ? styles.featured : ''} ${isLocked ? styles.locked : ''} ${isCompleted ? styles.completed : ''} opacity-0 animate-slide-up`}
       style={{
         animationDelay: `${animationDelay}ms`,
         '--chapter-color': chapter.color,
         '--chapter-color-dim': chapter.colorDim,
         '--chapter-color-bg': chapter.colorBg,
       } as React.CSSProperties}
-      onClick={(e) => {
-        if (onClick) {
-          onClick(e)
-          if (e.defaultPrevented) return
-        }
-        navigate(chapter.path)
-      }}
+      onClick={handleAction}
       role="button"
       tabIndex={0}
       aria-label={`Ir para ${chapter.title}`}
-      onKeyDown={(e) => e.key === 'Enter' && navigate(chapter.path)}
+      onKeyDown={(e) => e.key === 'Enter' && handleAction(e)}
       id={`chapter-card-${chapter.id}`}
     >
-      {/* Selo de Concluído */}
-      {isCompleted && (
-        <div className={styles.completedBadge} title="Capítulo Concluído">
-          <span className={styles.completedIcon}>✅</span>
-          <span>CONCLUÍDO</span>
-        </div>
-      )}
-
       {/* Selo de Bloqueado */}
       {isLocked && (
         <div className={styles.lockedBadge}>
@@ -71,7 +72,11 @@ export default function ChapterCard({
         {/* Ícone + ordem */}
         <div className={styles.topRow}>
           <span className={styles.icon} aria-hidden="true">{chapter.icon}</span>
-          <span className={styles.order}>{chapter.subtitle}</span>
+          <span className={`${styles.order} ${isCompleted ? styles.orderCompleted : ''}`}>
+            {isCompleted && <span className={styles.check}>✅</span>}
+            {chapter.subtitle}
+            {isCompleted && <span className={styles.statusText}> • CONCLUÍDO</span>}
+          </span>
         </div>
 
         {/* Textos */}
@@ -84,8 +89,20 @@ export default function ChapterCard({
 
         {/* CTA */}
         <div className={styles.cta} aria-hidden="true">
-          <span className={styles.ctaText}>{isLocked ? 'Ver projeto' : 'Explorar'}</span>
-          <span className={styles.ctaArrow}>→</span>
+          <div className={styles.rewards}>
+            <span className={styles.star}>⭐</span>
+            <span className={styles.xpText}>
+              <span className={styles.xpGained}>{xpEarned ?? 0}</span>
+              <span className={styles.xpSeparator}>/</span>
+              <span className={styles.xpAvailable}>{xpTotal ?? 0} XP</span>
+            </span>
+          </div>
+          <div className={styles.ctaButton}>
+            <span className={styles.ctaText}>
+              {isLocked ? 'Ver projeto' : (isCompleted ? 'Rever Missão' : 'Explorar')}
+            </span>
+            <span className={styles.ctaArrow}>→</span>
+          </div>
         </div>
 
         {/* Planeta decorativo de fundo */}

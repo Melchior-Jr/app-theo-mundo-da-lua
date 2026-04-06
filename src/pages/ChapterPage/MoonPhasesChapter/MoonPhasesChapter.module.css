@@ -402,6 +402,48 @@
   text-align: center;
 }
 
+.infoHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffea00;
+  background: rgba(255, 234, 0, 0.1);
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(255, 234, 0, 0.3);
+}
+
+.description {
+  font-family: var(--font-body);
+  color: #a8b4cc;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
 .phaseTitle {
   font-family: var(--font-display);
   font-size: 2.5rem;

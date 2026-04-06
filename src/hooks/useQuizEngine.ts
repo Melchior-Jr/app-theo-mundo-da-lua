@@ -56,7 +56,22 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     }
 
     setState(prev => {
-      const newXP = isCorrect ? prev.xp + 10 + (prev.combo >= 3 ? 5 : 0) : prev.xp
+      // Regra de XP: 10 base. A partir do combo 3, dobra o XP anterior do acerto.
+      // Ex: Combo 1: 10, Combo 2: 10, Combo 3: 20, Combo 4: 40, Combo 5: 80...
+      let xpAwarded = 0
+      if (isCorrect) {
+        if (prev.combo < 2) {
+          xpAwarded = 10
+        } else {
+          // Se combo já era 2, esse acerto é o 3º -> 20 XP
+          // Se combo já era 3, esse acerto é o 4º -> 40 XP
+          // Fórmula: 10 * 2^(combo - 1)
+          // Mas vamos limitar para não explodir em listas gigantes (ex: 1000 XP max por questão)
+          xpAwarded = Math.min(1000, 10 * Math.pow(2, prev.combo - 1))
+        }
+      }
+
+      const newXP = isCorrect ? prev.xp + xpAwarded : prev.xp
       const currentCombo = isCorrect ? prev.combo + 1 : 0
       const newLives = isCorrect ? prev.lives : Math.max(0, prev.lives - 1)
       const newCorrectCount = isCorrect ? prev.correctCount + 1 : prev.correctCount
@@ -121,7 +136,11 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
       playSFX('success')
       const winNum = Math.floor(Math.random() * 3) + 1
       playTrack(`/audio/Quiz Intergaláctico/Win_0${winNum}.MP3`)
-      setState(prev => ({ ...prev, status: 'finished' }))
+      
+      setState(prev => {
+        const bonusXP = !prev.hasMistakes ? 300 : 0
+        return { ...prev, status: 'finished', xp: prev.xp + bonusXP }
+      })
       return
     }
 

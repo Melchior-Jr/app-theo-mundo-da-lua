@@ -14,5 +14,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <RouterProvider router={router} />
       </SoundProvider>
     </AuthProvider>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
+
+// 🛠️ Registro do Coração da Estação (Service Worker)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('🚀 Estação de Comunicação (SW) Operacional:', reg.scope))
+      .catch(err => console.error('💥 Falha no sistema de propulsão SW:', err));
+  });
+}

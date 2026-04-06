@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { getCaption } from '@/data/subtitles'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { useProgress } from '@/hooks/useProgress'
 import TheoCharacter from '@/components/TheoCharacter'
 import PlanetViewer3D from '@/components/PlanetViewer3D'
 import ShareButton from '@/components/ShareButton'
@@ -112,6 +113,7 @@ export default function EarthMotionsChapter() {
     setOnNarrationFinish,
     currentTime 
   } = useNarrationSequence()
+  const { saveExploration } = useProgress()
 
   // Sincronia de legendas sincronizada pelo data/subtitles.ts
   const currentCaption = getCaption('chapter-2', currentTime)
@@ -151,8 +153,11 @@ export default function EarthMotionsChapter() {
       
       setActiveNarration(narration)
       activeLocalNarration.current = mode
+
+      // Ganha XP por descobrir o movimento
+      saveExploration(`view-motion-${mode}`, 50)
     }
-  }, [mode, canStartLocal, setActiveNarration, setOnNarrationFinish])
+  }, [mode, canStartLocal, setActiveNarration, setOnNarrationFinish, saveExploration])
 
   const motions: Record<'rotacao' | 'translaçao', MotionData> = {
     rotacao: {
@@ -284,7 +289,11 @@ export default function EarthMotionsChapter() {
                   recentTime: now
                 }
                 setIsDragging(true)
-                setHasInteracted(true)
+                if (!hasInteracted) {
+                  setHasInteracted(true)
+                  // Ganha XP por interagir com o modelo 3D do movimento pela primeira vez
+                  saveExploration(`interact-motion-3d-${mode}`, 50)
+                }
                 e.currentTarget.setPointerCapture(e.pointerId)
               }}
               onPointerMove={(e) => {
@@ -463,6 +472,7 @@ export default function EarthMotionsChapter() {
               <ShareButton 
                 title={`Aprendendo sobre ${currentData.title} com o Théo! 🚀`}
                 text={`Dá uma olhada no movimento de ${currentData.title} da Terra que eu acabei de aprender no Théo no Mundo da Lua!`}
+                onShare={() => saveExploration(`share-chapter-${mode}`, 50)}
               />
             </header>
 
@@ -471,7 +481,11 @@ export default function EarthMotionsChapter() {
                 <div 
                   key={i} 
                   className={`${styles.metaCard} ${styles.clickable}`}
-                  onClick={() => setSelectedCuriosity(stat.label)}
+                  onClick={() => {
+                    setSelectedCuriosity(stat.label)
+                    // Ganha XP por explorar detalhes específicos do movimento
+                    saveExploration(`motion-detail-${mode}-${stat.label.toLowerCase()}`, 25)
+                  }}
                 >
                   <span className={styles.metaLabel}>{stat.label}</span>
                   <span className={styles.metaValue}>{stat.value}</span>

@@ -11,7 +11,11 @@ interface QuizResultProps {
   correctAnswers: number
   onRetry: () => void
   onExit: () => void
+  onShare?: () => void
 }
+
+import { IoShareSocial } from 'react-icons/io5'
+import { useState } from 'react'
 
 export default function QuizResult({ 
   status, 
@@ -19,10 +23,19 @@ export default function QuizResult({
   totalQuestions, 
   correctAnswers, 
   onRetry, 
-  onExit 
+  onExit,
+  onShare 
 }: QuizResultProps) {
   const isWinner = status === 'finished'
   const message = isWinner ? getRandomMessage('finished') : getRandomMessage('gameOver')
+  const [shared, setShared] = useState(false)
+
+  const handleShare = () => {
+    if (!shared && onShare) {
+      onShare()
+      setShared(true)
+    }
+  }
 
   return (
     <div className={`${styles.resultContainer} ${isWinner ? styles.ceremony : ''}`}>
@@ -64,6 +77,16 @@ export default function QuizResult({
         <div className={styles.xpTotal}>+{xp} XP</div>
         <span>Ganho total na missão</span>
       </div>
+
+      {isWinner && (
+        <button 
+          className={`${styles.shareBtn} ${shared ? styles.shared : ''}`} 
+          onClick={handleShare}
+          disabled={shared}
+        >
+          <IoShareSocial /> {shared ? 'COMPARTILHADO! +100 XP' : 'COMPARTILHAR RESULTADO (+100 XP)'}
+        </button>
+      )}
 
       <div className={styles.statsSummary}>
         <div className={styles.summItem}>

@@ -7,8 +7,8 @@ interface Props {
 }
 
 /**
- * SplashLoader — Tela de carregamento lúdica e funcional.
- * Utiliza o personagem Théo oficial em formato SVG.
+ * SplashLoader — Tela de carregamento Premium unificada.
+ * Combina o personagem Théo com HUD Sci-Fi e animações espaciais.
  */
 export default function SplashLoader({ onReady }: Props) {
   const [progress, setProgress] = useState(0)
@@ -24,10 +24,10 @@ export default function SplashLoader({ onReady }: Props) {
           setCanStart(true)
           return 100
         }
-        const next = prev + Math.random() * 12
+        const next = prev + Math.random() * 15
         return next > 100 ? 100 : next
       })
-    }, 200)
+    }, 250)
 
     return () => clearInterval(timer)
   }, [])
@@ -41,33 +41,51 @@ export default function SplashLoader({ onReady }: Props) {
 
   return (
     <div className={`${styles.overlay} ${isFinishing ? styles.launching : ''}`}>
+      {/* HUD & Background */}
+      <div className={styles.gridOverlay} />
+
+      <div className={styles.starField}>
+        {[...Array(30)].map((_, i) => (
+          <div key={i} className={styles.star} style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 3}s`,
+            opacity: 0.2 + Math.random() * 0.8
+          } as React.CSSProperties} />
+        ))}
+      </div>
+
       <div className={styles.content}>
-        {/* Personagem Théo Oficial (SVG) */}
+        {/* Personagem Théo & Orbiting Rocket */}
         <div className={styles.theoContainer}>
-          <TheoCharacter size={180} emotion="bounce" className={styles.theoAvatar} />
           <div className={styles.glow} />
+          <TheoCharacter size={180} emotion="celebrate" className={styles.theoAvatar} />
+          <div className={styles.rocketMini}>🚀</div>
         </div>
 
         <div className={styles.textContainer}>
-          <h1 className={styles.title}>Théo no Mundo da Lua</h1>
-          <p className={styles.subtitle}>Preparando foguete para a missão científica...</p>
+          <h1 className={styles.title}>
+            <span className={styles.yellow}>Théo</span>
+            <span className={styles.white}>no Mundo</span>
+            <span className={styles.cyan}>da Lua 🌙</span>
+          </h1>
+          <p className={styles.subtitle}>Preparando Missão Científica...</p>
         </div>
 
-        {/* Barra de Carregamento Digital */}
+        {/* Barra de Progresso Futurista */}
         <div className={styles.loadingTrack}>
           <div 
             className={styles.loadingBar} 
             style={{ width: `${progress}%` }} 
           />
-          <div className={styles.progressText}>{Math.floor(progress)}%</div>
         </div>
 
         <div className={styles.statusText}>
-          {progress < 30 && "Checando tanques de oxigênio... 💨"}
-          {progress >= 30 && progress < 60 && "Sincronizando telescópios... 🔭"}
-          {progress >= 60 && progress < 90 && "Carregando mapas estelares... 🌌"}
-          {progress >= 90 && progress < 100 && "Contagem regressiva iniciada... ⏱️"}
-          {progress >= 100 && "Sistemas online. Pronto para o lançamento! 🚀"}
+          {progress < 30 && "Sincronizando Oxigênio... 💨"}
+          {progress >= 30 && progress < 60 && "Ajustando Telescópios... 🔭"}
+          {progress >= 60 && progress < 90 && "Mapeando Galáxias... 🌌"}
+          {progress >= 90 && progress < 100 && "Motores Prontos... 🔥"}
+          {progress >= 100 && "Sistemas Online! 🚀"}
         </div>
 
         {/* Botão de Início (Garante interação do usuário para o áudio) */}
@@ -76,20 +94,8 @@ export default function SplashLoader({ onReady }: Props) {
           onClick={handleStart}
           disabled={!canStart}
         >
-          {canStart ? 'INICIAR MISSÃO!' : 'CARREGANDO...'}
+          {canStart ? 'INICIAR MISSÃO!' : `CARREGANDO ${Math.floor(progress)}%`}
         </button>
-      </div>
-
-      {/* Background Espacial */}
-      <div className={styles.spaceBackground}>
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className={styles.star} style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            opacity: Math.random()
-          } as React.CSSProperties} />
-        ))}
       </div>
     </div>
   )

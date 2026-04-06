@@ -3,10 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { 
   Camera, Edit2, Save, X, Trophy, Star, Zap, 
   Target, Calendar, School, User, Hash,
-  ChevronRight, LogOut, CheckCircle2, Shield, Bell, Menu
+  ChevronRight, LogOut, CheckCircle2, Shield, Bell, Menu, Settings,
+  Volume2, VolumeX, Music, Headphones, MessageSquare, RotateCcw
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { SettingsModal } from '@/components/SettingsModal'
+import { useSound } from '@/context/SoundContext'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
 import { TROPHIES } from '@/data/trophies'
 import StarField from '@/components/StarField'
@@ -38,10 +41,20 @@ export default function ProfilePage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
   const [testMessage, setTestMessage] = useState({ type: '', text: '' })
+  const [showSettings, setShowSettings] = useState(false)
   
   // -- NOTIFICATION SETTINGS LOGIC --
   const [notifSettings, setNotifSettings] = useState<any>(null)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const { 
+    playSFX,
+    isMuted, toggleMute, 
+    bgVolume, setBgVolume,
+    sfxVolume, setSfxVolume,
+    narrationVolume, setNarrationVolume,
+    narrationRate, setNarrationRate, 
+    resetSettings
+  } = useSound()
 
   const fetchNotifSettings = async () => {
     if (!user?.id) return
@@ -403,8 +416,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => signOut()} className={styles.logoutBtnNav} title="Sair">
-                  <LogOut size={16} />
+                <button 
+                  onClick={() => { playSFX('click'); setShowSettings(true); }} 
+                  className={styles.settingsBtnNav} 
+                  title="Configurações"
+                >
+                  <Settings size={18} />
                 </button>
               </div>
             )}
@@ -497,6 +514,13 @@ export default function ProfilePage() {
                 <div className={styles.mLabel}>Missões</div>
                 <div className={styles.mValue}>{gameStats.length}</div>
               </div>
+              <button 
+                onClick={() => { playSFX('click'); signOut(); }} 
+                className={styles.logoutFooterBtn}
+              >
+                <LogOut size={14} />
+                Encerrar Missão (Sair)
+              </button>
             </div>
           </aside>
 
@@ -570,6 +594,86 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
+            {/* ────── AJUSTES DE ÁUDIO & EXPERIÊNCIA ────── */}
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2>Ajustes de Áudio & Experiência ⚙️</h2>
+                <button className={styles.resetBtn} onClick={() => { playSFX('click'); resetSettings(); }}>
+                  <RotateCcw size={14} /> Restaurar Padrão
+                </button>
+              </div>
+
+              <div className={styles.settingsGrid}>
+                {/* Mute Toggle */}
+                <div className={`${styles.soundCard} ${isMuted ? styles.soundCardMuted : ''}`} onClick={toggleMute}>
+                  <div className={styles.soundIcon}>
+                    {isMuted ? <VolumeX /> : <Volume2 />}
+                  </div>
+                  <div className={styles.soundInfo}>
+                    <span className={styles.soundTitle}>{isMuted ? 'Sons Desativados' : 'Sons Ativados'}</span>
+                    <span className={styles.soundSub}>Toque para alternar silêncio total</span>
+                  </div>
+                  <div className={`${styles.toggle} ${!isMuted ? styles.active : ''}`}>
+                    <div className={styles.toggleKnob} />
+                  </div>
+                </div>
+
+                <div className={styles.slidersContainer}>
+                  <div className={styles.controlGroup}>
+                    <div className={styles.labelRow}>
+                      <div className={styles.labelIcon}><Music size={16} /> Música de Fundo</div>
+                      <span className={styles.percent}>{Math.round(bgVolume * 100)}%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="0.5" step="0.05"
+                      value={bgVolume} disabled={isMuted}
+                      onChange={(e) => setBgVolume(parseFloat(e.target.value))}
+                      className={styles.slider}
+                    />
+                  </div>
+
+                  <div className={styles.controlGroup}>
+                    <div className={styles.labelRow}>
+                      <div className={styles.labelIcon}><Headphones size={16} /> Efeitos Sonoros</div>
+                      <span className={styles.percent}>{Math.round(sfxVolume * 100)}%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="1" step="0.05"
+                      value={sfxVolume} disabled={isMuted}
+                      onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
+                      className={styles.slider}
+                    />
+                  </div>
+
+                  <div className={styles.controlGroup}>
+                    <div className={styles.labelRow}>
+                      <div className={styles.labelIcon}><MessageSquare size={16} /> Narração</div>
+                      <span className={styles.percent}>{Math.round(narrationVolume * 100)}%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="1" step="0.05"
+                      value={narrationVolume} disabled={isMuted}
+                      onChange={(e) => setNarrationVolume(parseFloat(e.target.value))}
+                      className={styles.slider}
+                    />
+                  </div>
+
+                  <div className={styles.controlGroup}>
+                    <div className={styles.labelRow}>
+                      <div className={styles.labelIcon}><Zap size={16} /> Velocidade da Voz</div>
+                      <span className={styles.percent}>{narrationRate.toFixed(1)}x</span>
+                    </div>
+                    <input 
+                      type="range" min="0.5" max="2" step="0.1"
+                      value={narrationRate} disabled={isMuted}
+                      onChange={(e) => setNarrationRate(parseFloat(e.target.value))}
+                      className={styles.slider}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ────── CENTRO DE COMUNICAÇÕES ────── */}
             <div className={styles.section}>
               <div className={styles.commCenter}>
@@ -727,6 +831,13 @@ export default function ProfilePage() {
             </form>
           </div>
         </div>
+      )}
+      
+      {showSettings && (
+        <SettingsModal 
+          isOpen={showSettings} 
+          onClose={() => setShowSettings(false)} 
+        />
       )}
     </div>
   )

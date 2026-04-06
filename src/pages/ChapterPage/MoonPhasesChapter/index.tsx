@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { useProgress } from '@/hooks/useProgress'
 import FloatingTooltip from '@/components/FloatingTooltip'
+import ShareButton from '@/components/ShareButton'
 import styles from './MoonPhasesChapter.module.css'
 
 type MoonPhaseId = 'nova' | 'quarto-crescente' | 'cheia' | 'quarto-minguante'
@@ -65,6 +67,7 @@ export default function MoonPhasesChapter() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
   const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; content: string; title: string } | null>(null)
   const { canStartLocal, setActiveNarration, setThemeColor } = useNarrationSequence()
+  const { saveExploration } = useProgress()
   const currentPhase = PHASES[phaseIdx]
 
   useEffect(() => {
@@ -93,6 +96,9 @@ export default function MoonPhasesChapter() {
     if (nar) {
       setActiveNarration(nar)
     }
+
+    // Ganha XP por descobrir uma nova fase da lua
+    saveExploration(`view-moon-phase-${phase.id}`, 50)
   }
 
   const handleSceneClick = (e: React.MouseEvent) => {
@@ -104,20 +110,30 @@ export default function MoonPhasesChapter() {
       visible: true,
       x,
       y,
-      title: "Exploração Lunar",
+      title: "Exploration Lunar",
       content: currentPhase.details
     })
+
+    // Ganha XP por explorar detalhes da fase atual
+    saveExploration(`moon-detail-scene-${currentPhase.id}`, 50)
   }
 
   return (
     <div className={styles.chapterContainer}>
       {/* ESPAÇO DE RENDERIZAÇÃO 3D E ANIMAÇÕES */}
       <div className={styles.dashboard}>
-        {/* CABEÇALHO INFORMATIVO */}
-        <div className={styles.infoSection}>
-          <h1 className={styles.phaseTitle}>{currentPhase.name}</h1>
-          <p className={styles.phaseDescription}>{currentPhase.description}</p>
-        </div>
+        <header className={styles.infoHeader}>
+          <div className={styles.headerTop}>
+            <div className={styles.badge}>Destaque da Noite</div>
+            <ShareButton 
+              title={`Aprendendo as Fases da Lua com o Théo! ✨🌕`}
+              text={`Olha só que incrível a fase ${currentPhase.name} que eu aprendi agora no Théo no Mundo da Lua! 🌑🌓🌕🌗`}
+              onShare={() => saveExploration(`share-moon-phase-${currentPhase.id}`, 50)}
+            />
+          </div>
+          <h2 className={styles.title}>{currentPhase.name}</h2>
+          <p className={styles.description}>{currentPhase.description}</p>
+        </header>
 
         <div className={styles.scenesContainer} onClick={handleSceneClick}>
           <MoonPhaseScene currentPhase={currentPhase} />
@@ -133,7 +149,20 @@ export default function MoonPhasesChapter() {
             <span className={styles.cardLabel}>Idade da Lua</span>
             <span className={styles.cardValue}>{currentPhase.stats.idade}</span>
           </div>
-          <div className={styles.detailCard}>
+          <div 
+            className={`${styles.detailCard} ${styles.clickable}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setTooltip({
+                visible: true,
+                x: e.clientX,
+                y: e.clientY,
+                title: "Melhor Horário",
+                content: currentPhase.stats.visibilidade
+              });
+              saveExploration(`moon-detail-time-${currentPhase.id}`, 25);
+            }}
+          >
             <span className={styles.cardLabel}>Melhor Horário</span>
             <span className={styles.cardValue}>{currentPhase.stats.visibilidade}</span>
           </div>

@@ -1,6 +1,40 @@
 /* 🚀 THÉO EM ÓRBITA - SERVICE WORKER DE NOTIFICAÇÕES 🌙 */
 
 const THEO_NAME = 'Théo no Mundo da Lua';
+const CACHE_NAME = 'theo-static-v1';
+
+// 🛠️ Instalação: Cache dos recursos básicos para decolagem rápida
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      // Pequeno cache opcional, o Vite já lida com muito via hash, 
+      // mas precisamos do SW ativo e reportando fetch.
+      return cache.addAll(['/', '/index.html']);
+    })
+  );
+  self.skipWaiting();
+});
+
+// 🛠️ Ativação: Limpeza de caches obsoletos no cockpit
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 🛠️ Fetch: Necessário para a PWA ser instalável no Chrome
+self.addEventListener('fetch', (event) => {
+  // Apenas passa adiante, mas a existência do listener satisfaz o critério de instalebilidade
+  // futuramente pode-se implementar Cache-First aqui para performance.
+  event.respondWith(fetch(event.request));
+});
 
 // 🛠️ Esculpir a notificação quando um push chega
 self.addEventListener('push', (event) => {

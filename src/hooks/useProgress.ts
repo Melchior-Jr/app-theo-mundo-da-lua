@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { useAchievement } from '@/context/AchievementContext'
+import { TROPHIES } from '@/data/trophies'
+import { calcLevel } from '@/utils/playerUtils'
 
 export interface ChapterProgress {
   chapter_id: string
@@ -8,9 +11,16 @@ export interface ChapterProgress {
   completed: boolean
 }
 
+export interface ExplorationLog {
+  exploration_id: string // e.g. 'planet-mercurio-viewed'
+  xp_awarded: number
+}
+
 export function useProgress() {
   const { user } = useAuth()
+  const { showAchievement } = useAchievement()
   const [progress, setProgress] = useState<ChapterProgress[]>([])
+  const [exploration, setExploration] = useState<ExplorationLog[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,12 +33,19 @@ export function useProgress() {
 
   const fetchProgress = async () => {
     try {
-      const { data } = await supabase
+      const { data: pData } = await supabase
         .from('player_chapter_progress')
         .select('*')
         .eq('player_id', user?.id)
 
-      if (data) setProgress(data)
+      if (pData) setProgress(pData)
+
+      const { data: eData } = await supabase
+        .from('player_exploration_logs')
+        .select('exploration_id, xp_awarded')
+        .eq('player_id', user?.id)
+
+      if (eData) setExploration(eData)
     } catch (e) {
       console.error('Error fetching progress:', e)
     } finally {
@@ -76,10 +93,10 @@ export function useProgress() {
     if (!user?.id) return
 
     const rewards: Record<string, { xp: number, trophyId: string }> = {
-      'sistema-solar':        { xp: 100, trophyId: 'exp_first_chapter' },
-      'movimentos-da-terra': { xp: 150, trophyId: 'exp_moon_module' },
-      'constelaçoes':        { xp: 200, trophyId: 'exp_five_chapters' },
-      'fases-da-lua':        { xp: 250, trophyId: 'exp_all_chapters' }, // Just an example mapping
+      'sistema-solar':        { xp: 500, trophyId: 'exp_first_chapter' },
+      'movimentos-da-terra': { xp: 500, trophyId: 'exp_moon_module' },
+      'constelaçoes':        { xp: 500, trophyId: 'exp_five_chapters' },
+      'fases-da-lua':        { xp: 1000, trophyId: 'exp_all_chapters' }, 
     }
 
     const reward = rewards[chapterId]
@@ -96,10 +113,53 @@ export function useProgress() {
         unlocked_at: new Date().toISOString()
       }, { onConflict: 'user_id,trophy_id' })
 
-      // 2. Fetch current stats
+      // 2. Increment global XP using atomic RPC
+      const { error: rpcError } = await supabase.rpc('increment_player_xp', {
+        p_id: user.id,
+        p_amount: reward.xp
+      })
+
+      if (rpcError) throw rpcError
+
+      // 2.3 Level Up Detection
+      const { data: statsBefore } = await supabase
+        .from('player_global_stats')
+        .select('galactic_xp')
+        .eq('player_id', user.id)
+        .single()
+      
+      const currentXP = statsBefore?.galactic_xp || 0
+      const oldLevel = calcLevel(currentXP)
+      const newLevel = calcLevel(currentXP + reward.xp)
+
+      if (newLevel > oldLevel) {
+        showAchievement({
+          id: `level-up-${newLevel}`,
+          type: 'level',
+          title: `Nível ${newLevel}!`,
+          description: `Parabéns! Você alcançou o nível ${newLevel}. Théo está impressionado com seu progresso! 🚀✨`,
+          icon: '✨',
+          xpBonus: 0
+        })
+      }
+
+      // 2.5 Show Trophy Achievement
+      const trophy = TROPHIES.find(t => t.id === reward.trophyId)
+      if (trophy) {
+        showAchievement({
+          id: trophy.id,
+          type: 'trophy',
+          title: trophy.name,
+          description: trophy.description,
+          icon: trophy.icon, // Assumindo que o ícone é compatível com o span.icon do modal
+          xpBonus: reward.xp
+        })
+      }
+
+      // 3. Update total trophies count in stats
       const { data: stats } = await supabase
         .from('player_global_stats')
-        .select('galactic_xp, total_trophies')
+        .select('total_trophies')
         .eq('player_id', user.id)
         .single()
 
@@ -107,7 +167,6 @@ export function useProgress() {
         await supabase
           .from('player_global_stats')
           .update({
-            galactic_xp: (stats.galactic_xp || 0) + reward.xp,
             total_trophies: (stats.total_trophies || 0) + 1
           })
           .eq('player_id', user.id)
@@ -119,5 +178,63 @@ export function useProgress() {
     }
   }
 
-  return { progress, loading, saveProgress, fetchProgress }
+  const saveExploration = async (exploration_id: string, xp_to_award: number = 10) => {
+    if (!user?.id) return
+
+    // 1. Check if already explored
+    const exists = exploration.some(e => e.exploration_id === exploration_id)
+    if (exists) return
+
+    try {
+      // 2. Persist to DB
+      const { error } = await supabase
+        .from('player_exploration_logs')
+        .insert({
+          player_id: user.id,
+          exploration_id,
+          xp_awarded: xp_to_award,
+          created_at: new Date().toISOString()
+        })
+
+      if (error) throw error
+
+      // 3. Update local state
+      setExploration(prev => [...prev, { exploration_id, xp_awarded: xp_to_award }])
+
+      // 4. Update global XP using atomic RPC
+      const { error: rpcError } = await supabase.rpc('increment_player_xp', {
+        p_id: user.id,
+        p_amount: xp_to_award
+      })
+
+      if (rpcError) throw rpcError
+
+      // 4.5 Level Up Detection (for exploration)
+      const { data: statsBefore } = await supabase
+        .from('player_global_stats')
+        .select('galactic_xp')
+        .eq('player_id', user.id)
+        .single()
+      
+      const currentXP = statsBefore?.galactic_xp || 0
+      const oldLevel = calcLevel(currentXP)
+      const newLevel = calcLevel(currentXP + xp_to_award)
+
+      if (newLevel > oldLevel) {
+        showAchievement({
+          id: `level-up-${newLevel}`,
+          type: 'level',
+          title: `Nível ${newLevel}!`,
+          description: `Nível ${newLevel} alcançado! Você está se tornando um mestre do espaço.`,
+          icon: '🚀',
+        })
+      }
+
+      console.log(`🗺️ Exploração descoberta: ${exploration_id} (+${xp_to_award} XP)`)
+    } catch (e) {
+      console.error('Error saving exploration:', e)
+    }
+  }
+
+  return { progress, exploration, loading, saveProgress, saveExploration, fetchProgress }
 }

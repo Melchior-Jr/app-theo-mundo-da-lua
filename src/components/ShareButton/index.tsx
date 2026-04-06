@@ -7,9 +7,10 @@ interface ShareButtonProps {
   text: string
   url?: string
   className?: string
+  onShare?: () => void
 }
 
-export default function ShareButton({ title, text, url = window.location.href, className = '' }: ShareButtonProps) {
+export default function ShareButton({ title, text, url = window.location.href, className = '', onShare }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const handleShare = async () => {
@@ -22,6 +23,7 @@ export default function ShareButton({ title, text, url = window.location.href, c
     if (navigator.share) {
       try {
         await navigator.share(shareData)
+        if (onShare) onShare()
       } catch (err) {
         console.log('Share failed:', err)
       }
@@ -30,6 +32,7 @@ export default function ShareButton({ title, text, url = window.location.href, c
       try {
         await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`)
         setCopied(true)
+        if (onShare) onShare()
         setTimeout(() => setCopied(false), 3000)
       } catch (err) {
         console.error('Clipboard failed', err)
@@ -40,6 +43,7 @@ export default function ShareButton({ title, text, url = window.location.href, c
   const shareOnWhatsApp = () => {
     const encodedText = encodeURIComponent(`${title}\n\n${text}\n\n${url}`)
     window.open(`https://wa.me/?text=${encodedText}`, '_blank')
+    if (onShare) onShare()
   }
 
   return (

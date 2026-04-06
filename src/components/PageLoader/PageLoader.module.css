@@ -1,0 +1,135 @@
+.loaderContainer {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 50%, #0D1B2A 0%, #01010A 100%);
+  color: #fff;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  position: relative;
+  z-index: 9999;
+}
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(139, 249, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 249, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Rocket Animation */
+.rocketWrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  animation: float 2.5s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(5deg); }
+  50% { transform: translateY(-12px) rotate(-3deg); }
+}
+
+.rocketGlow {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(139, 249, 255, 0.15) 0%, transparent 65%);
+  border-radius: 50%;
+  filter: blur(10px);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+.rocket {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 0 15px rgba(139, 249, 255, 0.4));
+  z-index: 2;
+}
+
+/* Text & Progress */
+.textWrapper {
+  text-align: center;
+  z-index: 5;
+}
+
+.loadingText {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(139, 249, 255, 0.4);
+}
+
+.progressTrack {
+  width: 160px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  margin: 1rem auto;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  position: absolute;
+  height: 100%;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, #8bf9ff, transparent);
+  animation: scan 1.2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  from { left: -100%; }
+  to { left: 100%; }
+}
+
+.subText {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+/* Background Stars */
+.starField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #fff;
+  animation: twinkle 3s infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}

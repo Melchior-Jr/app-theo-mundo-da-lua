@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, LogOut, Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, Bell } from 'lucide-react'
+import { Menu, X, Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, Bell, Settings } from 'lucide-react'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
 import StarField from '@/components/StarField'
 import { useAuth } from '@/context/AuthContext'
@@ -8,7 +8,11 @@ import { useSound } from '@/context/SoundContext'
 import { supabase } from '@/lib/supabase'
 import { NotificationDropdown } from '@/components/NotificationDropdown'
 import { NotificationService } from '@/services/notificationService'
+import { SettingsModal } from '@/components/SettingsModal'
 import FeaturedBanner from '@/components/FeaturedBanner'
+import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { useProgress } from '@/hooks/useProgress'
+import ShareButton from '@/components/ShareButton'
 import styles from './GamesPage.module.css'
 
 // ─── SVGs ────────────────────────────────────────────────────────
@@ -175,30 +179,63 @@ const ACTIVITIES = [
     color: '#ef476f',
     Art: MemoryArt,
     locked: true,
-    type: 'jogo'
-  },
+    type: 'jogo',
+    unlocked_challenge: 0
+  }
 ]
 
-const CATEGORIES = ['Tudo', 'Aulas', 'Jogos']
+interface Activity {
+  id: string
+  title: string
+  sub: string
+  difficulty: 'Fácil' | 'Médio' | 'Difícil'
+  path: string
+  color: string
+  Art: React.FC
+  locked: boolean
+  type: 'aula' | 'jogo'
+  unlocked_challenge?: number
+}
+
+interface ExtendedActivity extends Activity {
+  current: number
+  target: number
+  label: string
+  percent: number
+  status: 'open' | 'progression_locked' | 'dev_locked'
+}
+
+const CATEGORIES = ['Tudo', 'Aulas', 'Jogos'] as const
+type CategoryType = typeof CATEGORIES[number]
 const DIFF_COLOR = { Fácil: '#06d6a0', Médio: '#FFD166', Difícil: '#ef476f' }
 
 export default function GamesPage() {
   const { session, user } = useAuth()
-  const { setIsMuted } = useSound()
+  const { playBGMusic, playSFX } = useSound()
   const [showAuth, setShowAuth] = useState(false)
   const [playerData, setPlayerData] = useState<any>(null)
   const [playerStats, setPlayerStats] = useState<any>(null)
+  const [gameStats, setGameStats] = useState<any[]>([])
+  const [chapterProgress, setChapterProgress] = useState<any[]>([])
   const [topPlayers, setTopPlayers] = useState<any[]>([])
-  const [activeCategory, setActiveCategory] = useState('Tudo')
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const { isGlobalLoading } = useNarrationSequence()
+  const { saveExploration } = useProgress()
+  const [activeCategory, setActiveCategory] = useState<CategoryType>('Tudo')
   const [scrolled, setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [showNotifications, setShowNotifications] = useState(false)
+  const [showLockModal, setShowLockModal] = useState<{ show: boolean, title: string, message: string }>({ show: false, title: '', message: '' })
 
   const toggleMenu = () => setIsMenuOpen(prev => !prev)
   const closeMenu = () => setIsMenuOpen(false)
 
-  useEffect(() => { setIsMuted(true); return () => setIsMuted(false) }, [setIsMuted])
+
+  useEffect(() => {
+    if (isGlobalLoading) return
+    playBGMusic()
+  }, [playBGMusic, isGlobalLoading])
 
   useEffect(() => {
     fetchTopPlayers()
@@ -258,43 +295,114 @@ export default function GamesPage() {
   }
 
   const fetchPlayerData = async () => {
+    if (!user?.id) return
     try {
-      // Perfil básico
-      const { data: profile } = await supabase.from('players').select('*').eq('id', user?.id).single()
+      const [profileRes, statsRes, trophyRes, gStatsRes, cProgressRes, challengesRes] = await Promise.all([
+        supabase.from('players').select('*').eq('id', user.id).single(),
+        supabase.from('player_global_stats').select('*').eq('player_id', user.id).single(),
+        supabase.from('user_trophies').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('player_game_stats').select('*').eq('player_id', user.id),
+        supabase.from('player_chapter_progress').select('*').eq('player_id', user.id),
+        supabase.from('quiz_challenges').select('*').eq('status', 'completed').or(`challenger_id.eq.${user.id},challenged_id.eq.${user.id}`)
+      ])
 
-      // Estatísticas globais (XP, Score)
-      const { data: stats } = await supabase.from('player_global_stats').select('*').eq('player_id', user?.id).single()
+      // Cálculo de vitórias em duelo
+      const duelWins = challengesRes.data?.filter(c => {
+        const isChallenger = c.challenger_id === user.id
+        const c1 = c.challenger_score || 0
+        const c2 = c.challenged_score || 0
+        return isChallenger ? c1 > c2 : c2 > c1
+      }).length || 0
 
-      // Contagem REAL de troféus da tabela de conquistas
-      const { count: trophyCount } = await supabase
-        .from('user_trophies')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user?.id)
-
-      // Mesclamos os dados para garantir que o count de troféus seja o real da tabela
-      setPlayerData(profile)
+      setPlayerData(profileRes.data)
       setPlayerStats({
-        ...stats,
-        total_trophies: trophyCount || 0,
-        galactic_xp: stats?.galactic_xp || 0,
-        total_score: stats?.total_score || 0
+        ...statsRes.data,
+        total_trophies: trophyRes.count || 0,
+        galactic_xp: statsRes.data?.galactic_xp || 0,
+        total_score: statsRes.data?.total_score || 0,
+        duel_wins: duelWins
       })
+      setGameStats(gStatsRes.data || [])
+      setChapterProgress(cProgressRes.data || [])
     } catch (e) {
       console.error(e)
     }
   }
 
-  const handleGameClick = (e: React.MouseEvent, item: typeof ACTIVITIES[0]) => {
-    if (item.locked) { e.preventDefault(); return }
+  const handleGameClick = (e: React.MouseEvent, item: any) => {
+    if (item.status === 'progression_locked') {
+      e.preventDefault();
+      setShowLockModal({
+        show: true,
+        title: 'Acesso Restrito, Astronauta!',
+        message: `O ${item.title} é um desafio avançado! Para decolar aqui, você precisa completar pelo menos um capítulo na Jornada do Conhecimento primeiro. Estude um pouco e volte aqui!`
+      })
+      return
+    }
+    if (item.status === 'dev_locked') {
+      e.preventDefault();
+      return
+    }
     if (!session) { e.preventDefault(); setShowAuth(true) }
   }
 
-  const filteredActivities = useMemo(() => {
-    if (activeCategory === 'Tudo') return ACTIVITIES
-    if (activeCategory === 'Aulas') return ACTIVITIES.filter(a => a.type === 'aula')
-    if (activeCategory === 'Jogos') return ACTIVITIES.filter(a => a.type === 'jogo')
-    return ACTIVITIES
-  }, [activeCategory])
+  const activitiesProgress: ExtendedActivity[] = useMemo(() => {
+    const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253'
+
+    const targets: Record<string, number> = {
+      journey: 4,
+      quiz: 20, // 5 Níveis * (3 Missões + 1 Revisão)
+      invasores: 2500,
+      duel: 10
+    }
+
+    return ACTIVITIES.map((act) => {
+      if (act.locked) return { ...act, percent: 0, label: 'Bloqueado', current: 0, target: 0, status: 'dev_locked' } as ExtendedActivity
+      
+      let current = 0
+      let label = ''
+
+      if (act.id === 'journey') {
+        current = chapterProgress.filter(p => p.completed).length
+        label = `${current} de ${targets.journey} capítulos`
+      } else if (act.id === 'quiz') {
+        const stats = gameStats.find(gs => gs.game_id === QUIZ_GAME_ID)
+        const challengeData = stats?.metadata?.challenge_data || {}
+        
+        // Contagem de desafios únicos concluídos
+        current = Object.values(challengeData).filter((c: any) => c.completed).length
+        label = `${current} de ${targets.quiz} desafios`
+      } else if (act.id === 'invasores') {
+        const stats = gameStats.find(gs => gs.game_id === 'invasores-do-conhecimento')
+        current = Math.floor((stats?.total_score || 0) / 10)
+        label = `${current}xp de ${targets.invasores}xp`
+      } else if (act.id === 'duel') {
+        current = playerStats?.duel_wins || 0
+        label = `${current} de ${targets.duel} vitórias`
+      }
+
+      const percent = Math.min(100, (current / (targets[act.id] || 1)) * 100)
+      
+      const hasChapter = chapterProgress.some(p => p.completed)
+      let status: 'open' | 'progression_locked' | 'dev_locked' = 'open'
+      
+      if (act.locked) {
+        status = 'dev_locked'
+      } else if (act.type === 'jogo' && !hasChapter) {
+        status = 'progression_locked'
+      }
+
+      return { 
+        ...act, 
+        current, 
+        target: targets[act.id] || 1, 
+        label, 
+        percent, 
+        status, 
+        locked: status !== 'open' 
+      } as ExtendedActivity
+    })
+  }, [gameStats, chapterProgress, playerStats])
 
   const level = calcLevel(playerStats?.galactic_xp)
   const title = getLevelTitle(level)
@@ -306,9 +414,9 @@ export default function GamesPage() {
       <div className={styles.nebula1} />
       <div className={styles.nebula2} />
 
-      <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
+      <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''} ${isMenuOpen ? styles.navbarMenuOpen : ''}`}>
         <div className={styles.navbarContainer}>
-          <Link to="/" className={styles.logo} onClick={closeMenu}>
+          <Link to="/" className={styles.logo} onClick={() => { playSFX('click'); closeMenu(); }}>
             {!scrolled ? (
               <div className={styles.logoMoon}><div className={styles.moon}></div><div className={styles.glow}></div></div>
             ) : (
@@ -325,7 +433,7 @@ export default function GamesPage() {
                 <button
                   className={styles.bellBtn}
                   title="Notificações"
-                  onClick={() => setShowNotifications(!showNotifications)}
+                  onClick={() => { playSFX('click'); setShowNotifications(!showNotifications); }}
                 >
                   <Bell size={18} />
                   {unreadCount > 0 && <div className={styles.bellDot} />}
@@ -340,17 +448,16 @@ export default function GamesPage() {
               </div>
             )}
 
-            <button className={styles.menuToggle} onClick={toggleMenu} aria-label="Menu">
+            <button className={styles.menuToggle} onClick={() => { playSFX('click'); toggleMenu(); }} aria-label="Menu">
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
 
           <div className={`${styles.navLinks} ${isMenuOpen ? styles.menuOpen : ''}`}>
-            <Link to="/jogos" className={`${styles.navLink} ${activeCategory === 'Tudo' ? styles.navLinkActive : ''}`} onClick={() => { setActiveCategory('Tudo'); closeMenu(); }}>ESTAÇÃO</Link>
-            <button className={`${styles.navLink} ${activeCategory === 'Aulas' ? styles.navLinkActive : ''}`} onClick={() => { setActiveCategory('Aulas'); closeMenu(); }}>AULAS</button>
-            <button className={`${styles.navLink} ${activeCategory === 'Jogos' ? styles.navLinkActive : ''}`} onClick={() => { setActiveCategory('Jogos'); closeMenu(); }}>JOGOS</button>
-            <Link to="/ranking" className={styles.navLink} onClick={closeMenu}>RANKING</Link>
-            <Link to="/trofeus" className={styles.navLink} onClick={closeMenu}>TROFÉUS</Link>
+            <button className={`${styles.navLink} ${activeCategory === 'Aulas' ? styles.navLinkActive : ''}`} onClick={() => { playSFX('click'); setActiveCategory('Aulas'); closeMenu(); }}>AULAS</button>
+            <button className={`${styles.navLink} ${activeCategory === 'Jogos' ? styles.navLinkActive : ''}`} onClick={() => { playSFX('click'); setActiveCategory('Jogos'); closeMenu(); }}>JOGOS</button>
+            <Link to="/ranking" className={styles.navLink} onClick={() => { playSFX('click'); closeMenu(); }}>RANKING</Link>
+            <Link to="/trofeus" className={styles.navLink} onClick={() => { playSFX('click'); closeMenu(); }}>TROFÉUS</Link>
 
             {session ? (
               <div className={styles.userWidget}>
@@ -358,7 +465,10 @@ export default function GamesPage() {
                   <button
                     className={styles.bellBtn}
                     title="Notificações"
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={() => {
+                      playSFX('click')
+                      setShowNotifications(!showNotifications)
+                    }}
                   >
                     <Bell size={18} />
                     {unreadCount > 0 && <div className={styles.bellDot} />}
@@ -371,7 +481,18 @@ export default function GamesPage() {
                     onUnreadChange={setUnreadCount}
                   />
                 </div>
-                <Link to="/perfil" className={styles.userCard}>
+
+                <button 
+                  className={styles.settingsBtn} 
+                  title="Configurações"
+                  onClick={() => {
+                    playSFX('click')
+                    setShowSettings(true)
+                  }}
+                >
+                  <Settings size={18} />
+                </button>
+                <Link to="/perfil" className={styles.userCard} onClick={() => playSFX('click')}>
                   <div className={styles.userAvatarWrap}>
                     {playerData?.avatar_url ? <img src={playerData.avatar_url} className={styles.userAvatar} /> : <div className={styles.userAvatarFallback}>{playerData?.username?.charAt(0) || '?'}</div>}
                   </div>
@@ -383,10 +504,9 @@ export default function GamesPage() {
                     </div>
                   </div>
                 </Link>
-                <button onClick={() => supabase.auth.signOut()} className={styles.logoutBtn} title="Sair"><LogOut size={16} /></button>
               </div>
             ) : (
-              <Link to="/login" className={styles.loginBtn}>ENTRAR</Link>
+              <Link to="/login" className={styles.loginBtn} onClick={() => playSFX('click')}>ENTRAR</Link>
             )}
           </div>
         </div>
@@ -394,14 +514,13 @@ export default function GamesPage() {
 
       <div className={styles.content}>
         <header className={styles.pageHeader}>
-          <div className={styles.titleWrapper}>
-            <h1 className={styles.pageTitle}>Estação <span>Espacial</span></h1>
-            <div className={styles.scannerLine} />
-          </div>
-
           <div className={styles.subWrapper}>
             <p className={styles.pageSub}>
-              Bem-vindo ao seu hub central de comando. Explore o universo através de missões educativas e desafios intergalácticos.
+              Bem-vindo ao <span className={styles.theo}>Théo</span>
+              <span className={styles.noMundo}> no Mundo</span>
+              <span className={styles.daLuaNav}> da Lua <span className={styles.moonEmojiNav}>🌙</span></span>
+              <br />
+              Se prepara aí… porque a gente vai decolar numa viagem pelo espaço cheia de descobertas, missões e muita coisa massa pra explorar!  👨‍🚀🚀
             </p>
           </div>
         </header>
@@ -411,18 +530,24 @@ export default function GamesPage() {
           BadgeIcon={Star}
           title="Jornada do Conhecimento"
           subtitle="Embarque na aventura de Théo e descubra os segredos do universo em 4 capítulos épicos!"
-          ctaText="CONTINUAR MISSÃO"
+          ctaText="IR PARA AULA"
           ctaPath="/capitulos"
           Art={ProgressArt}
+          onCtaClick={() => playSFX('click')}
         >
           <div className={styles.bannerProgression}>
             <div className={styles.progressionHeader}>
-              <span className={styles.progressionCount}>0/4 CAPÍTULOS</span>
+              <span className={styles.progressionCount}>
+                {(activitiesProgress.find(a => a.id === 'journey') as any)?.label || '0 de 4 capítulos'}
+              </span>
             </div>
             <div className={styles.progressionFooter}>
               <div className={styles.progressionBarWrap}>
                 <div className={styles.progressionBar}>
-                  <div className={styles.progressionFill} style={{ width: '0%' }} />
+                  <div 
+                    className={styles.progressionFill} 
+                    style={{ width: `${(activitiesProgress.find(a => a.id === 'journey') as any)?.percent || 0}%` }} 
+                  />
                 </div>
               </div>
             </div>
@@ -453,7 +578,7 @@ export default function GamesPage() {
                 <div className={styles.playerStat}><span className={styles.playerStatNum}>{playerStats?.total_trophies || 0}</span><span className={styles.playerStatLabel}>Troféus</span></div>
                 <div className={styles.playerStat}><span className={styles.playerStatNum}>{playerStats?.galactic_xp || 0}</span><span className={styles.playerStatLabel}>Galactic XP</span></div>
               </div>
-              <Link to="/perfil" className={styles.playerProfileBtn}>Ver Perfil <ChevronRight size={15} /></Link>
+              <Link to="/perfil" className={styles.playerProfileBtn} onClick={() => playSFX('click')}>Ver Perfil <ChevronRight size={15} /></Link>
             </div>
           </section>
         )}
@@ -462,14 +587,22 @@ export default function GamesPage() {
           <h2 className={styles.sectionTitle}><LayoutGrid size={18} /> Missões Disponíveis</h2>
           <div className={styles.categoryPills}>
             {CATEGORIES.map(cat => (
-              <button key={cat} className={`${styles.pill} ${activeCategory === cat ? styles.pillActive : ''}`} onClick={() => setActiveCategory(cat)}>{cat}</button>
+              <button 
+                key={cat} 
+                className={`${styles.pill} ${activeCategory === cat ? styles.pillActive : ''}`} 
+                onClick={() => { playSFX('click'); setActiveCategory(cat); }}
+              >
+                {cat}
+              </button>
             ))}
           </div>
         </div>
 
         <div className={styles.mainLayout}>
           <div className={styles.gamesGrid}>
-            {filteredActivities.map((item, idx) => (
+            {activitiesProgress
+              .filter(act => activeCategory === 'Tudo' || (activeCategory === 'Aulas' ? act.type === 'aula' : act.type === 'jogo'))
+              .map((item, idx) => (
               <Link
                 key={item.id}
                 to={item.path}
@@ -479,7 +612,18 @@ export default function GamesPage() {
               >
                 <div className={styles.gameCardImage}>
                   <item.Art />
-                  {item.locked && <div className={styles.lockOverlay}><Lock size={20} /><span>Em breve</span></div>}
+                  {item.status === 'dev_locked' && (
+                    <div className={styles.lockOverlay}>
+                      <Lock size={20} />
+                      <span>Em breve</span>
+                    </div>
+                  )}
+                  {item.status === 'progression_locked' && (
+                    <div className={styles.lockOverlay} style={{ backgroundColor: 'rgba(255, 61, 113, 0.4)' }}>
+                      <Lock size={20} />
+                      <span>Estude Primeiro</span>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.gameCardBody}>
                   <div className={styles.gameCardMeta}>
@@ -487,6 +631,24 @@ export default function GamesPage() {
                     <span className={styles.gameCardDiff} style={{ color: DIFF_COLOR[item.difficulty as keyof typeof DIFF_COLOR] }}>{item.difficulty}</span>
                   </div>
                   <h3 className={styles.gameCardTitle}>{item.title}</h3>
+                  
+                  {session && item.status === 'open' && (
+                    <div className={styles.gameCardProgress}>
+                      <div className={styles.progressHeader}>
+                        <span className={styles.progressLabel}>{(item as any).label}</span>
+                        <span className={styles.progressPercent}>{Math.round((item as any).percent)}%</span>
+                      </div>
+                      <div className={styles.progressBar}>
+                        <div 
+                          className={styles.progressFill} 
+                          style={{ 
+                            width: `${(item as any).percent}%`,
+                            backgroundColor: item.color 
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.gameCardAccent} />
               </Link>
@@ -516,6 +678,20 @@ export default function GamesPage() {
                 <Link to="/capitulos" className={styles.quickLink}><BookOpen size={15} /> Capítulos <ChevronRight size={13} className={styles.quickLinkArrow} /></Link>
               </div>
             </div>
+
+            <div className={`${styles.sideCard} ${styles.shareCard}`}>
+              <div className={styles.sideCardHeader}>
+                <div className={styles.xpBadge}>+50 XP</div>
+                <h3>Convide Amigos</h3>
+              </div>
+              <p className={styles.shareText}>Ajude o Théo a levar o conhecimento para mais crianças!</p>
+              <ShareButton 
+                title="Explorando o Espaço com o Théo! 🚀"
+                text="Vem aprender sobre o Universo de um jeito super divertido no Théo no Mundo da Lua! Ganhei muitos pontos explorando os planetas!"
+                url="https://theonomundodalua.com"
+                onShare={() => saveExploration('share-platform-bonus', 50)}
+              />
+            </div>
           </aside>
         </div>
       </div>
@@ -524,6 +700,22 @@ export default function GamesPage() {
         <span>© 2026 Théo no Mundo da Lua</span>
         <span className={styles.footerStatus}><div className={styles.statusDot} /> Sistema Estável</span>
       </footer>
+
+      {showLockModal.show && (
+        <div className={styles.modalOverlay} onClick={() => setShowLockModal({ ...showLockModal, show: false })}>
+          <div className={styles.lockModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.lockModalIcon}><Lock size={40} /></div>
+            <h2>{showLockModal.title}</h2>
+            <p>{showLockModal.message}</p>
+            <button 
+              className={styles.lockModalBtn} 
+              onClick={() => setShowLockModal({ ...showLockModal, show: false })}
+            >
+              ENTENDIDO, CAPITÃO!
+            </button>
+          </div>
+        </div>
+      )}
 
       {showAuth && (
         <div className={styles.authModal}>
@@ -537,6 +729,11 @@ export default function GamesPage() {
           </div>
         </div>
       )}
+
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </div>
   )
 }

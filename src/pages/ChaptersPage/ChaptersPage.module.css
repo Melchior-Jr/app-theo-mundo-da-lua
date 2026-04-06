@@ -497,18 +497,34 @@
   .mobileBell  { display: block; }
 }
 
-.bellBtn {
+.bellBtn,
+.settingsBtn {
   position: relative;
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08); /* Increased slightly for better visibility */
+  border: 1px solid rgba(255,255,255,0.15); /* Stronger border */
   border-radius: 50%;
-  color: rgba(255,255,255,0.55);
+  color: rgba(168, 180, 204, 0.8); /* Better base contrast */
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.bellBtn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+.bellBtn:hover,
+.settingsBtn:hover { 
+  color: #fff; 
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(-1px);
+}
+
+.settingsBtn:hover svg {
+  transform: rotate(45deg);
+}
+
+.settingsBtn svg {
+  transition: transform 0.4s ease;
+}
 
 .bellDot {
   position: absolute;
@@ -541,13 +557,29 @@
     gap: 0.5rem;
   }
   
-  /* Garante nível e XP no mobile reduzindo o nome se necessário */
-  @media (max-width: 480px) {
-    .userName { display: none; } /* Esconde o nome para caber Nível/XP */
-    .userTitle { font-weight: 900; }
-    .userCard { padding: 0.35rem 0.6rem; gap: 0.4rem; }
-    .userMeta { display: flex; transform: scale(0.9); }
-    .navLinks { gap: 0.3rem; }
+  /* Garante que informações fiquem empilhadas e limpas no mobile */
+  @media (max-width: 540px) {
+    .userName { 
+      display: none; 
+    }
+    .userCard { 
+      padding: 0.35rem 0.65rem; 
+      gap: 0.45rem; 
+      border-radius: 50px; /* Volta ao formato de pílula já que só tem meta */
+    }
+    .userMeta { 
+      flex-direction: column; 
+      align-items: flex-start;
+      gap: 0; 
+      line-height: 1.2;
+      transform: scale(0.9);
+      transform-origin: left center;
+    }
+    .userLevel, .userXp {
+      display: block;
+      font-size: 0.6rem;
+    }
+    .navLinks { gap: 0.4rem; }
   }
 
   .userWidget { 

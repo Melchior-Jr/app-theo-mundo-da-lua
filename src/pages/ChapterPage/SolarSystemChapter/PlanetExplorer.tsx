@@ -5,6 +5,8 @@ import PlanetViewer3D from '@/components/PlanetViewer3D'
 import FloatingTooltip from '@/components/FloatingTooltip'
 import { getNarrationById, getRandomLoadingNarration } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { useProgress } from '@/hooks/useProgress'
+import ShareButton from '@/components/ShareButton'
 import styles from './PlanetExplorer.module.css'
 
 interface Props {}
@@ -35,6 +37,8 @@ export default function PlanetExplorer({}: Props) {
     setThemeColor,
     addViewedPlanet
   } = useNarrationSequence()
+
+  const { saveExploration } = useProgress()
 
   // Banco de curiosidades detalhadas (Lore) para cada estatística
   const STAT_LORE: Record<string, Record<string, string>> = {
@@ -114,11 +118,14 @@ export default function PlanetExplorer({}: Props) {
     if (isModelLoaded && planetNarration) {
       setActiveNarration(planetNarration)
       addViewedPlanet(selectedPlanet.id)
+      
+      // Ganha XP por ver o planeta pela primeira vez
+      saveExploration(`view-planet-${selectedPlanet.id}`, 20)
     } else {
       setActiveNarration(loadingNarration)
     }
     setThemeColor(selectedPlanet.color)
-  }, [selectedPlanet, isModelLoaded, setActiveNarration, setThemeColor, addViewedPlanet])
+  }, [selectedPlanet, isModelLoaded, setActiveNarration, setThemeColor, addViewedPlanet, saveExploration])
 
   useEffect(() => {
     setIsModelLoaded(false)
@@ -148,6 +155,9 @@ export default function PlanetExplorer({}: Props) {
       content: selectedPlanet.funFact // Usa a curiosidade como conteúdo inicial da tooltip
     })
     setHasInteracted(true)
+
+    // Ganha XP por interagir com o modelo 3D
+    saveExploration(`interact-3d-${selectedPlanet.id}`, 20)
   }
 
   return (
@@ -172,8 +182,15 @@ export default function PlanetExplorer({}: Props) {
 
         <div className={styles.infoBox}>
           <header className={styles.infoHeader}>
-            <div className={styles.planetBadge}>
-              <span className={styles.planetOrder}>{selectedPlanet.order}º Parada</span>
+            <div className={styles.headerTop}>
+              <div className={styles.planetBadge}>
+                <span className={styles.planetOrder}>{selectedPlanet.order}º Parada</span>
+              </div>
+              <ShareButton 
+                title={`Explorando ${selectedPlanet.name} com o Théo! 🚀`}
+                text={`Olha só o que eu descobri sobre o planeta ${selectedPlanet.name} no Théo no Mundo da Lua! 🪐`}
+                onShare={() => saveExploration(`share-planet-${selectedPlanet.id}`, 50)}
+              />
             </div>
             <h2 className={styles.planetTitle}>{selectedPlanet.name}</h2>
           </header>
@@ -188,7 +205,11 @@ export default function PlanetExplorer({}: Props) {
               <button 
                 key={stat.label} 
                 className={`${styles.statCard} ${styles.clickable}`}
-                onClick={() => setActiveStatDetail({ id: selectedPlanet.id, ...stat })}
+                onClick={() => {
+                  setActiveStatDetail({ id: selectedPlanet.id, ...stat })
+                  // Ganha XP por explorar detalhes específicos (Cards com modais)
+                  saveExploration(`stat-detail-${selectedPlanet.id}-${stat.label.toLowerCase()}`, 10)
+                }}
               >
                 <div className={styles.statLabel}>{stat.label}</div>
                 <div className={styles.statValue}>{stat.value}</div>

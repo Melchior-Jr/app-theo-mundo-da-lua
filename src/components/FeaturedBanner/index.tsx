@@ -11,6 +11,7 @@ interface FeaturedBannerProps {
   ctaPath: string
   secondaryText?: string
   onSecondaryClick?: () => void
+  onCtaClick?: () => void
   Art?: React.ElementType
   children?: React.ReactNode
 }
@@ -24,6 +25,7 @@ export default function FeaturedBanner({
   ctaPath,
   secondaryText,
   onSecondaryClick,
+  onCtaClick,
   Art,
   children
 }: FeaturedBannerProps) {
@@ -41,7 +43,7 @@ export default function FeaturedBanner({
         <p className={styles.sub}>{subtitle}</p>
         
         <div className={styles.actions}>
-          <Link to={ctaPath} className={styles.cta}>
+          <Link to={ctaPath} className={styles.cta} onClick={onCtaClick}>
              {ctaText} <div className={styles.ctaIcon}>✨</div>
           </Link>
           {secondaryText && (

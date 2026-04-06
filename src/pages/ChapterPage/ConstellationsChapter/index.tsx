@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getNarrationById } from '@/data/narration'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { useProgress } from '@/hooks/useProgress'
 import { Star } from 'lucide-react'
+import ShareButton from '@/components/ShareButton'
 import styles from './ConstellationsChapter.module.css'
 
 type ConstellationId = 
@@ -246,6 +248,7 @@ export default function ConstellationsChapter() {
   const [activeIntroStat, setActiveIntroStat] = useState<{ label: string; value: string; hint: string } | null>(null)
   
   const { setActiveNarration, setThemeColor, canStartLocal, setCanStartLocal } = useNarrationSequence()
+  const { saveExploration } = useProgress()
 
   // Sincroniza com o botão de lâmpada (reset da tela inicial)
   useEffect(() => {
@@ -282,9 +285,12 @@ export default function ConstellationsChapter() {
       }
       
       setThemeColor(activeConstellation.color)
+
+      // Ganha XP por descobrir uma constelação nova
+      saveExploration(`view-constellation-${selectedId}`, 20)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, canStartLocal, setActiveNarration, setThemeColor, activeConstellation])
+  }, [selectedId, canStartLocal, setActiveNarration, setThemeColor, activeConstellation, saveExploration])
 
   const handleSelect = (id: ConstellationId) => {
     setSelectedId(id)
@@ -304,7 +310,11 @@ export default function ConstellationsChapter() {
   }
 
   const handleReveal = () => {
-    if (selectedId && !revealed) setRevealed(true)
+    if (selectedId && !revealed) {
+      setRevealed(true)
+      // Ganha XP por ligar os pontos e revelar a figura da constelação
+      saveExploration(`reveal-constellation-${selectedId}`, 20)
+    }
   }
 
   return (
@@ -409,14 +419,23 @@ export default function ConstellationsChapter() {
             </div>
           )}
         </div>
-
         {/* Painel de Informações */}
         <div className={styles.infoPanel}>
           {activeConstellation ? (
             <>
               <header className={styles.infoHeader}>
-                <div className={styles.badge}>Constelação</div>
+                <div className={styles.headerTop}>
+                  <div className={styles.badge}>Constelação</div>
+                  <ShareButton 
+                    title={`Mapeei a Constelação de ${activeConstellation.name}! ✨🌌`}
+                    text={`Acabei de descobrir a história da constelação de ${activeConstellation.name} no Théo no Mundo da Lua! O céu está ficando incrível!`}
+                    onShare={() => saveExploration(`share-constellation-${selectedId}`, 50)}
+                  />
+                </div>
                 <h2 className={styles.title}>{activeConstellation.name}</h2>
+                {activeConstellation.shortName && (
+                  <p className={styles.subtitle}>Conhecida como {activeConstellation.shortName}</p>
+                )}
                 <p className={styles.description}>{activeConstellation.description}</p>
               </header>
 
@@ -430,7 +449,11 @@ export default function ConstellationsChapter() {
                     className={`${styles.statCard} ${styles.clickable} ${revealed ? styles.revealedCard : ''}`}
                     style={{ transitionDelay: `${100 * (i + 1)}ms` }}
                     onClick={() => {
-                      if (revealed) setActiveStatDetail(stat)
+                      if (revealed) {
+                        setActiveStatDetail(stat)
+                        // Ganha XP por explorar detalhes específicos da constelação
+                        saveExploration(`const-detail-${selectedId}-${stat.label.toLowerCase()}`, 10)
+                      }
                     }}
                     disabled={!revealed}
                   >
@@ -470,7 +493,11 @@ export default function ConstellationsChapter() {
                   <button 
                     key={stat.label} 
                     className={`${styles.statCard} ${styles.clickable}`}
-                    onClick={() => setActiveIntroStat(stat)}
+                    onClick={() => {
+                      setActiveIntroStat(stat)
+                      // Ganha XP por explorar conceitos básicos do guia
+                      saveExploration(`const-intro-guide-${stat.label.toLowerCase()}`, 25)
+                    }}
                   >
                     <div className={styles.statLabel}>{stat.label}</div>
                     <div className={styles.statValue}>{stat.value}</div>
