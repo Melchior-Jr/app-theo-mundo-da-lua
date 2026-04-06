@@ -1176,6 +1176,59 @@
   50% { opacity: 1; transform: scale(1.2); }
 }
 
+/* --- GAME CARD EMOJI ART ------------------------------ */
+.cardArtWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--c-dark, #0d0d2b);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardNebula {
+  position: absolute;
+  inset: 0;
+  filter: blur(40px);
+  opacity: 0.5;
+  z-index: 1;
+}
+
+.cardEmojiMain {
+  font-size: 72px;
+  filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.3));
+  z-index: 3;
+  animation: cardFloat 4s ease-in-out infinite;
+  display: block;
+  user-select: none;
+}
+
+.cardEmojiSecondary {
+  position: absolute;
+  font-size: 38px;
+  opacity: 0.3;
+  z-index: 2;
+  filter: blur(1.5px);
+  user-select: none;
+}
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(6deg); }
+}
+
+.pos0 { top: 12%; right: 12%; animation: floatSecondary 5s ease-in-out infinite; }
+.pos1 { bottom: 12%; left: 12%; animation: floatSecondary 6s ease-in-out infinite 0.5s; }
+.pos2 { top: 15%; left: 15%; font-size: 24px; animation: floatSecondary 4.5s ease-in-out infinite 0.2s; }
+.pos3 { bottom: 15%; right: 15%; font-size: 24px; animation: floatSecondary 5.5s ease-in-out infinite 0.8s; }
+
+@keyframes floatSecondary {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5px, -10px) scale(1.1); }
+}
+
 /* --- BANNER MINI ICONS ---------------------------------- */
 .progressionIcons { display: flex; align-items: center; gap: 8px; }
 .iconSunSmall, .iconEarthSmall, .iconMoonSmall, .iconRocketSmall {

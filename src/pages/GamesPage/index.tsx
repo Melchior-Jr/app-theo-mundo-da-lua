@@ -16,67 +16,42 @@ import ShareButton from '@/components/ShareButton'
 import styles from './GamesPage.module.css'
 
 // ─── SVGs ────────────────────────────────────────────────────────
-function QuizArt() {
+function EnhancedCardArt({ main, secondary, color, bg }: { main: string, secondary?: string[], color: string, bg: string }) {
   return (
-    <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" className={styles.gameArt}>
-      <rect width="280" height="160" fill="#0d0d2b" />
-      <circle cx="140" cy="80" r="40" fill="rgba(79,172,254,0.1)" stroke="#4facfe" strokeWidth="2" strokeDasharray="4 4" />
-      <text x="140" y="95" textAnchor="middle" fontSize="48" fill="#4facfe" fontWeight="900" className={styles.qFloat1}>?</text>
-      <text x="80" y="60" textAnchor="middle" fontSize="24" fill="#4facfe" opacity="0.4" fontWeight="900" className={styles.qFloat2}>?</text>
-      <text x="200" y="60" textAnchor="middle" fontSize="24" fill="#4facfe" opacity="0.4" fontWeight="900" className={styles.qFloat3}>?</text>
-    </svg>
+    <div className={styles.cardArtWrapper} style={{ '--c-dark': bg } as React.CSSProperties}>
+      <div className={styles.cardNebula} style={{ background: color }} />
+      <span className={styles.cardEmojiMain} aria-hidden="true">{main}</span>
+      {secondary?.map((emoji, i) => (
+        <span 
+          key={i} 
+          className={`${styles.cardEmojiSecondary} ${styles[`pos${i}`]}`} 
+          aria-hidden="true"
+        >
+          {emoji}
+        </span>
+      ))}
+    </div>
   )
+}
+
+function QuizArt() {
+  return <EnhancedCardArt main="🧠" secondary={['❓', '⚡']} color="#4facfe" bg="#0d0d2b" />
 }
 
 function InvasoresArt() {
-  return (
-    <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" className={styles.gameArt}>
-      <rect width="280" height="160" fill="#050515" />
-      <g className={styles.ufoFloat}>
-        <ellipse cx="140" cy="60" rx="30" ry="10" fill="#00e5ff" opacity="0.8" />
-        <circle cx="140" cy="55" r="12" fill="#00e5ff" opacity="0.4" />
-      </g>
-      <path d="M 120 130 L 160 130 L 140 100 Z" fill="#ff0055" className={styles.shipFloat} />
-      <rect x="138" y="80" width="4" height="20" fill="#00e5ff" opacity="0.6" className={styles.laserBeam} />
-    </svg>
-  )
+  return <EnhancedCardArt main="👾" secondary={['🛸', '💥']} color="#00e5ff" bg="#050515" />
 }
 
 function DuelArt() {
-  return (
-    <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" className={styles.gameArt}>
-      <rect width="280" height="160" fill="#120520" />
-      <circle cx="140" cy="80" r="50" fill="rgba(181,23,158,0.1)" stroke="#b5179e" strokeWidth="1" />
-      <path d="M 80 80 L 120 80" stroke="#ef476f" strokeWidth="4" strokeLinecap="round" className={styles.fighterLeft} />
-      <path d="M 160 80 L 200 80" stroke="#4facfe" strokeWidth="4" strokeLinecap="round" className={styles.fighterRight} />
-      <g className={styles.vsBurst}>
-        <circle cx="140" cy="80" r="15" fill="#f7c762" />
-        <text x="140" y="85" textAnchor="middle" fontSize="14" fontWeight="900" fill="#000">VS</text>
-      </g>
-    </svg>
-  )
+  return <EnhancedCardArt main="⚔️" secondary={['🔥', '🏆']} color="#b5179e" bg="#120520" />
 }
 
 function HuntArt() {
-  return (
-    <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" className={styles.gameArt}>
-      <rect width="280" height="160" fill="#0a0a1a" />
-      <circle cx="140" cy="80" r="30" fill="#f7c762" className={styles.pulseMoon} />
-      <path d="M 140 20 L 140 140 M 80 80 L 200 80" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-      <circle cx="140" cy="80" r="60" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    </svg>
-  )
+  return <EnhancedCardArt main="🔭" secondary={['🪐', '🔍']} color="#06d6a0" bg="#0a0a1a" />
 }
 
 function MemoryArt() {
-  return (
-    <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" className={styles.gameArt}>
-      <rect width="280" height="160" fill="#0f172a" />
-      <rect x="85" y="45" width="50" height="70" rx="6" fill="rgba(239,71,111,0.15)" stroke="#ef476f" strokeWidth="1.5" />
-      <rect x="145" y="45" width="50" height="70" rx="6" fill="rgba(239,71,111,0.05)" stroke="rgba(239,71,111,0.3)" strokeWidth="1" strokeDasharray="3 2" />
-      <circle cx="110" cy="80" r="10" fill="#ef476f" opacity="0.8" />
-    </svg>
-  )
+  return <EnhancedCardArt main="🎴" secondary={['🧬', '💎']} color="#ef476f" bg="#0f172a" />
 }
 
 function ProgressArt() {
@@ -108,21 +83,7 @@ function ProgressArt() {
 }
 
 function JourneyArt() {
-  return (
-    <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-      <defs>
-        <radialGradient id="jbg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#0d1b3e" />
-          <stop offset="100%" stopColor="#02040a" />
-        </radialGradient>
-      </defs>
-      <rect width="300" height="200" fill="url(#jbg)" />
-      <path d="M 30 160 Q 100 60 180 100 Q 240 130 270 60" fill="none" stroke="rgba(139,249,255,0.2)" strokeWidth="1.5" strokeDasharray="5 4" />
-      <circle cx="30" cy="160" r="14" fill="#f7c762" />
-      <circle cx="150" cy="105" r="14" fill="#4facfe" opacity="0.85" />
-      <circle cx="270" cy="60" r="10" fill="#8bf9ff" opacity="0.8" />
-    </svg>
-  )
+  return <EnhancedCardArt main="📚" secondary={['🗺️', '✨']} color="#f7c762" bg="#0d1b3e" />
 }
 
 // ─── Activities ──────────────────────────────────────────────────
