@@ -109,23 +109,39 @@ export default function PlanetExplorer({}: Props) {
   }
 
 
-  // Atualiza o Théo Global quando o planeta muda ou carrega
-  useEffect(() => {
-    const randomLoading = getRandomLoadingNarration()
-    const loadingNarration = { ...randomLoading, id: `loading-${selectedPlanet.id}` }
-    const planetNarration = getNarrationById(`planet-${selectedPlanet.id}`)
+  // Ref para rastrear se a narração do planeta atual já foi disparada para evitar loops
+  const lastNarrationRef = useRef<string | null>(null)
 
-    if (isModelLoaded && planetNarration) {
-      setActiveNarration(planetNarration)
-      addViewedPlanet(selectedPlanet.id)
-      
-      // Ganha XP por ver o planeta pela primeira vez
-      saveExploration(`view-planet-${selectedPlanet.id}`, 20)
+  useEffect(() => {
+    const planetNarrationId = isModelLoaded 
+      ? `planet-${selectedPlanet.id}` 
+      : `loading-${selectedPlanet.id}`
+    
+    // Se a narração já foi disparada para este estado, não faz nada
+    if (lastNarrationRef.current === planetNarrationId) return
+
+    if (isModelLoaded) {
+      const planetNarration = getNarrationById(`planet-${selectedPlanet.id}`)
+      if (planetNarration) {
+        setActiveNarration(planetNarration)
+        addViewedPlanet(selectedPlanet.id)
+        
+        // Ganha XP por ver o planeta pela primeira vez
+        saveExploration(`view-planet-${selectedPlanet.id}`, 20)
+        lastNarrationRef.current = planetNarrationId
+      }
     } else {
+      const randomLoading = getRandomLoadingNarration()
+      const loadingNarration = { ...randomLoading, id: `loading-${selectedPlanet.id}` }
       setActiveNarration(loadingNarration)
+      lastNarrationRef.current = planetNarrationId
     }
+  }, [selectedPlanet, isModelLoaded, setActiveNarration, addViewedPlanet, saveExploration])
+
+  // Efeito separado para a cor do tema, menos ruidoso
+  useEffect(() => {
     setThemeColor(selectedPlanet.color)
-  }, [selectedPlanet, isModelLoaded, setActiveNarration, setThemeColor, addViewedPlanet, saveExploration])
+  }, [selectedPlanet.color, setThemeColor])
 
   useEffect(() => {
     setIsModelLoaded(false)

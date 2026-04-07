@@ -70,11 +70,20 @@ export function NarrationSequenceProvider({ children }: { children: ReactNode })
   }, [location.pathname])
 
   const setActiveNarration = useCallback((n: Narration | null) => {
-    setActiveNarrationState(n)
-    if (n !== null) {
-      setNarrationKey(k => k + 1)
-      setCurrentTime(0)
-    }
+    setActiveNarrationState(prev => {
+      // Se for a mesma narração (mesmo ID), não reseta o áudio
+      if (prev?.id === n?.id && n !== null) {
+        return prev
+      }
+
+      // Se estamos mudando para uma nova narração ou limpando (null)
+      if (n !== null) {
+        setNarrationKey(k => k + 1)
+        setCurrentTime(0)
+      }
+      
+      return n
+    })
   }, [])
 
   const addViewedPlanet = useCallback((id: string) => {

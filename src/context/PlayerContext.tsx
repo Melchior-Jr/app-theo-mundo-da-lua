@@ -85,34 +85,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [user?.id, fetchPlayerData])
 
-  const saveProgress = async (chapter_id: string, sub_step: string, completed = false) => {
-    if (!user?.id) return
-
-    try {
-      // 1. Update local state immediately (Optimistic)
-      // Note: Logic adapted for new schema structure
-      
-      // 2. Persist to DB
-      await supabase
-        .from('player_chapter_progress')
-        .upsert({
-          player_id: user.id,
-          chapter_id,
-          sub_step,
-          completed: completed,
-          updated_at: new Date().toISOString()
-        })
-
-      // 3. Rewards if just completed
-      if (completed) {
-        await awardChapterRewards(chapter_id)
-      }
-    } catch (e) {
-      console.error('Error saving progress:', e)
-    }
-  }
-
-  const awardChapterRewards = async (chapterId: string) => {
+  const awardChapterRewards = useCallback(async (chapterId: string) => {
     if (!user?.id) return
 
     const rewards: Record<string, { xp: number, trophyId: string }> = {
@@ -173,9 +146,44 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (e) {
       console.error('Error awarding chapter rewards:', e)
     }
-  }
+  }, [user?.id, playerStats?.galactic_xp, showAchievement, fetchPlayerData])
 
-  const saveExploration = async (exploration_id: string, xp_to_award: number = 10) => {
+  const saveProgress = useCallback(async (chapter_id: string, sub_step: string, completed = false) => {
+    if (!user?.id) return
+
+    try {
+      // 1. Persist to DB
+      await supabase
+        .from('player_chapter_progress')
+        .upsert({
+          player_id: user.id,
+          chapter_id,
+          sub_step,
+          completed: completed,
+          updated_at: new Date().toISOString()
+        })
+
+      // 2. Rewards if just completed
+      if (completed) {
+        await awardChapterRewards(chapter_id)
+      }
+      
+      // 3. Atualizar estado local para refletir a mudança sem esperar o refetch
+      setProgress(prev => {
+        const index = prev.findIndex(p => p.chapter_id === chapter_id)
+        if (index >= 0) {
+          const updated = [...prev]
+          updated[index] = { ...updated[index], sub_step, completed, updated_at: new Date().toISOString() }
+          return updated
+        }
+        return [...prev, { chapter_id, sub_step, completed, updated_at: new Date().toISOString() }]
+      })
+    } catch (e) {
+      console.error('Error saving progress:', e)
+    }
+  }, [user?.id, awardChapterRewards])
+
+  const saveExploration = useCallback(async (exploration_id: string, xp_to_award: number = 10) => {
     if (!user?.id) return
     if (explorationLogs.some(e => e.exploration_id === exploration_id)) return
 
@@ -211,7 +219,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (e) {
       console.error('Error saving exploration:', e)
     }
-  }
+  }, [user?.id, explorationLogs, playerStats?.galactic_xp, showAchievement, fetchPlayerData])
 
   return (
     <PlayerContext.Provider value={{ 

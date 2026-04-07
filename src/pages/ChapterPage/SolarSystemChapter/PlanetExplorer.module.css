@@ -25,7 +25,7 @@
   min-height: 0;
   position: relative;
   /* Espaço para o dock no desktop, no mobile será ajustado */
-  margin-bottom: 40px; 
+  margin-bottom: 0; 
 }
 
 .viewerContainer {
@@ -187,8 +187,9 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 12px 20px;
+  padding: 0 20px; /* Padding vertical removido (0px) */
   z-index: 10;
+  margin-top: -40px; /* Movido 40px para cima */
 }
 
 .dockTrack {
@@ -215,7 +216,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 8px;
+  padding: 50px 8px 8px; /* Aumentado padding-top para 50px */
   min-width: 65px;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -289,7 +290,7 @@
   .planetDetail {
     grid-template-columns: 1fr;
     gap: 8px; /* Mais compacto */
-    margin-bottom: 20px;
+    margin-bottom: 0;
   }
 
   .viewerContainer {
@@ -342,8 +343,9 @@
   }
   
   .planetDock {
-    margin-top: 10px;
-    padding-bottom: 80px; /* Margem para os botões da página */
+    margin-top: -40px; /* Mantém o deslocamento para cima no mobile */
+    padding-top: 0;
+    padding-bottom: 0; 
   }
 
   .dockItem {
@@ -431,7 +433,7 @@
 /* GUIA DE INTERAÇÃO */
 .interactionHint {
   position: absolute;
-  bottom: 30px; /* Alinhado precisamente sobre os ícones do dock */
+  bottom: 80px; /* Ajustado para acompanhar o dock mais alto */
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
