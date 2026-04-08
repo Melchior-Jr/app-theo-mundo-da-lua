@@ -141,6 +141,78 @@ export const TROPHIES: Trophy[] = [
     rewardXp: 400,
     order: 21
   },
+  {
+    id: 'inv_kills_100',
+    name: 'Atirador Estelar',
+    description: '100 aliens derrotados! Sua mira é mais precisa que um laser de precisão. 🎯👾',
+    category: 'minigame',
+    rarity: 'raro',
+    icon: 'Target',
+    progressType: 'contador',
+    goal: 100,
+    rewardXp: 500,
+    order: 22
+  },
+  {
+    id: 'inv_streak_10',
+    name: 'Mente Cósmica',
+    description: '10 acertos seguidos no meio do tiroteio! Você é um gênio multitarefa. 🧠✨',
+    category: 'minigame',
+    rarity: 'epico',
+    icon: 'Zap',
+    progressType: 'unico',
+    goal: 1,
+    rewardXp: 600,
+    order: 23
+  },
+  {
+    id: 'inv_combo_20',
+    name: 'Combo Galáctico',
+    description: 'Chegou no Combo 20! A velocidade da luz é pouco para você. ⚡🚀',
+    category: 'minigame',
+    rarity: 'lendario',
+    icon: 'FastForward',
+    progressType: 'unico',
+    goal: 1,
+    rewardXp: 800,
+    order: 24
+  },
+  {
+    id: 'inv_moon_master',
+    name: 'Mestre da Lua',
+    description: 'Provou que sabe tudo sobre o nosso satélite natural! 🌕🏆',
+    category: 'minigame',
+    rarity: 'raro',
+    icon: 'Moon',
+    progressType: 'contador',
+    goal: 5, // 5 acertos na categoria Lua
+    rewardXp: 400,
+    order: 25
+  },
+  {
+    id: 'inv_nodamage',
+    name: 'Invencível',
+    description: 'Completou uma missão sem levar um único arranhão. Imbatível! 🛡️💎',
+    category: 'minigame',
+    rarity: 'lendario',
+    icon: 'Shield',
+    progressType: 'unico',
+    goal: 1,
+    rewardXp: 1000,
+    order: 26
+  },
+  {
+    id: 'inv_wrong_50',
+    name: 'Defensor do Saber',
+    description: 'Destruiu 50 respostas erradas. Manteve o espaço limpo de fake news! 🧹❌',
+    category: 'minigame',
+    rarity: 'raro',
+    icon: 'Trash2',
+    progressType: 'contador',
+    goal: 50,
+    rewardXp: 300,
+    order: 27
+  },
 
   // PROGRESSÃO
   {

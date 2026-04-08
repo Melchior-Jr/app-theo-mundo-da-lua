@@ -41,6 +41,12 @@ export interface QuizResult {
   status: 'finished' | 'gameover'
 }
 
+export interface QuestionLogEntry {
+  questionId: string
+  isCorrect: boolean
+  timeSpent: number // seconds
+}
+
 export interface QuizState {
   currentIdx: number
   lives: number
@@ -51,4 +57,5 @@ export interface QuizState {
   correctCount: number
   hasMistakes: boolean
   maxCombo: number
+  questionsLog: QuestionLogEntry[]
 }

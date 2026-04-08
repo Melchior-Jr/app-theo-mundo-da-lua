@@ -1,4 +1,4 @@
-export type GameState = 'START' | 'PLAYING' | 'QUESTION_ACTIVE' | 'PAUSED' | 'GAMEOVER';
+export type GameState = 'START' | 'CHAPTER_SELECT' | 'MODO_COMBATE' | 'MODO_DESAFIO' | 'PAUSED' | 'GAMEOVER' | 'VICTORY';
 
 export interface GameObject {
   x: number;
@@ -12,12 +12,17 @@ export interface Player extends GameObject {
   speed: number;
 }
 
+export type AlienType = 'NORMAL' | 'EXPLORADOR' | 'SHOOTER' | 'CONFUSOR' | 'GUARDIAN' | 'MESTRE' | 'CHEFÃO_CÓSMICO' | 'BOSS_EDUCATIVO';
+
 export interface Alien extends GameObject {
   id: string;
-  type: 'NORMAL' | 'FAST' | 'SPECIAL';
+  type: AlienType;
   points: number;
   speedY: number;
+  speedX?: number; 
   health: number;
+  maxHealth?: number;
+  phase?: number;
 }
 
 export interface Bullet extends GameObject {
@@ -25,20 +30,31 @@ export interface Bullet extends GameObject {
   speedY: number;
 }
 
+export type AnswerType = 'CORRETA' | 'ERRADA_COMUM' | 'ERRADA_PERIGOSA' | 'TRAP' | 'BONUS';
+
 export interface AnswerItem extends GameObject {
   text: string;
-  isCorrect: boolean;
+  type: AnswerType;
   speedY: number;
+  speedX: number; // Para oscilação lateral
+  amplitude: number; // Intensidade da oscilação
   id: string;
+  creationTime: number; // Para cálculo de seno/oscilação
+  health: number;
+  maxHealth: number;
 }
+
+export type QuestionLevel = 'Fácil' | 'Médio' | 'Difícil';
+export type QuestionCategory = 'Sistema Solar' | 'Terra' | 'Lua' | 'Constelações' | 'Sol' | 'Exploração Espacial';
 
 export interface Question {
   id: string;
-  theme: 'SISTEMA_SOLAR' | 'PLANETAS' | 'TERRA' | 'LUA' | 'CONSTELACOES';
+  category: QuestionCategory;
   text: string;
   correct: string;
-  alternatives: string[]; // Erros
-  difficulty: number;
+  alternatives: string[];
+  explanation: string;
+  level: QuestionLevel;
 }
 
 export interface GameResult {
@@ -52,4 +68,44 @@ export interface GameResult {
   max_combo: number;
   duration: number;
   lives_remaining: number;
+  is_perfect_run: boolean;
+  correct_answers_by_category: Record<string, number>;
+  max_streak: number;
+}
+
+export interface Chapter {
+  id: number;
+  slug: string;
+  title: string;
+  category: QuestionCategory;
+  minScoreToUnlock: number;
+  palette: {
+    primary: string;
+    secondary: string;
+    background: string;
+    accent: string;
+  };
+}
+
+export interface UserProgressData {
+  unlockedChapters: number[];
+  highScores: Record<number, number>;
+}
+
+export interface QuestionEvent {
+  user_id: string;
+  game_slug: 'invasores-conhecimento';
+  chapter_id: number;
+  question_id: string;
+  choice_text: string;
+  is_correct: boolean;
+  response_time_ms: number;
+  difficulty: QuestionLevel;
+}
+
+export interface PedagogicalStats {
+  accuracy_rate: number;
+  avg_response_time: number;
+  total_questions: number;
+  mastered_categories: string[];
 }

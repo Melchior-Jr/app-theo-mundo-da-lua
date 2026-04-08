@@ -1,4 +1,4 @@
-import { Player, Alien, Bullet, AnswerItem, Question, GameState, GameObject, GameResult } from './types';
+import { Player, Alien, Bullet, AnswerItem, Question, GameState, GameObject, Chapter, AlienType, QuestionLevel, GameResult } from './types';
 
 // CONFIGURAÇÕES BASE
 const PLAYER_WIDTH = 50;
@@ -26,6 +26,7 @@ export class InvasoresEngine {
   public maxCombo: number = 0;
   public state: GameState = 'START';
   public currentQuestion: Question | null = null;
+  public currentChapter: Chapter | null = null;
   
   // CONTROLES
   private keys: Set<string> = new Set();
@@ -33,7 +34,7 @@ export class InvasoresEngine {
   // TIMERS
   private lastShotTime: number = 0;
   private alienSpawnTimer: number = 0;
-  private questionTimer: number = 0;
+  
   
   // EFEITOS
   private stars: any[] = [];
@@ -42,12 +43,19 @@ export class InvasoresEngine {
   private flashAlpha: number = 0;
   private alertText: string = '';
   private alertTimer: number = 0;
+  private slowdownFactor: number = 1.0;
+  private challengeGlow: number = 0;
   
   // CALLBACKS
   public onGameOver: (score: number) => void = () => {};
   public onResult: (result: GameResult) => void = () => {};
   public onQuestionStart: (q: Question) => void = () => {};
-  public onQuestionEnd: (correct: boolean) => void = () => {};
+  public onQuestionEnd: (correct: boolean, details?: { 
+    question_id: string, 
+    choice: string, 
+    responseTime: number,
+    difficulty: QuestionLevel 
+  }) => void = () => {};
   
   // STATS
   public aliensDestroyed: number = 0;
@@ -55,6 +63,7 @@ export class InvasoresEngine {
   public wrongAnswersHit: number = 0;
   public wrongAnswersDestroyed: number = 0;
   private startTime: number = 0;
+  private questionStartTime: number = 0;
   
   // DIFICULDADE E POWERUPS
   private difficulty: number = 1.0;
@@ -62,6 +71,20 @@ export class InvasoresEngine {
   private powerups: any[] = [];
   public shieldActive: boolean = false;
   private shieldTimer: number = 0;
+  public shieldHealth: number = 0;
+  
+  // ACHIEVEMENT TRACKING
+  public isPerfectRun: boolean = true;
+  public correctAnswersByCategory: Record<string, number> = {};
+  public currentStreak: number = 0;
+  public maxStreak: number = 0;
+  private comboPerks = {
+    doubleShot: false,
+    magnet: false,
+    extraSlowdown: false,
+    laser: false,
+    autoShield: false
+  };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -80,16 +103,27 @@ export class InvasoresEngine {
     this.initStars();
   }
 
+  public setChapter(chapter: Chapter) {
+    this.currentChapter = chapter;
+    this.initStars();
+  }
+
   public resize() {
-    this.player.y = this.canvas.height - 120;
+    // O canvas já foi redimensionado externamente pelo index.tsx
+    // Aqui apenas ajustamos os limites do player
     if (this.player.x > this.canvas.width - this.player.width) {
-        this.player.x = this.canvas.width - this.player.width;
+      this.player.x = this.canvas.width - this.player.width;
     }
-    this.stars = [];
+    this.player.y = this.canvas.height - 120;
+    
+    // Reinicializa estrelas para ocupar o novo espaço
     this.initStars();
   }
 
   private initStars() {
+    this.stars = [];
+    const starColor = this.currentChapter?.palette.accent || 'rgba(255, 255, 255';
+    
     // Camada Longe (Lenta)
     for (let i = 0; i < 60; i++) {
         this.stars.push({
@@ -97,7 +131,7 @@ export class InvasoresEngine {
             y: Math.random() * this.canvas.height,
             size: 0.5 + Math.random(),
             speed: 0.2 + Math.random() * 0.3,
-            color: 'rgba(255, 255, 255, 0.3)'
+            color: `${starColor}, 0.3)`
         });
     }
     // Camada Média
@@ -107,11 +141,9 @@ export class InvasoresEngine {
             y: Math.random() * this.canvas.height,
             size: 1 + Math.random(),
             speed: 0.8 + Math.random() * 1.5,
-            color: 'rgba(255, 255, 255, 0.6)'
+            color: `${starColor}, 0.6)`
         });
     }
-    // Nebulosas/Gases de fundo (Efeito de Mancha)
-    this.ctx.fillStyle = 'rgba(0, 229, 255, 0.05)';
   }
 
   private initControls() {
@@ -124,7 +156,7 @@ export class InvasoresEngine {
   }
 
   private handleTouch(e: TouchEvent) {
-    if (this.state !== 'PLAYING' && this.state !== 'QUESTION_ACTIVE') return;
+    if (this.state !== 'MODO_COMBATE' && this.state !== 'MODO_DESAFIO') return;
     e.preventDefault();
     const rect = this.canvas.getBoundingClientRect();
     const touch = e.touches[0];
@@ -149,10 +181,11 @@ export class InvasoresEngine {
     this.score = 0;
     this.combo = 0;
     this.maxCombo = 0;
-    this.state = 'PLAYING';
+    this.state = 'MODO_COMBATE';
     this.currentQuestion = null;
+    this.slowdownFactor = 1.0;
+    this.challengeGlow = 0;
     this.alienSpawnTimer = 0;
-    this.questionTimer = 0;
     this.aliensDestroyed = 0;
     this.correctAnswers = 0;
     this.wrongAnswersHit = 0;
@@ -162,10 +195,28 @@ export class InvasoresEngine {
     this.powerups = [];
     this.shieldActive = false;
     this.shieldTimer = 0;
+    this.shieldHealth = 0;
+    this.comboPerks = {
+      doubleShot: false,
+      magnet: false,
+      extraSlowdown: false,
+      laser: false,
+      autoShield: false
+    };
+    
+    // Achievement Reset
+    this.isPerfectRun = true;
+    this.correctAnswersByCategory = {};
+    this.currentStreak = 0;
+    this.maxStreak = 0;
   }
 
   public update(_deltaTime: number) {
-    if (this.state === 'PAUSED' || this.state === 'GAMEOVER' || this.state === 'START') return;
+    if (this.state === 'START') {
+        this.updateStars();
+        return;
+    }
+    if (this.state === 'PAUSED' || this.state === 'GAMEOVER') return;
 
     this.frame++;
     if (this.screenShake > 0) this.screenShake *= 0.9;
@@ -187,27 +238,30 @@ export class InvasoresEngine {
       this.spawnAlienWave();
       this.alienSpawnTimer = 0;
       
-      // Checar Boss/Alerta
-      if (Math.floor(this.score / 5000) > Math.floor((this.score - 100) / 5000)) {
-          this.alertText = 'BOSS INCOMING!';
-          this.alertTimer = 120;
-          this.flashAlpha = 0.3;
+      // Checar Boss/Alerta - Apenas se não houver Boss ativo
+      const hasBoss = this.aliens.some(a => a.type === 'CHEFÃO_CÓSMICO');
+      const currentMilestone = Math.floor(this.score / 5000);
+      const lastMilestone = Math.floor((this.score - 100) / 5000); // 100 pontos de margem
+      
+      if (!hasBoss && this.score >= 5000 && currentMilestone > lastMilestone) {
+          this.spawnBoss();
       }
     }
 
-    // Pergunta Manager (A cada 20s se não houver pergunta ativa)
-    if (this.state !== 'QUESTION_ACTIVE' ) {
-      this.questionTimer += _deltaTime;
-      if (this.questionTimer > 15000) {
-        this.triggerQuestionEvent();
-        this.questionTimer = 0;
-      }
+    // Gerenciar Slowdown e Transição
+    const extraSlow = this.comboPerks.extraSlowdown ? 0.4 : 0;
+    if (this.state === 'MODO_DESAFIO') {
+        this.slowdownFactor = Math.max(0.4 - extraSlow, this.slowdownFactor - 0.05);
+        this.challengeGlow = Math.min(1, this.challengeGlow + 0.05);
+    } else {
+        this.slowdownFactor = Math.min(1.0, this.slowdownFactor + 0.05);
+        this.challengeGlow = Math.max(0, this.challengeGlow - 0.05);
     }
   }
 
   private updateStars() {
     for (const s of this.stars) {
-      s.y += s.speed;
+      s.y += s.speed * this.slowdownFactor;
       if (s.y > this.canvas.height) {
         s.y = -s.size;
         s.x = Math.random() * this.canvas.width;
@@ -216,38 +270,82 @@ export class InvasoresEngine {
   }
 
   private updatePlayer() {
+    const now = Date.now();
+
     if (this.keys.has('ArrowLeft') && this.player.x > 0) {
       this.player.x -= this.player.speed;
     }
     if (this.keys.has('ArrowRight') && this.player.x < this.canvas.width - this.player.width) {
       this.player.x += this.player.speed;
     }
+    
+    // Tiro Manual (Espaço)
     if (this.keys.has('Space')) {
-      const now = Date.now();
       if (now - this.lastShotTime > 250) {
         this.shoot();
         this.lastShotTime = now;
       }
     }
 
-    // Auto-fire em mobile (ou se estiver jogando)
-    const now = Date.now();
-    if (now - this.lastShotTime > 350) {
+    // Auto-fire (Sempre ativo no combate, desativado no desafio para precisão)
+    const fireInterval = this.comboPerks.laser ? 150 : 400;
+    const isChallenge = this.state === 'MODO_DESAFIO';
+    if (!isChallenge && now - this.lastShotTime > fireInterval) {
       this.shoot();
       this.lastShotTime = now;
     }
   }
 
   private shoot() {
-    const isSuper = this.combo >= 10;
-    this.bullets.push({
-      x: this.player.x + this.player.width / 2 - BULLET_WIDTH / 2,
-      y: this.player.y,
-      width: BULLET_WIDTH,
-      height: BULLET_HEIGHT,
-      owner: 'PLAYER',
-      speedY: isSuper ? -15 : -10
-    });
+    this.updateComboPerks();
+    const bY = this.player.y;
+    const bW = BULLET_WIDTH;
+    const bH = BULLET_HEIGHT;
+
+    if (this.comboPerks.laser) {
+        // Laser Contínuo (mais rápido e potente)
+        this.bullets.push({
+            x: this.player.x + this.player.width / 2 - bW / 2,
+            y: bY, width: bW, height: bH * 2,
+            owner: 'PLAYER', speedY: -15
+        });
+    } else if (this.comboPerks.doubleShot) {
+        // Disparo Duplo
+        this.bullets.push({
+            x: this.player.x + 5, y: bY, width: bW, height: bH,
+            owner: 'PLAYER', speedY: -10
+        });
+        this.bullets.push({
+            x: this.player.x + this.player.width - 10, y: bY, width: bW, height: bH,
+            owner: 'PLAYER', speedY: -10
+        });
+    } else {
+        // Tiro Normal
+        this.bullets.push({
+            x: this.player.x + this.player.width / 2 - bW / 2,
+            y: bY, width: bW, height: bH,
+            owner: 'PLAYER', speedY: -10
+        });
+    }
+  }
+
+  private updateComboPerks() {
+    this.comboPerks = {
+        doubleShot: this.combo >= 3,
+        magnet: this.combo >= 5,
+        extraSlowdown: this.combo >= 7,
+        laser: this.combo >= 10,
+        autoShield: this.combo >= 15
+    };
+
+    // Escudo Automático (Ativável uma vez quando chegar no 15)
+    if (this.comboPerks.autoShield && !this.shieldActive && this.combo === 15) {
+        this.shieldActive = true;
+        this.shieldHealth = 10;
+        this.shieldTimer = 600; // Dura mais tempo
+        this.alertText = 'ESCUDO AUTOMÁTICO!';
+        this.alertTimer = 60;
+    }
   }
 
   private updateBullets() {
@@ -274,7 +372,8 @@ export class InvasoresEngine {
         if (this.rectIntersects(p, this.player)) {
             if (p.type === 'shield') {
                 this.shieldActive = true;
-                this.shieldTimer = 360; // aprox 6 segundos
+                this.shieldHealth = 10;
+                this.shieldTimer = 600; // aprox 10 segundos
             }
             this.powerups.splice(i, 1);
             continue;
@@ -288,19 +387,62 @@ export class InvasoresEngine {
   }
 
   private updateAliens(_dt: number) {
+    const challengeActive = this.state === 'MODO_DESAFIO';
+    const correctAns = challengeActive ? this.answers.find(a => a.type === 'CORRETA') : null;
+
     this.aliens = this.aliens.filter(a => {
-      a.y += a.speedY * this.difficulty;
+      // Movimento Vertical
+      a.y += a.speedY * this.difficulty * this.slowdownFactor;
       
-      // Atirar ocasionalmente (Dificuldade afeta frequência)
-      if (Math.random() < 0.005 * this.difficulty) {
-        this.alienFire(a);
+      // Movimento Lateral / Comportamento Específico
+      switch(a.type) {
+        case 'EXPLORADOR':
+            a.x += (Math.sin(this.frame * 0.1) * 3) * this.slowdownFactor;
+            break;
+        case 'SHOOTER':
+        case 'CONFUSOR':
+            if (a.speedX === undefined) a.speedX = 2;
+            a.x += a.speedX * this.slowdownFactor;
+            if (a.x <= 0 || a.x >= this.canvas.width - a.width) a.speedX *= -1;
+            if (a.type === 'CONFUSOR' && !challengeActive && Math.random() < 0.012 * this.slowdownFactor) {
+                this.dropGarbage(a);
+            }
+            break;
+        case 'GUARDIAN':
+            if (correctAns) {
+                const targetX = correctAns.x + correctAns.width/2 - a.width/2;
+                a.x += (targetX - a.x) * 0.15 * this.slowdownFactor;
+                a.y = correctAns.y - 50; 
+            } else {
+                a.y += 2.5 * this.slowdownFactor;
+            }
+            break;
+        case 'MESTRE':
+            if (a.speedX === undefined) a.speedX = 4;
+            a.x += a.speedX * this.slowdownFactor;
+            if (a.x <= 20 || a.x >= this.canvas.width - a.width - 20) a.speedX *= -1;
+            a.y += (0.8 + Math.sin(this.frame * 0.05)) * this.slowdownFactor;
+            break;
+        case 'CHEFÃO_CÓSMICO':
+            if (a.speedX === undefined) a.speedX = 0.8;
+            a.x += a.speedX * this.slowdownFactor;
+            if (a.x <= 20 || a.x >= this.canvas.width - a.width - 20) a.speedX *= -1;
+            a.y = Math.min(100, a.y + 0.5); 
+            if (Math.random() < 0.03 * this.difficulty && this.state !== 'MODO_DESAFIO') this.alienFire(a);
+            break;
+      }
+      
+      // Atirar ocasionalmente (SHOOTER atira mais)
+      // Durante o desafio (perguntas), os aliens param de atirar para não carregar a tela
+      if (this.state !== 'MODO_DESAFIO') {
+          const fireChance = a.type === 'SHOOTER' ? 0.03 : 0.005;
+          if (Math.random() < fireChance * this.difficulty * this.slowdownFactor) {
+            this.alienFire(a);
+          }
       }
 
-      // Chegar no fundo = penalidade de pontos e reset de combo
+      // Chegar no fundo = apenas remove o alien sem penalidade (solicitação do usuário)
       if (a.y > this.canvas.height) {
-        this.score = Math.max(0, this.score - 50);
-        this.combo = 0;
-        this.screenShake = 5;
         return false;
       }
       return true;
@@ -308,13 +450,50 @@ export class InvasoresEngine {
   }
 
   private updateAnswers() {
+    this.updateComboPerks(); // Garantir que os buffs estão sincronizados
+    
     this.answers = this.answers.filter(a => {
-      a.y += a.speedY;
+      // Ajustar velocidade baseado no buff de slowdown extra (Combo 7)
+      const currentSpeedY = this.comboPerks.extraSlowdown && this.state === 'MODO_DESAFIO' 
+          ? a.speedY * 0.5 
+          : a.speedY;
+
+      a.y += currentSpeedY * this.slowdownFactor;
+      
+      // Ímã de Powerups (Combo 5)
+      if (this.comboPerks.magnet) {
+          this.powerups.forEach(p => {
+              const dx = (this.player.x + this.player.width/2) - (p.x + p.width/2);
+              if (Math.abs(dx) < 250) { // Raio de atração maior para powerups
+                  p.x += dx * 0.08;
+              }
+          });
+      }
+
+      // Oscilação Lateral
+      a.x += Math.sin((Date.now() - a.creationTime) * a.speedX) * a.amplitude;
+      
+      // Limitar bordas laterais
+      if (a.x < 10) a.x = 10;
+      if (a.x > this.canvas.width - a.width - 10) a.x = this.canvas.width - a.width - 10;
+
       if (a.y > this.canvas.height) {
-        if (a.isCorrect) {
-          this.onQuestionEnd(false);
-          this.state = 'PLAYING';
+        if (a.type === 'CORRETA') {
+          // VITÓRIA! A certa passou com sucesso
+          this.collectCorrectAnswer();
+        } else if (a.type.startsWith('ERRADA')) {
+          // ERRO! Deixou passar uma resposta errada
+          this.onQuestionEnd(false, {
+            question_id: this.currentQuestion?.id || '',
+            choice: 'DEIXOU_PASSAR_ERRO',
+            responseTime: Date.now() - this.questionStartTime,
+            difficulty: this.currentQuestion?.level || 'Fácil'
+          });
+          this.state = 'MODO_COMBATE';
           this.currentQuestion = null;
+          this.flashAlpha = 0.3;
+          this.combo = 0;
+          this.updateComboPerks();
         }
         return false;
       }
@@ -324,9 +503,9 @@ export class InvasoresEngine {
 
   private updateParticles() {
     this.particles = this.particles.filter(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= 0.02;
+      p.x += p.vx * this.slowdownFactor;
+      p.y += p.vy * this.slowdownFactor;
+      p.life -= 0.02 * (this.state === 'MODO_DESAFIO' ? 0.5 : 1);
       return p.life > 0;
     });
   }
@@ -337,33 +516,57 @@ export class InvasoresEngine {
       if (b.owner === 'PLAYER') {
         for (const a of this.aliens) {
           if (this.rectIntersects(b, a)) {
+            b.y = -100; // Remover bala independently
+            
             a.health--;
-            b.y = -100; // Remover bala
             if (a.health <= 0) {
               this.destroyAlien(a);
             }
+            
+            if (a.type === 'BOSS_EDUCATIVO') {
+                this.screenShake = 3;
+            }
           }
         }
-        // Balas vs Respostas Erradas
         for (const ans of this.answers) {
-          if (!ans.isCorrect && this.rectIntersects(b, ans)) {
-            this.destroyAnswer(ans, true);
+          if (ans.y > 0 && this.rectIntersects(b, ans)) {
+            ans.health--;
+            this.createExplosion(b.x, b.y, '#ffffff', 5); // Efeito de impacto
+            
+            if (ans.health <= 0) {
+                if (ans.type === 'CORRETA') {
+                    // ERRO! Atirou na resposta certa repetidamente até quebrar
+                    this.createExplosion(ans.x + ans.width/2, ans.y + ans.height/2, '#ff3d71', 15);
+                    this.onQuestionEnd(false, {
+                        question_id: this.currentQuestion?.id || '',
+                        choice: 'ATIROU_NA_CORRETA',
+                        responseTime: Date.now() - this.questionStartTime,
+                        difficulty: this.currentQuestion?.level || 'Fácil'
+                    });
+                    this.state = 'MODO_COMBATE';
+                    this.currentQuestion = null;
+                    this.flashAlpha = 0.4;
+                    this.combo = 0;
+                    this.answers = []; 
+                } else {
+                    this.destroyAnswer(ans, true);
+                }
+            }
             b.y = -100;
           }
         }
       } else if (b.owner === 'ENEMY') {
         // Balas Inimigas vs Player
         if (this.rectIntersects(b, this.player)) {
-          this.handlePlayerHit();
+          this.handlePlayerHit(1); // Tiros tiram 1 de escudo
           b.y = this.canvas.height + 100; // Remover bala
         }
       }
     }
-
     // Player vs Aliens
     for (const a of this.aliens) {
       if (this.rectIntersects(this.player, a)) {
-        this.handlePlayerHit();
+        this.handlePlayerHit(10); // Colisões matam o escudo (aguenta apenas 1 impacto)
         this.aliens = this.aliens.filter(alien => alien.id !== a.id);
         this.createExplosion(a.x, a.y, '#ff3d71');
       }
@@ -371,13 +574,26 @@ export class InvasoresEngine {
 
     // Player vs Respostas
     for (const ans of this.answers) {
-      if (this.rectIntersects(this.player, ans)) {
-        if (ans.isCorrect) {
-          this.collectCorrectAnswer();
+      if (ans.y > 0 && this.rectIntersects(this.player, ans)) {
+        // Colidir com QUALQUER resposta agora é ruim, exceto bônus
+        if (ans.type === 'BONUS') {
+          this.score += 500;
+          this.createExplosion(this.player.x + this.player.width/2, this.player.y, '#ffd600', 30);
         } else {
-          this.hitWrongAnswer();
+          // Colidiu com a certa ou errada = falha (o objetivo é DESTRUIR erradas e DEIXAR passar a certa)
+          this.handlePlayerHit(1); // Dano leve por colisão
+          this.onQuestionEnd(false, {
+            question_id: this.currentQuestion?.id || '',
+            choice: 'COLIDIU_COM_RESPOSTA',
+            responseTime: Date.now() - this.questionStartTime,
+            difficulty: this.currentQuestion?.level || 'Fácil'
+          });
+          this.state = 'MODO_COMBATE';
+          this.currentQuestion = null;
+          this.flashAlpha = 0.4;
+          this.combo = 0;
+          this.answers = [];
         }
-        this.answers = this.answers.filter(item => item.id !== ans.id);
       }
     }
   }
@@ -401,64 +617,169 @@ export class InvasoresEngine {
   }
 
   private spawnAlienWave() {
-    const count = 3 + Math.floor(this.score / 500);
+    const isBossActive = this.aliens.some(a => a.type === 'BOSS_EDUCATIVO');
+    const isChallengeActive = this.state === 'MODO_DESAFIO';
+    if (isBossActive || isChallengeActive) return; // Não spawna aliens durante Boss ou Perguntas
+
+    const count = 3 + Math.floor(this.score / 1500);
     for (let i = 0; i < count; i++) {
         const x = Math.random() * (this.canvas.width - ALIEN_WIDTH);
+        const rand = Math.random();
+        let type: AlienType = 'NORMAL';
+        let health = 1;
+        
+        if (rand > 0.95) type = 'MESTRE';
+        else if (rand > 0.85) type = 'SHOOTER';
+        else if (rand > 0.75) type = 'EXPLORADOR';
+        else if (rand > 0.65 && this.score > 2000) type = 'CONFUSOR';
+
         this.aliens.push({
             id: Math.random().toString(36),
-            x,
-            y: -50,
+            x, y: -50,
             width: ALIEN_WIDTH,
             height: ALIEN_HEIGHT,
-            type: Math.random() > 0.8 ? 'FAST' : 'NORMAL',
-            points: 10,
-            speedY: 1.5 + Math.random() * 1,
-            health: 1
+            type,
+            points: type === 'NORMAL' ? 10 : (type === 'MESTRE' ? 150 : 35),
+            speedY: type === 'EXPLORADOR' ? 3.0 : 1.5,
+            health,
+            maxHealth: health
         });
     }
   }
 
-  private triggerQuestionEvent() {
-    // Import dinâmico ou injetado das perguntas
-    // Por agora, chamando o callback do React para pegar uma pergunta do banco
-    this.state = 'QUESTION_ACTIVE';
+  private spawnBoss() {
+      if (this.aliens.some(a => a.type === 'CHEFÃO_CÓSMICO')) return;
+
+      this.alertText = 'CHEFÃO CÓSMICO!';
+      this.alertTimer = 120;
+      this.aliens.push({
+          id: 'boss-1',
+          x: this.canvas.width / 2 - 100,
+          y: -150,
+          width: 200,
+          height: 120,
+          type: 'CHEFÃO_CÓSMICO',
+          points: 5000,
+          speedY: 0,
+          health: 100, 
+          maxHealth: 100
+      });
+  }
+
+  private dropGarbage(a: Alien) {
+      this.answers.push({
+          id: `garbage-${Math.random()}`,
+          text: 'ERRO...',
+          type: Math.random() > 0.5 ? 'TRAP' : 'ERRADA_COMUM',
+          x: a.x, y: a.y,
+          width: ANSWER_WIDTH, height: ANSWER_HEIGHT,
+          speedY: 2, speedX: 0.05, amplitude: 5,
+          creationTime: Date.now(),
+          health: 10, maxHealth: 10
+      });
   }
 
   public startQuestionEvent(q: Question) {
+    this.alertText = 'DESAFIO!';
+    this.alertTimer = 60;
+    this.flashAlpha = 0.2;
+    this.state = 'MODO_DESAFIO';
+
+    // Spawn de Guardião se a pontuação for alta
+    if (this.difficulty > 1.3) {
+        this.aliens.push({
+            id: `guardian-${Date.now()}`,
+            x: this.canvas.width / 2, y: -50,
+            width: ALIEN_WIDTH * 1.2, height: ALIEN_HEIGHT,
+            type: 'GUARDIAN', points: 50, speedY: 1, health: 2, maxHealth: 2
+        });
+    }
+
     this.currentQuestion = q;
     const items: AnswerItem[] = [];
+    const now = Date.now();
     
-    // Resposta Correta
+    // 1. Resposta CORRETA
     items.push({
       id: 'correct',
       text: q.correct,
-      isCorrect: true,
+      type: 'CORRETA',
       x: Math.random() * (this.canvas.width - ANSWER_WIDTH),
-      y: -100,
+      y: -150,
       width: ANSWER_WIDTH,
       height: ANSWER_HEIGHT,
-      speedY: 1.2
+      speedY: 0.8 + (Math.random() * 0.3),
+      speedX: 0.02,
+      amplitude: 1.5,
+      creationTime: now,
+      health: 10,
+      maxHealth: 10
     });
 
-    // Erradas
+    // 2. Respostas ERRADAS (Comuns e Perigosas)
     q.alternatives.forEach((alt, i) => {
+      const isDangerous = Math.random() > 0.7; // 30% de chance de ser perigosa
       items.push({
         id: `wrong-${i}`,
         text: alt,
-        isCorrect: false,
+        type: isDangerous ? 'ERRADA_PERIGOSA' : 'ERRADA_COMUM',
         x: Math.random() * (this.canvas.width - ANSWER_WIDTH),
-        y: -200 - (i * 100),
+        y: -300 - (i * 150),
         width: ANSWER_WIDTH,
         height: ANSWER_HEIGHT,
-        speedY: 1.2 + (Math.random() * 0.5)
+        speedY: 1.0 + (Math.random() * 0.5),
+        speedX: 0.03,
+        amplitude: 2.5,
+        creationTime: now + (i * 200),
+        health: 10,
+        maxHealth: 10
       });
     });
 
+    // 3. Adicionar TRAP ou BONUS ocasionalmente
+    if (this.difficulty > 1.5 && Math.random() > 0.5) {
+        items.push({
+            id: 'trap-item',
+            text: q.alternatives[0], // Pega uma errada mas usa visual similar
+            type: 'TRAP',
+            x: Math.random() * (this.canvas.width - ANSWER_WIDTH),
+            y: -500,
+            width: ANSWER_WIDTH,
+            height: ANSWER_HEIGHT,
+            speedY: 1.2,
+            speedX: 0.05,
+            amplitude: 3,
+            creationTime: now,
+            health: 10,
+            maxHealth: 10
+        });
+    }
+
+    if (Math.random() > 0.8) {
+        items.push({
+            id: 'bonus-item',
+            text: 'XP BÔNUS',
+            type: 'BONUS',
+            x: Math.random() * (this.canvas.width - ANSWER_WIDTH),
+            y: -60,
+            width: ANSWER_WIDTH,
+            height: ANSWER_HEIGHT,
+            speedY: 3.5,
+            speedX: 0.08,
+            amplitude: 4,
+            creationTime: now,
+            health: 10,
+            maxHealth: 10
+        });
+    }
+
     this.answers = items;
+    this.questionStartTime = Date.now();
     this.onQuestionStart(q);
   }
 
   private destroyAlien(a: Alien) {
+
     this.aliens = this.aliens.filter(alien => alien.id !== a.id);
     this.score += a.points + (this.combo * 2);
     this.aliensDestroyed++;
@@ -482,27 +803,101 @@ export class InvasoresEngine {
   }
 
   private collectCorrectAnswer() {
+    // Dano no Boss se ele estiver ativo
+    const boss = this.aliens.find(a => a.type === 'CHEFÃO_CÓSMICO');
+    if (boss) {
+        boss.health -= 20; // Dano massivo por saber!
+        this.createExplosion(boss.x + boss.width/2, boss.y + boss.height/2, '#ff3d71', 60);
+        if (boss.health <= 0) {
+            this.destroyAlien(boss); 
+            this.alertText = 'CHEFÃO DERROTADO!';
+            this.alertTimer = 120;
+        }
+    }
     this.score += 150 + (this.combo * 10);
     this.correctAnswers++;
-    this.createExplosion(this.player.x + this.player.width/2, this.player.y, '#00ffa3', 20);
-    this.onQuestionEnd(true);
-    this.state = 'PLAYING';
+
+    // Spawn de MESTRE após sequência
+    if (this.correctAnswers % 3 === 0) {
+        this.aliens.push({
+            id: `mestre-${Date.now()}`,
+            x: Math.random() * this.canvas.width, y: -50,
+            width: ALIEN_WIDTH * 1.5, height: ALIEN_HEIGHT * 1.5,
+            type: 'MESTRE', points: 300, speedY: 1.5, health: 5, maxHealth: 5
+        });
+        this.alertText = 'MESTRE CÓSMICO!';
+        this.alertTimer = 60;
+    }
+    
+    // SMART BOMB: Destruir todos os aliens comuns na tela!
+    this.aliens.forEach(a => {
+        if (a.type !== 'CHEFÃO_CÓSMICO' && a.type !== 'MESTRE') {
+            this.createExplosion(a.x + a.width/2, a.y + a.height/2, '#00ffa3', 20);
+            this.aliensDestroyed++;
+            this.score += a.points;
+        }
+    });
+    // Remove todos exceto Chefão e Mestre (que são persistentes)
+    this.aliens = this.aliens.filter(a => a.type === 'CHEFÃO_CÓSMICO' || a.type === 'MESTRE');
+
+    this.createExplosion(this.player.x + this.player.width/2, this.player.y, '#00ffa3', 40);
+    this.flashAlpha = 0.5;
+    this.alertText = 'ACERTOU! 🚀';
+    this.alertTimer = 60;
+    
+    // Streak tracking
+    this.currentStreak++;
+    if (this.currentStreak > this.maxStreak) this.maxStreak = this.currentStreak;
+    
+    // Category tracking
+    if (this.currentQuestion) {
+      const cat = this.currentQuestion.category;
+      this.correctAnswersByCategory[cat] = (this.correctAnswersByCategory[cat] || 0) + 1;
+    }
+
+    const responseTime = Date.now() - this.questionStartTime;
+    this.onQuestionEnd(true, {
+      question_id: this.currentQuestion?.id || '',
+      choice: this.currentQuestion?.correct || '',
+      responseTime,
+      difficulty: this.currentQuestion?.level || 'Fácil'
+    });
+    
+    this.state = 'MODO_COMBATE';
     this.currentQuestion = null;
     this.answers = [];
   }
 
-  private handlePlayerHit() {
+  private handlePlayerHit(damage: number = 10) {
+    // Reset de Combo no Dano
+    if (this.combo > 5) {
+        this.alertText = 'COMBO QUEBRADO!';
+        this.alertTimer = 40;
+    }
+    this.combo = 0;
+    this.updateComboPerks();
+
     if (this.shieldActive) {
-        this.shieldActive = false;
-        this.shieldTimer = 0;
-        this.screenShake = 12;
-        this.flashAlpha = 0.15;
-        this.createExplosion(this.player.x + this.player.width/2, this.player.y + this.player.height/2, '#00e5ff', 25);
+        this.shieldHealth -= damage;
+        this.screenShake = 8;
+        this.flashAlpha = 0.1;
+        this.createExplosion(this.player.x + this.player.width/2, this.player.y + this.player.height/2, '#00e5ff', 5);
+        
+        if (this.shieldHealth <= 0) {
+            this.shieldActive = false;
+            this.shieldTimer = 0;
+            this.screenShake = 20;
+            this.createExplosion(this.player.x + this.player.width/2, this.player.y + this.player.height/2, '#00e5ff', 30);
+            this.alertText = 'ESCUDO DESTRUÍDO!';
+            this.alertTimer = 40;
+        }
         return;
     }
 
     this.player.lives--;
     this.combo = 0;
+    this.currentStreak = 0; // Perde streak no dano
+    this.isPerfectRun = false; // Perde perfect run no dano
     this.wrongAnswersHit++;
     this.screenShake = 25;
     this.flashAlpha = 0.5;
@@ -513,16 +908,25 @@ export class InvasoresEngine {
     if (this.player.lives <= 0) this.setGameOver();
   }
 
-  private hitWrongAnswer() {
-    this.handlePlayerHit();
-  }
-
   private destroyAnswer(ans: AnswerItem, shot: boolean) {
     this.answers = this.answers.filter(a => a.id !== ans.id);
     if (shot) {
       this.score += 5;
       this.wrongAnswersDestroyed++;
       this.createExplosion(ans.x + ans.width/2, ans.y + ans.height/2, '#ffffff');
+
+      // VITÓRIA IMEDIATA: Se não restarem mais respostas ERRADAS, o jogador venceu o desafio!
+      if (this.state === 'MODO_DESAFIO') {
+          const hasWrongs = this.answers.some(a => 
+              a.type === 'ERRADA_COMUM' || 
+              a.type === 'ERRADA_PERIGOSA' || 
+              a.type === 'TRAP'
+          );
+
+          if (!hasWrongs) {
+              this.collectCorrectAnswer();
+          }
+      }
     }
   }
 
@@ -556,7 +960,10 @@ export class InvasoresEngine {
       wrong_answers_destroyed: this.wrongAnswersDestroyed,
       max_combo: this.maxCombo,
       duration,
-      lives_remaining: Math.max(0, this.player.lives)
+      lives_remaining: Math.max(0, this.player.lives),
+      is_perfect_run: this.isPerfectRun,
+      correct_answers_by_category: this.correctAnswersByCategory,
+      max_streak: this.maxStreak
     });
   }
 
@@ -570,7 +977,8 @@ export class InvasoresEngine {
     }
 
     // Background
-    this.ctx.fillStyle = '#05070a';
+    const bgColor = this.currentChapter?.palette.background || '#05070a';
+    this.ctx.fillStyle = bgColor;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     // Efeito de Vinheta / Gradiente Radial
@@ -578,10 +986,20 @@ export class InvasoresEngine {
         this.canvas.width/2, this.canvas.height/2, 0,
         this.canvas.width/2, this.canvas.height/2, this.canvas.width
     );
-    grad.addColorStop(0, 'rgba(13, 13, 30, 0.5)');
-    grad.addColorStop(1, 'rgba(5, 7, 10, 1)');
+    const secondaryColor = this.currentChapter?.palette.secondary || 'rgba(13, 13, 30, 0.5)';
+    grad.addColorStop(0, secondaryColor);
+    grad.addColorStop(1, bgColor);
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Glow do Modo Desafio
+    if (this.challengeGlow > 0) {
+        this.ctx.save();
+        this.ctx.globalAlpha = this.challengeGlow * 0.2;
+        this.ctx.fillStyle = this.currentChapter?.palette.primary || '#00e5ff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
+    }
 
     // Estrelas
     for (const s of this.stars) {
@@ -590,6 +1008,8 @@ export class InvasoresEngine {
       this.ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
       this.ctx.fill();
     }
+
+    if (this.state === 'START') return;
 
     // Partículas
     for (const p of this.particles) {
@@ -606,6 +1026,19 @@ export class InvasoresEngine {
 
     // Player
     this.drawNave();
+
+    // Challenge Mode Text
+    if (this.state === 'MODO_DESAFIO' && this.challengeGlow > 0.5) {
+        this.ctx.save();
+        this.ctx.fillStyle = '#00ffa3';
+        this.ctx.font = 'bold 24px "Orbitron"';
+        this.ctx.textAlign = 'center';
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = '#00ffa3';
+        this.ctx.globalAlpha = 0.5 + Math.sin(this.frame * 0.1) * 0.3;
+        this.ctx.fillText("PEGUE A RESPOSTA CORRETA", this.canvas.width/2, this.canvas.height/2 + 100);
+        this.ctx.restore();
+    }
 
     // Powerups
     this.powerups.forEach(p => this.drawPowerup(p));
@@ -684,13 +1117,10 @@ export class InvasoresEngine {
     const { x, y, width, height } = this.player;
     
     // Motor Flame
-    if (this.state === 'PLAYING' || this.state === 'QUESTION_ACTIVE' || this.state === 'START') {
+    if (this.state === 'MODO_COMBATE' || this.state === 'MODO_DESAFIO' || this.state === 'START') {
         const flSize = 5 + Math.sin(this.frame * 0.5) * 8;
-        
-        // Brilho externo da chama
         this.ctx.shadowBlur = 20;
         this.ctx.shadowColor = '#ff3d00';
-        
         this.ctx.fillStyle = '#ff9100';
         this.ctx.beginPath();
         this.ctx.moveTo(x + width*0.3, y + height);
@@ -698,7 +1128,6 @@ export class InvasoresEngine {
         this.ctx.lineTo(x + width*0.7, y + height);
         this.ctx.fill();
 
-        // Núcleo da chama
         this.ctx.fillStyle = '#fff';
         this.ctx.beginPath();
         this.ctx.moveTo(x + width*0.4, y + height);
@@ -707,17 +1136,47 @@ export class InvasoresEngine {
         this.ctx.fill();
     }
 
+    // Aura de Combo
+    if (this.combo >= 3) {
+        this.ctx.save();
+        const comboColor = this.combo >= 15 ? '#ffd600' : (this.combo >= 10 ? '#00ffa3' : '#00e5ff');
+        this.ctx.shadowBlur = 10 + Math.sin(this.frame * 0.2) * 10;
+        this.ctx.shadowColor = comboColor;
+        this.ctx.strokeStyle = comboColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.globalAlpha = 0.6;
+        
+        // Asas de Energia
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - 5, y + height);
+        this.ctx.lineTo(x - 25, y + height + 10);
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width + 5, y + height);
+        this.ctx.lineTo(x + width + 25, y + height + 10);
+        this.ctx.stroke();
+        
+        if (this.combo >= 10) {
+            this.ctx.beginPath();
+            this.ctx.arc(x + width/2, y + height/2, width * 0.9, 0, Math.PI * 2);
+            this.ctx.setLineDash([5, 10]);
+            this.ctx.stroke();
+        }
+        this.ctx.restore();
+    }
+
     // Escudo Ativo
     if (this.shieldActive) {
         this.ctx.beginPath();
-        this.ctx.arc(this.player.x + this.player.width/2, this.player.y + this.player.height/2, 50, 0, Math.PI * 2);
+        this.ctx.arc(x + width/2, y + height/2, 50, 0, Math.PI * 2);
         this.ctx.lineWidth = 4;
+        const shieldColor = this.currentChapter?.palette.primary || '#00e5ff';
         const gradient = this.ctx.createRadialGradient(
-            this.player.x + this.player.width/2, this.player.y + this.player.height/2, 35,
-            this.player.x + this.player.width/2, this.player.y + this.player.height/2, 55
+            x + width/2, y + height/2, 35,
+            x + width/2, y + height/2, 55
         );
         gradient.addColorStop(0, 'transparent');
-        gradient.addColorStop(1, '#00e5ff');
+        gradient.addColorStop(1, shieldColor);
         this.ctx.strokeStyle = gradient;
         this.ctx.globalAlpha = 0.4 + Math.sin(this.frame / 5) * 0.2;
         this.ctx.stroke();
@@ -725,9 +1184,10 @@ export class InvasoresEngine {
     }
 
     // Corpo da Nave
-    this.ctx.fillStyle = '#00e5ff';
+    const primaryColor = this.currentChapter?.palette.primary || '#00e5ff';
+    this.ctx.fillStyle = primaryColor;
     this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = '#00e5ff';
+    this.ctx.shadowColor = primaryColor;
     
     this.ctx.beginPath();
     this.ctx.moveTo(x + width / 2, y); // Topo
@@ -738,32 +1198,24 @@ export class InvasoresEngine {
     this.ctx.closePath();
     this.ctx.fill();
     
-    // Asas laterais
     this.ctx.fillStyle = '#00838f';
     this.ctx.beginPath();
     this.ctx.moveTo(x, y + height*0.6);
     this.ctx.lineTo(x - 10, y + height);
     this.ctx.lineTo(x + width*0.3, y + height);
     this.ctx.fill();
-    
+    this.ctx.beginPath();
     this.ctx.moveTo(x + width, y + height*0.6);
     this.ctx.lineTo(x + width + 10, y + height);
     this.ctx.lineTo(x + width*0.7, y + height);
     this.ctx.fill();
 
-    // Detalhe Cockpit
     const cockpitGrad = this.ctx.createLinearGradient(x, y, x, y + height);
     cockpitGrad.addColorStop(0, '#ffffff');
     cockpitGrad.addColorStop(1, '#00e5ff');
     this.ctx.fillStyle = cockpitGrad;
     this.ctx.beginPath();
     this.ctx.ellipse(x + width/2, y + height*0.45, width*0.2, height*0.25, 0, 0, Math.PI*2);
-    this.ctx.fill();
-    
-    // Brilho no cockpit
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    this.ctx.beginPath();
-    this.ctx.ellipse(x + width/2 - 5, y + height*0.4, 5, 8, -0.5, 0, Math.PI*2);
     this.ctx.fill();
 
     this.ctx.shadowBlur = 0;
@@ -772,107 +1224,289 @@ export class InvasoresEngine {
   private drawAlien(a: Alien) {
     const time = this.frame * 0.05;
     const hover = Math.sin(time + parseInt(a.id, 36)) * 5;
-    const color = a.type === 'FAST' ? '#ff3d71' : '#00ffa3';
     
     this.ctx.save();
-    this.ctx.translate(a.x + a.width/2, a.y + a.height/2 + hover);
-    
-    // Corpo (Forma baseada no tipo)
-    this.ctx.fillStyle = color;
+    this.ctx.translate(a.x + a.width / 2, a.y + a.height / 2 + hover);
     this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = color;
     
-    // Desenho baseado no tipo
-    if (a.type === 'FAST') {
-        // --- INTERCEPTADOR (Design em Triângulo/V) ---
+    if (a.type === 'CHEFÃO_CÓSMICO') {
+        const glow = Math.sin(this.frame * 0.05) * 10 + 20;
+        this.ctx.shadowBlur = glow;
+        this.ctx.shadowColor = '#ff3d71';
+        
+        // Nave Mãe
+        const grad = this.ctx.createLinearGradient(0, -60, 0, 60);
+        grad.addColorStop(0, '#2b1b10');
+        grad.addColorStop(0.5, '#4a148c');
+        grad.addColorStop(1, '#060c1a');
+        this.ctx.fillStyle = grad;
+        
         this.ctx.beginPath();
-        this.ctx.moveTo(0, -a.height/2); 
+        this.ctx.ellipse(0, 0, 100, 40, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#ff3d71';
+        this.ctx.lineWidth = 3;
+        this.ctx.stroke();
+        
+        // Domo Superior
+        this.ctx.beginPath();
+        this.ctx.arc(0, -10, 30, Math.PI, 0);
+        this.ctx.fillStyle = 'rgba(255, 61, 113, 0.3)';
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Barra de Vida do Boss
+        this.ctx.save();
+        const healthPct = Math.max(0, a.health / (a.maxHealth || 100));
+        const barWidth = 120;
+        const barHeight = 8;
+        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        this.ctx.fillRect(-barWidth/2, -80, barWidth, barHeight);
+        this.ctx.fillStyle = '#ff3d71';
+        this.ctx.fillRect(-barWidth/2, -80, barWidth * healthPct, barHeight);
+        this.ctx.restore();
+        
+        // Luzes Inferiores
+        for(let i=0; i<8; i++) {
+            const angle = (this.frame * 0.05) + (i * Math.PI / 4);
+            const lx = Math.cos(angle) * 70;
+            const ly = Math.sin(angle) * 15;
+            this.ctx.fillStyle = (this.frame + i * 10) % 40 < 20 ? '#ff3d71' : '#fff';
+            this.ctx.beginPath();
+            this.ctx.arc(lx, ly, 4, 0, Math.PI*2);
+            this.ctx.fill();
+        }
+    } else if (a.type === 'MESTRE') {
+        this.ctx.shadowColor = '#aa00ff';
+        this.ctx.fillStyle = '#aa00ff';
+        this.ctx.beginPath();
+        for(let i=0; i<4; i++) {
+            const r = i % 2 === 0 ? a.width/2 : a.width/4;
+            const ang = i * Math.PI / 2;
+            this.ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.stroke();
+        
+        this.ctx.fillStyle = '#fff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 5 + Math.sin(this.frame * 0.2) * 3, 0, Math.PI*2);
+        this.ctx.fill();
+    } else if (a.type === 'GUARDIAN') {
+        const glow = 15 + Math.sin(this.frame * 0.1) * 5;
+        this.ctx.shadowColor = '#00f2fe';
+        this.ctx.shadowBlur = glow;
+        
+        this.ctx.strokeStyle = '#00f2fe';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI / 3) + (this.frame * 0.02);
+            const r = a.width/2 + 5;
+            this.ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+        }
+        this.ctx.closePath();
+        this.ctx.stroke();
+        
+        this.ctx.fillStyle = '#060c1a';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, a.width/3, 0, Math.PI*2);
+        this.ctx.fill();
+        this.ctx.stroke();
+    } else if (a.type === 'CONFUSOR') {
+        this.ctx.shadowColor = '#ffd600';
+        this.ctx.fillStyle = '#263456';
+        this.ctx.fillRect(-15, -15, 30, 30);
+        this.ctx.strokeStyle = '#ffd600';
+        this.ctx.strokeRect(-15, -15, 30, 30);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(-15, 0); this.ctx.lineTo(-40, -10 + Math.sin(this.frame*0.1)*5);
+        this.ctx.moveTo(15, 0); this.ctx.lineTo(40, 10 + Math.sin(this.frame*0.1)*5);
+        this.ctx.stroke();
+        
+        if (this.frame % 30 < 15) {
+            this.ctx.fillStyle = '#ffd600';
+            this.ctx.font = 'bold 16px "Orbitron"';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('?', 0, 5);
+        }
+    } else if (a.type === 'EXPLORADOR') {
+        this.ctx.shadowColor = '#00ffa3';
+        this.ctx.fillStyle = '#00ffa3';
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -a.height/2);
         this.ctx.lineTo(a.width/2, a.height/2);
-        this.ctx.lineTo(0, a.height/3);
+        this.ctx.lineTo(0, a.height/6);
         this.ctx.lineTo(-a.width/2, a.height/2);
         this.ctx.closePath();
         this.ctx.fill();
-
-        // Antenas Superiores
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.stroke();
+    } else if (a.type === 'SHOOTER') {
+        this.ctx.shadowColor = '#aa00ff';
+        this.ctx.fillStyle = '#1a2340';
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -a.height/2);
+        this.ctx.lineTo(a.width/2, 0);
+        this.ctx.lineTo(0, a.height/2);
+        this.ctx.lineTo(-a.width/2, 0);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#aa00ff';
         this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = color;
-        this.ctx.beginPath();
-        this.ctx.moveTo(-a.width/4, -a.height/4);
-        this.ctx.lineTo(-a.width/2, -a.height/2);
-        this.ctx.moveTo(a.width/4, -a.height/4);
-        this.ctx.lineTo(a.width/2, -a.height/2);
         this.ctx.stroke();
-    } else {
-        // --- SONDA (Design mais Robótico/Alien clássico) ---
-        // Cabeça
-        this.ctx.beginPath();
-        this.ctx.ellipse(0, -5, a.width/2, a.height/2.5, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // Mandíbulas/Garras inferiores
-        this.ctx.beginPath();
-        this.ctx.moveTo(-a.width/2.5, 0);
-        this.ctx.lineTo(-a.width/3, a.height/2);
-        this.ctx.lineTo(-a.width/6, a.height/4);
-        this.ctx.lineTo(a.width/6, a.height/4);
-        this.ctx.lineTo(a.width/3, a.height/2);
-        this.ctx.lineTo(a.width/2.5, 0);
-        this.ctx.stroke();
-
-        // Núcleo de Energia (O olho central)
-        this.ctx.fillStyle = '#fff';
-        this.ctx.shadowBlur = 10;
-        this.ctx.beginPath();
-        this.ctx.ellipse(0, -5, 12, 8, 0, 0, Math.PI * 2);
-        this.ctx.fill();
         
-        this.ctx.fillStyle = '#f00';
+        this.ctx.fillStyle = '#aa00ff';
+        this.ctx.fillRect(-a.width/2 - 5, -3, 8, 6);
+        this.ctx.fillRect(a.width/2 - 3, -3, 8, 6);
+    } else {
+        this.ctx.shadowColor = '#00e5ff';
+        this.ctx.fillStyle = '#1a2340';
         this.ctx.beginPath();
-        this.ctx.arc(0, -5, 3 + Math.sin(time*4)*1.5, 0, Math.PI*2);
+        this.ctx.ellipse(0, 0, a.width/2, a.height/2.5, 0, 0, Math.PI * 2);
         this.ctx.fill();
+        this.ctx.strokeStyle = '#00e5ff';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        
+        this.ctx.fillStyle = '#00e5ff';
+        for(let i=0; i<3; i++) {
+            this.ctx.beginPath();
+            this.ctx.arc(-10 + i * 10, 0, 3, 0, Math.PI*2);
+            this.ctx.fill();
+        }
     }
     
-    // Detalhes de brilho comuns
-    this.ctx.globalAlpha = 0.3;
-    this.ctx.fillStyle = '#fff';
-    this.ctx.beginPath();
-    this.ctx.arc(-5, -10, 4, 0, Math.PI*2);
-    this.ctx.fill();
-    this.ctx.globalAlpha = 1.0;
-    
     this.ctx.restore();
-    this.ctx.shadowBlur = 0;
   }
 
   private drawAnswer(ans: AnswerItem) {
     this.ctx.save();
-    const pulse = Math.sin(this.frame * 0.1) * 2;
-    
-    this.ctx.shadowBlur = 20;
-    this.ctx.shadowColor = ans.isCorrect ? '#00ffa3' : '#ff3d71';
-    
-    this.ctx.fillStyle = ans.isCorrect ? 'rgba(0, 255, 163, 0.25)' : 'rgba(255, 61, 113, 0.15)';
-    this.ctx.strokeStyle = ans.isCorrect ? '#00ffa3' : '#ff3d71';
-    this.ctx.lineWidth = 2;
-    
-    // Bubble animada
-    this.roundRect(ans.x - pulse, ans.y - pulse, ans.width + pulse*2, ans.height + pulse*2, 12);
-    this.ctx.stroke();
-    this.ctx.fill();
 
-    // Reflexo Glass
-    this.ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    // Estilo baseado no tipo
+    let glowColor = 'rgba(74, 144, 226, 0.5)';
+    let label = '';
+
+    switch(ans.type) {
+        case 'CORRETA':
+            glowColor = 'rgba(0, 242, 254, 0.6)';
+            break;
+        case 'ERRADA_PERIGOSA':
+            glowColor = 'rgba(255, 61, 113, 0.8)';
+            label = '⚠️';
+            break;
+        case 'TRAP':
+            glowColor = 'rgba(0, 242, 254, 0.4)';
+            break;
+        case 'BONUS':
+            glowColor = 'rgba(255, 214, 0, 0.8)';
+            label = '⭐';
+            break;
+        case 'ERRADA_COMUM':
+            glowColor = 'rgba(255, 255, 255, 0.2)';
+            break;
+    }
+
+    // Glow Effect
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = glowColor;
+
+    // Fundo da Resposta (Glassmorphism sutil)
+    const isCorrect = ans.type === 'CORRETA';
+    const pulse = isCorrect ? Math.sin(Date.now() / 200) * 10 + 10 : 0;
+    
+    if (isCorrect) {
+        this.ctx.shadowBlur = 20 + pulse;
+        this.ctx.strokeStyle = `rgba(0, 242, 254, ${0.5 + pulse/40})`;
+        this.ctx.lineWidth = 2;
+    }
+
+    this.ctx.fillStyle = isCorrect ? 'rgba(0, 40, 60, 0.9)' : 'rgba(10, 15, 30, 0.8)';
     this.ctx.beginPath();
-    this.ctx.moveTo(ans.x + 10, ans.y + 10);
-    this.ctx.lineTo(ans.x + ans.width - 20, ans.y + 10);
+    this.ctx.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
+    this.ctx.fill();
+    if (isCorrect) this.ctx.stroke();
+    
+    // Arredondar bordas
+    const radius = 8;
+    this.ctx.beginPath();
+    this.ctx.moveTo(ans.x + radius, ans.y);
+    this.ctx.lineTo(ans.x + ans.width - radius, ans.y);
+    this.ctx.quadraticCurveTo(ans.x + ans.width, ans.y, ans.x + ans.width, ans.y + radius);
+    this.ctx.lineTo(ans.x + ans.width, ans.y + ans.height - radius);
+    this.ctx.quadraticCurveTo(ans.x + ans.width, ans.y + ans.height, ans.x + ans.width - radius, ans.y + ans.height);
+    this.ctx.lineTo(ans.x + radius, ans.y + ans.height);
+    this.ctx.quadraticCurveTo(ans.x, ans.y + ans.height, ans.x, ans.y + ans.height - radius);
+    this.ctx.lineTo(ans.x, ans.y + radius);
+    this.ctx.quadraticCurveTo(ans.x, ans.y, ans.x + radius, ans.y);
+    this.ctx.closePath();
+    this.ctx.fill();
     this.ctx.stroke();
 
-    // Texto
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '800 13px "Outfit"';
+    // Highlight sutil para a correta
+    if (ans.type === 'CORRETA') {
+        const pulse = Math.sin(this.frame * 0.1) * 3;
+        this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + pulse * 0.1})`;
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+    }
+
+    // Dano Visual (Rachaduras)
+    if (ans.health < ans.maxHealth) {
+        this.ctx.save();
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        this.ctx.lineWidth = 1;
+        const damagePct = (ans.maxHealth - ans.health) / ans.maxHealth;
+        
+        // Desenha "rachaduras" baseadas no id para serem consistentes
+        const seed = ans.id.length; 
+        for(let i=0; i < damagePct * 8; i++) {
+            const rx = ((seed * (i+1)) % 100) / 100 * ans.width;
+            const ry = ((seed * (i+5)) % 100) / 100 * ans.height;
+            this.ctx.beginPath();
+            this.ctx.moveTo(ans.x + rx, ans.y + ry);
+            this.ctx.lineTo(ans.x + rx + 15, ans.y + ry + 15);
+            this.ctx.stroke();
+        }
+
+        // Alerta de quase quebrando
+        if (ans.health <= 2 && this.frame % 10 < 5) {
+            this.ctx.fillStyle = 'rgba(255, 61, 113, 0.2)';
+            this.ctx.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
+            this.ctx.fill();
+        }
+        this.ctx.restore();
+    }
+
+    // Texto da Resposta
+    this.ctx.font = 'bold 20px Outfit, sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(ans.text.toUpperCase(), ans.x + ans.width / 2, ans.y + ans.height/2 + 5);
+    this.ctx.textBaseline = 'middle';
     
+    // Borda do texto para contraste máximo
+    this.ctx.strokeStyle = '#000000';
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeText(ans.text, ans.x + ans.width / 2, ans.y + ans.height / 2);
+    
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillText(ans.text, ans.x + ans.width / 2, ans.y + ans.height / 2);
+    
+    // Truncar texto se for muito longo
+    let displayText = ans.text;
+    if (displayText.length > 25) displayText = displayText.substring(0, 22) + '...';
+    
+    this.ctx.fillText(displayText, ans.x + ans.width / 2, ans.y + ans.height / 2);
+
+    // Renderizar Label (Ícone)
+    if (label) {
+        this.ctx.font = '14px serif';
+        this.ctx.fillText(label, ans.x + ans.width - 15, ans.y + 15);
+    }
+
     this.ctx.restore();
     this.ctx.shadowBlur = 0;
   }

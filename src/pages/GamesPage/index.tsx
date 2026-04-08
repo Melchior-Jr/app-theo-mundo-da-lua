@@ -13,6 +13,7 @@ import FeaturedBanner from '@/components/FeaturedBanner'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { usePlayer } from '@/context/PlayerContext'
 import ShareButton from '@/components/ShareButton'
+import { SubjectService, Subject } from '@/services/subjectService'
 import styles from './GamesPage.module.css'
 
 // ─── SVGs ────────────────────────────────────────────────────────
@@ -87,18 +88,8 @@ function JourneyArt() {
 }
 
 // ─── Activities ──────────────────────────────────────────────────
-const ACTIVITIES = [
-  {
-    id: 'journey',
-    title: 'Jornada Galáctica',
-    sub: 'Trilha principal',
-    difficulty: 'Fácil',
-    path: '/capitulos',
-    color: '#f7c762',
-    Art: JourneyArt,
-    locked: false,
-    type: 'aula'
-  },
+// Jogos permanecem estáticos por enquanto até modularizarmos eles também
+const STATIC_GAMES = [
   {
     id: 'quiz',
     title: 'Quiz Intergaláctico',
@@ -193,6 +184,7 @@ export default function GamesPage() {
   } = usePlayer()
   
   const { playBGMusic, playSFX } = useSound()
+  const [subjects, setSubjects] = useState<Subject[]>([])
   const [showAuth, setShowAuth] = useState(false)
   const [topPlayers, setTopPlayers] = useState<any[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
@@ -204,8 +196,20 @@ export default function GamesPage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [showLockModal, setShowLockModal] = useState<{ show: boolean, title: string, message: string }>({ show: false, title: '', message: '' })
 
-  const toggleMenu = () => setIsMenuOpen(prev => !prev)
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
   const closeMenu = () => setIsMenuOpen(false)
+
+  useEffect(() => {
+    async function loadSubjects() {
+      try {
+        const data = await SubjectService.listAll()
+        setSubjects(data)
+      } catch (err) {
+        console.error('Erro ao carregar jornadas:', err)
+      }
+    }
+    loadSubjects()
+  }, [])
 
 
   useEffect(() => {
@@ -289,39 +293,51 @@ export default function GamesPage() {
   const activitiesProgress: ExtendedActivity[] = useMemo(() => {
     const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253'
 
-    const targets: Record<string, number> = {
-      journey: 4,
-      quiz: 20, // 5 Níveis * (3 Missões + 1 Revisão)
-      invasores: 2500,
-      duel: 10
-    }
+    const journeys = subjects.map(s => ({
+      id: s.id,
+      title: s.name,
+      sub: 'Jornada do Conhecimento',
+      difficulty: 'Fácil' as any,
+      path: `/jornada/${s.slug}`,
+      color: s.theme_color || '#f7c762',
+      Art: JourneyArt,
+      locked: s.status === 'coming_soon',
+      type: 'aula' as any,
+      status: s.status === 'coming_soon' ? 'dev_locked' : 'open' as any
+    }))
 
-    return ACTIVITIES.map((act) => {
-      if (act.locked) return { ...act, percent: 0, label: 'Bloqueado', current: 0, target: 0, status: 'dev_locked' } as ExtendedActivity
+    const allActs = [...journeys, ...STATIC_GAMES]
+
+    return allActs.map((act) => {
+      // @ts-ignore
+      if (act.status === 'dev_locked') return { ...act, percent: 0, label: 'Em breve', current: 0, target: 1 } as ExtendedActivity
       
       let current = 0
+      let target = 1
       let label = ''
 
-      if (act.id === 'journey') {
-        current = chapterProgress.filter(p => p.completed).length
-        label = `${current} de ${targets.journey} capítulos`
+      if (act.type === 'aula') {
+        current = chapterProgress.filter(p => p.completed && p.subject_id === act.id).length
+        target = 4 // Idealmente viria de uma contagem de capítulos por subject
+        label = `${current} de ${target} capítulos`
       } else if (act.id === 'quiz') {
         const stats = gameStats.find(gs => gs.game_id === QUIZ_GAME_ID)
         const challengeData = stats?.metadata?.challenge_data || {}
-        
-        // Contagem de desafios únicos concluídos
         current = Object.values(challengeData).filter((c: any) => c.completed).length
-        label = `${current} de ${targets.quiz} desafios`
+        target = 20
+        label = `${current} de ${target} desafios`
       } else if (act.id === 'invasores') {
         const stats = gameStats.find(gs => gs.game_id === 'invasores-do-conhecimento')
         current = Math.floor((stats?.total_score || 0) / 10)
-        label = `${current}xp de ${targets.invasores}xp`
+        target = 2500
+        label = `${current}xp de ${target}xp`
       } else if (act.id === 'duel') {
         current = playerStats?.duel_wins || 0
-        label = `${current} de ${targets.duel} vitórias`
+        target = 10
+        label = `${current} de ${target} vitórias`
       }
 
-      const percent = Math.min(100, (current / (targets[act.id] || 1)) * 100)
+      const percent = Math.min(100, (current / target) * 100)
       
       const hasChapter = chapterProgress.some(p => p.completed)
       let status: 'open' | 'progression_locked' | 'dev_locked' = 'open'
@@ -335,14 +351,14 @@ export default function GamesPage() {
       return { 
         ...act, 
         current, 
-        target: targets[act.id] || 1, 
+        target, 
         label, 
         percent, 
         status, 
         locked: status !== 'open' 
       } as ExtendedActivity
     })
-  }, [gameStats, chapterProgress, playerStats])
+  }, [subjects, gameStats, chapterProgress, playerStats])
 
   const level = calcLevel(playerStats?.galactic_xp)
   const title = getLevelTitle(level)

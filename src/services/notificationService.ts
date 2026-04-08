@@ -9,7 +9,7 @@ export interface Notification {
   title:      string
   content:    string | null
   type:       NotificationType
-  source:     NotificationSource
+  source?:     NotificationSource
   read:       boolean
   created_at: string
 }
@@ -24,14 +24,24 @@ export const NotificationService = {
     // 1. Busca notificações da tabela padrão
     let query = supabase
       .from('notifications')
-      .select('*')
+      .select('id, user_id, title, message, type, is_read, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(10)
 
-    if (source) query = query.eq('source', source)
-    const { data: standard, error: stdErr } = await query
+    const { data: standardRaw, error: stdErr } = await query
     if (stdErr) throw stdErr
+
+    // Mapear colunas do banco para o modelo do frontend
+    const standard: Notification[] = (standardRaw || []).map(n => ({
+      id: n.id,
+      user_id: n.user_id,
+      title: n.title,
+      content: n.message,
+      type: n.type as NotificationType,
+      read: n.is_read,
+      created_at: n.created_at
+    }))
 
     // 2. Se for global ou quiz, busca também da 'quiz_challenges'
     let challenges: Notification[] = []
@@ -86,9 +96,8 @@ export const NotificationService = {
       .from('notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('read', false)
+      .eq('is_read', false)
 
-    if (source) query = query.eq('source', source)
     const { count: stdCount, error: stdErr } = await query
     if (stdErr) throw stdErr
 
@@ -121,7 +130,7 @@ export const NotificationService = {
     // 1. Tenta na tabela padrão
     const { data } = await supabase
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('id', id)
       .select('id')
     
@@ -141,11 +150,10 @@ export const NotificationService = {
     // 1. Marca na tabela padrão
     let query = supabase
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('user_id', userId)
-      .eq('read', false)
+      .eq('is_read', false)
 
-    if (source) query = query.eq('source', source)
     await query
 
     // 2. Marca na quiz_challenges se for global ou quiz
@@ -163,13 +171,62 @@ export const NotificationService = {
    * Envia uma nova notificação (útil para eventos manuais na UI).
    */
   async notify(data: Partial<Notification>): Promise<Notification> {
+    // Prepara o objeto para o formato do banco
+    const dbData = {
+      user_id: data.user_id,
+      title: data.title,
+      message: data.content,
+      type: data.type || 'info',
+      is_read: false
+    }
+
     const { data: result, error } = await supabase
       .from('notifications')
-      .insert([data])
+      .insert([dbData])
       .select()
       .single()
 
     if (error) throw error
-    return result
+    
+    // Retorna mapeado de volta para o frontend
+    return {
+      id: result.id,
+      user_id: result.user_id,
+      title: result.title,
+      content: result.message,
+      type: result.type,
+      read: result.is_read,
+      created_at: result.created_at
+    }
+  },
+
+  /**
+   * Envia uma notificação para TODOS os usuários (Global).
+   * Operação administrativa.
+   */
+  async notifyAll(title: string, content: string, type: NotificationType = 'info'): Promise<void> {
+    // 1. Busca todos os usuários
+    const { data: players, error: plErr } = await supabase
+      .from('players')
+      .select('id');
+    
+    if (plErr) throw plErr;
+    if (!players || players.length === 0) return;
+
+    // 2. Cria as instâncias de notificação no formato do banco
+    const notifications = players.map(p => ({
+      user_id: p.id,
+      title,
+      message: content,
+      type,
+      is_read: false
+    }));
+
+    // 3. Insere em lote
+    const { error: insErr } = await supabase
+      .from('notifications')
+      .insert(notifications);
+    
+    if (insErr) throw insErr;
   }
 }

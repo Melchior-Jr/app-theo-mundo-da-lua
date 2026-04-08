@@ -56,15 +56,33 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     try {
       // 1. Perfil e Estatísticas Globais
-      const [profileRes, statsRes, progressRes, logsRes, trophiesRes, gamesRes, challengesRes] = await Promise.all([
+      const [profileRes, statsRes, progressRes, logsRes, trophiesRes, gamesRes] = await Promise.all([
         supabase.from('players').select('*').eq('id', user.id).single(),
         supabase.from('player_global_stats').select('*').eq('player_id', user.id).single(),
         supabase.from('player_chapter_progress').select('*').eq('player_id', user.id),
         supabase.from('player_exploration_logs').select('*').eq('player_id', user.id).order('created_at', { ascending: false }).limit(1000),
         supabase.from('user_trophies').select('*').eq('user_id', user.id),
-        supabase.from('player_game_stats').select('*, games(*)').eq('player_id', user.id),
-        supabase.from('quiz_challenges').select('*').eq('status', 'completed').or(`challenger_id.eq.${user.id},challenged_id.eq.${user.id}`)
+        supabase.from('player_game_stats').select('*, games(*)').eq('player_id', user.id)
       ])
+
+      if (profileRes.error && profileRes.error.code === 'PGRST116') {
+        // Not a player (probably admin/teacher)
+        setPlayerData(null)
+        setLoading(false)
+        return
+      }
+
+      if (profileRes.data) {
+        setPlayerData(profileRes.data)
+        localStorage.setItem(`theo_player_${user.id}`, JSON.stringify(profileRes.data))
+      }
+
+      // 2. Quiz Challenges (Separate to not block profile if it fails or if not relevant)
+      const { data: challengesData } = await supabase
+        .from('quiz_challenges')
+        .select('*')
+        .eq('status', 'completed')
+        .or(`challenger_id.eq.${user.id},challenged_id.eq.${user.id}`)
 
       if (profileRes.data) {
         setPlayerData(profileRes.data)
@@ -72,7 +90,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       if (statsRes.data) {
         // Cálculo de vitórias em duelo (Arena Pvp)
-        const duelWins = (challengesRes.data as any)?.filter((c: any) => {
+        const duelWins = (challengesData as any)?.filter((c: any) => {
           const isChallenger = c.challenger_id === user.id
           const c1 = c.challenger_score || 0
           const c2 = c.challenged_score || 0

@@ -17,6 +17,19 @@ const InvasoresPage = lazy(() => import('@/pages/InvasoresPage'))
 const TrophyRoomPage = lazy(() => import('@/pages/TrophyRoom'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
+// Rotas Admin
+const AdminLayout = lazy(() => import('@/pages/AdminPage/AdminLayout'))
+const AdminOverview = lazy(() => import('@/pages/AdminPage'))
+const ChaptersManager = lazy(() => import('@/pages/AdminPage/ChaptersManager'))
+const NotificationsManager = lazy(() => import('@/pages/AdminPage/NotificationsManager'))
+const UsersManager = lazy(() => import('@/pages/AdminPage/UsersManager'))
+const ActivitiesManager = lazy(() => import('@/pages/AdminPage/ActivitiesManager'))
+const SubjectsManager = lazy(() => import('@/pages/AdminPage/SubjectsManager'))
+const PedagogicalAnalysis = lazy(() => import('@/pages/AdminPage/PedagogicalAnalysis'))
+
+// Rotas Professor
+const TeacherLayout = lazy(() => import('@/pages/TeacherPage/TeacherLayout'))
+
 import PageLoader from '@/components/PageLoader'
 
 export const router = createBrowserRouter([
@@ -42,6 +55,10 @@ export const router = createBrowserRouter([
       },
       {
         path: 'capitulos',
+        element: <ChaptersPage />,
+      },
+      {
+        path: 'jornada/:subjectSlug',
         element: <ChaptersPage />,
       },
       {
@@ -75,6 +92,32 @@ export const router = createBrowserRouter([
       {
         path: 'trofeus',
         element: <TrophyRoomPage />,
+      },
+      {
+        path: 'admin',
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <AdminOverview /> },
+          { path: 'chapters', element: <ChaptersManager /> },
+          { path: 'subjects', element: <SubjectsManager /> },
+          { path: 'activities', element: <ActivitiesManager /> },
+          { path: 'notifications', element: <NotificationsManager /> },
+          { path: 'users', element: <UsersManager /> },
+          { path: 'pedagogical', element: <PedagogicalAnalysis /> },
+        ]
+      },
+      {
+        path: 'prof',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <TeacherLayout />
+          </Suspense>
+        ),
+        children: [
+          { index: true, element: <AdminOverview /> },
+          { path: 'alunos', element: <UsersManager /> },
+          { path: 'analise', element: <PedagogicalAnalysis /> },
+        ]
       },
       {
         path: '*',

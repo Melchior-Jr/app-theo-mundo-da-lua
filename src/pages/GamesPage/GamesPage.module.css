@@ -933,6 +933,7 @@
     backdrop-filter: blur(30px);
     animation: menuSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  .menuOpen { display: flex !important; }
   .navLinks.menuOpen { display: flex; }
   .navLink { font-size: 1.8rem; font-weight: 800; }
   .userWidget { 
@@ -972,7 +973,7 @@
   .heroArt { display: none; }
   .heroTitle { font-size: clamp(1.8rem, 7vw, 2.8rem); }
 
-  .navLinks { display: none; }
+
 
   .playerSection { display: none; }
   .playerWidget {

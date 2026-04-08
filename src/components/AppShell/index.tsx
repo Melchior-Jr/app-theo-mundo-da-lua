@@ -24,7 +24,7 @@ export default function AppShell() {
    ].includes(location.pathname) || (location.pathname.startsWith('/capitulos/') && location.pathname !== '/capitulos')
  
    // List of routes that NEVER show the splash (hubs/public)
-   const isSimplePage = ['/', '/login', '/reset-password', '/jogos', '/ranking', '/perfil', '/capitulos', '/trofeus', '/install'].includes(location.pathname)
+   const isSimplePage = ['/', '/login', '/reset-password', '/jogos', '/ranking', '/perfil', '/capitulos', '/trofeus', '/install'].includes(location.pathname) || location.pathname.startsWith('/admin') || location.pathname.startsWith('/prof')
  
    const [isLoaded, setIsLoaded] = useState(false)
 

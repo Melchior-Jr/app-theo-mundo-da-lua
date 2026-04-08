@@ -314,7 +314,10 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
         metadata: {
            level: currentLevel,
            challenge: currentChallenge,
-           xp_earned: finalXp
+           xp_earned: finalXp,
+           correct_count: engine.correctCount,
+           total_questions: engine.totalQuestions,
+           questions_log: engine.questionsLog
         }
       })
       if (sessionErr) throw sessionErr;
@@ -408,8 +411,6 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
       if (gameErr) throw gameErr;
 
       // 5. Trophy Progress & Unlocks
-      // Utilize existing isChallengeFinished and isPerfect from above scope (lines 356-357)
-      
       // Update: First Correct (if correctCount > 0)
       if (engine.correctCount > 0) {
         await TrophyService.updateProgress(user.id, 'quiz_first_correct', 1, false)
@@ -434,8 +435,6 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
       if (currentLevel >= 5) {
         await TrophyService.updateProgress(user.id, 'prog_level_5', 1, true)
       }
-
-      // 6. Update Daily Streak & Awards
       await ProgressionService.updateDailyStreak(user.id);
 
       console.log('[QuizSystem] Tudo gravado com sucesso! 🚀');
