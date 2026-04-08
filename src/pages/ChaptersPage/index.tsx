@@ -13,6 +13,8 @@ import { NotificationDropdown } from '@/components/NotificationDropdown'
 import { NotificationService } from '@/services/notificationService'
 import { SettingsModal } from '@/components/SettingsModal'
 import { useSound } from '@/context/SoundContext'
+import { MissionsModal } from '@/components/MissionsModal'
+import { CHAPTER_MISSIONS } from '@/data/missions'
 import styles from './ChaptersPage.module.css'
 
 export default function ChaptersPage() {
@@ -29,6 +31,7 @@ export default function ChaptersPage() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [selectedMissionsChapter, setSelectedMissionsChapter] = useState<any>(null)
 
   const { playBGMusic, playSFX } = useSound()
   const narration = getNarrationById('chapters-selection')
@@ -169,12 +172,19 @@ export default function ChaptersPage() {
             // Calcula XP Ganho (Conclusão + Exploração)
             const chapterCompletionXP = isCompleted ? chapter.xpAward : 0
             
-            // Filtra logs de exploração que pertencem a este capítulo
-            const explorationXP = explorationLogs
+            // Filtra logs de exploração únicos (evita somar o mesmo ID duas vezes)
+            const uniqueLogsMap = new Map()
+            explorationLogs.forEach((log: any) => {
+              if (!uniqueLogsMap.has(log.exploration_id)) {
+                uniqueLogsMap.set(log.exploration_id, log)
+              }
+            })
+            const uniqueLogs = Array.from(uniqueLogsMap.values())
+            const explorationXP = uniqueLogs
               .filter((log: any) => {
-                const id = log.exploration_id
+                const id = log.exploration_id.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
                 if (chapter.id === 'sistema-solar') 
-                  return id.startsWith('view-planet-') || id.startsWith('interact-3d-') || id.startsWith('stat-detail-')
+                  return id.startsWith('view-planet-') || id.startsWith('interact-3d-') || id.startsWith('stat-detail-') || id.startsWith('share-planet-') || id === 'theo-bulb-solar-system'
                 if (chapter.id === 'movimentos-da-terra')
                   return id.startsWith('view-motion-') || id.startsWith('interact-motion-3d-') || id.startsWith('motion-detail-')
                 if (chapter.id === 'constelaçoes')
@@ -183,17 +193,11 @@ export default function ChaptersPage() {
                   return id.startsWith('view-moon-phase-') || id.startsWith('moon-detail-scene-') || id.startsWith('moon-detail-time-')
                 return false
               })
-              .reduce((sum: number, log: any) => sum + (log.xp_awarded || 10), 0)
+              .reduce((sum: number, log: any) => sum + (log.xp_awarded || 0), 0)
 
-            const totalEarned = chapterCompletionXP + explorationXP
-
-            // Define o XP total potencial (baseado no mapeamento de interação)
-            const XP_TOTAL_MAX: Record<string, number> = {
-              'sistema-solar': 1000,
-              'movimentos-da-terra': 700,
-              'constelaçoes': 1300,
-              'fases-da-lua': 1000
-            }
+            const chapterMissions = CHAPTER_MISSIONS[chapter.id] || []
+            const totalMaxXP = (chapter.xpAward || 0) + chapterMissions.reduce((sum, m) => (m.id !== 'completion' ? sum + m.xp : sum), 0)
+            const totalEarned = Math.min(chapterCompletionXP + explorationXP, totalMaxXP)
 
             return (
               <ChapterCard 
@@ -203,11 +207,21 @@ export default function ChaptersPage() {
                 animationDelay={150 + i * 100} 
                 isCompleted={isCompleted} 
                 xpEarned={totalEarned}
-                xpTotal={XP_TOTAL_MAX[chapter.id] || chapter.xpAward}
+                xpTotal={totalMaxXP}
                 onClick={(e) => {
                   if (!user) {
                     e.preventDefault()
                     setShowAuth(true)
+                  }
+                }}
+                onXPClick={() => {
+                  const missions = CHAPTER_MISSIONS[chapter.id]
+                  if (missions) {
+                    setSelectedMissionsChapter({
+                      chapterMissions: { chapterId: chapter.id, missions },
+                      isCompleted,
+                      color: chapter.color
+                    })
                   }
                 }}
               />
@@ -252,6 +266,17 @@ export default function ChaptersPage() {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
       />
+
+      {selectedMissionsChapter && (
+        <MissionsModal
+          isOpen={!!selectedMissionsChapter}
+          onClose={() => setSelectedMissionsChapter(null)}
+          chapterMissions={selectedMissionsChapter.chapterMissions}
+          explorationLogs={explorationLogs}
+          isChapterCompleted={selectedMissionsChapter.isCompleted}
+          chapterColor={selectedMissionsChapter.color}
+        />
+      )}
     </div>
   )
 }

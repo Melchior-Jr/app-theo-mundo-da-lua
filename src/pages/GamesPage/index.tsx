@@ -11,7 +11,7 @@ import { NotificationService } from '@/services/notificationService'
 import { SettingsModal } from '@/components/SettingsModal'
 import FeaturedBanner from '@/components/FeaturedBanner'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
-import { useProgress } from '@/hooks/useProgress'
+import { usePlayer } from '@/context/PlayerContext'
 import ShareButton from '@/components/ShareButton'
 import styles from './GamesPage.module.css'
 
@@ -184,17 +184,20 @@ const DIFF_COLOR = { Fácil: '#06d6a0', Médio: '#FFD166', Difícil: '#ef476f' }
 
 export default function GamesPage() {
   const { session, user } = useAuth()
+  const { 
+    playerData, 
+    playerStats, 
+    gameStats, 
+    progress: chapterProgress, 
+    saveExploration
+  } = usePlayer()
+  
   const { playBGMusic, playSFX } = useSound()
   const [showAuth, setShowAuth] = useState(false)
-  const [playerData, setPlayerData] = useState<any>(null)
-  const [playerStats, setPlayerStats] = useState<any>(null)
-  const [gameStats, setGameStats] = useState<any[]>([])
-  const [chapterProgress, setChapterProgress] = useState<any[]>([])
   const [topPlayers, setTopPlayers] = useState<any[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const { isGlobalLoading } = useNarrationSequence()
-  const { saveExploration } = useProgress()
   const [activeCategory, setActiveCategory] = useState<CategoryType>('Tudo')
   const [scrolled, setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -244,9 +247,8 @@ export default function GamesPage() {
   }, [user?.id])
 
   useEffect(() => {
-    if (user?.id) fetchPlayerData()
-    else { setPlayerData(null); setPlayerStats(null) }
-  }, [user])
+    fetchTopPlayers()
+  }, [])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const top = e.currentTarget.scrollTop
@@ -262,41 +264,6 @@ export default function GamesPage() {
         const merged = data.map(d => ({ ...d, ...profiles?.find(p => p.id === d.player_id) }))
         setTopPlayers(merged)
       }
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const fetchPlayerData = async () => {
-    if (!user?.id) return
-    try {
-      const [profileRes, statsRes, trophyRes, gStatsRes, cProgressRes, challengesRes] = await Promise.all([
-        supabase.from('players').select('*').eq('id', user.id).single(),
-        supabase.from('player_global_stats').select('*').eq('player_id', user.id).single(),
-        supabase.from('user_trophies').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('player_game_stats').select('*').eq('player_id', user.id),
-        supabase.from('player_chapter_progress').select('*').eq('player_id', user.id),
-        supabase.from('quiz_challenges').select('*').eq('status', 'completed').or(`challenger_id.eq.${user.id},challenged_id.eq.${user.id}`)
-      ])
-
-      // Cálculo de vitórias em duelo
-      const duelWins = challengesRes.data?.filter(c => {
-        const isChallenger = c.challenger_id === user.id
-        const c1 = c.challenger_score || 0
-        const c2 = c.challenged_score || 0
-        return isChallenger ? c1 > c2 : c2 > c1
-      }).length || 0
-
-      setPlayerData(profileRes.data)
-      setPlayerStats({
-        ...statsRes.data,
-        total_trophies: trophyRes.count || 0,
-        galactic_xp: statsRes.data?.galactic_xp || 0,
-        total_score: statsRes.data?.total_score || 0,
-        duel_wins: duelWins
-      })
-      setGameStats(gStatsRes.data || [])
-      setChapterProgress(cProgressRes.data || [])
     } catch (e) {
       console.error(e)
     }

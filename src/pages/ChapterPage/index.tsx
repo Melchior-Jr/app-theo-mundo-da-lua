@@ -12,6 +12,10 @@ import SolarSystemChapter from './SolarSystemChapter'
 import EarthMotionsChapter from './EarthMotionsChapter'
 import ConstellationsChapter from './ConstellationsChapter'
 import MoonPhasesChapter from './MoonPhasesChapter'
+import { MissionsModal } from '@/components/MissionsModal'
+import { CHAPTER_MISSIONS } from '@/data/missions'
+import { useState } from 'react'
+import { usePlayer } from '@/context/PlayerContext'
 import styles from './ChapterPage.module.css'
 
 export default function ChapterPage() {
@@ -34,6 +38,9 @@ export default function ChapterPage() {
     setActiveNarration,
     setOnNarrationFinish 
   } = useNarrationSequence()
+  
+  const [showMissions, setShowMissions] = useState(false)
+  const { explorationLogs, progress: allProgress } = usePlayer()
 
   const { progress, saveProgress, loading: loadingProgress } = useProgress()
 
@@ -146,12 +153,34 @@ export default function ChapterPage() {
         disableNarration={subStep !== 'overview'}
         hideFunFact={subStep !== 'overview' || chapter.id === 'movimentos-da-terra'}
       >
+        {/* Adiciona botão de missões fixo no HUD lateral ou flutuante via portal se necessário, 
+            mas por enquanto vamos injetar no Container se ele permitir ou ser renderizado aqui como overlay */}
+        <button 
+          className={styles.missionsToggle}
+          onClick={() => setShowMissions(true)}
+          title="Ver Missões"
+        >
+          <span className={styles.missionsIcon}>🎯</span>
+          <span className={styles.missionsText}>Missões</span>
+        </button>
+
         {chapter.id === 'sistema-solar' ? <SolarSystemChapter step={subStep} /> :
          chapter.id === 'movimentos-da-terra' ? <EarthMotionsChapter /> :
          chapter.id === 'constelaçoes' ? <ConstellationsChapter /> :
          chapter.id === 'fases-da-lua' ? <MoonPhasesChapter /> :
          <div className={styles.placeholder}>Carregando conteúdo...</div>}
       </ChapterContainer>
+
+      {showMissions && (
+        <MissionsModal
+          isOpen={showMissions}
+          onClose={() => setShowMissions(false)}
+          chapterMissions={{ chapterId: chapter.id, missions: CHAPTER_MISSIONS[chapter.id] || [] }}
+          explorationLogs={explorationLogs}
+          isChapterCompleted={allProgress.some((p: any) => p.chapter_id === chapter.id && p.completed)}
+          chapterColor={chapter.color}
+        />
+      )}
     </div>
   )
 }

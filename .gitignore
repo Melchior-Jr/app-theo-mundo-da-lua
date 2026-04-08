@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 3D Models
+public/3D Model/excluded_large_files/
+public/3D Model/backups/

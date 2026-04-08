@@ -4,6 +4,7 @@ import { useQuizEngine } from '@/hooks/useQuizEngine'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/context/SoundContext'
+import { usePlayer } from '@/context/PlayerContext'
 import styles from './QuizSystem.module.css'
 import QuestionRenderer from './QuestionRenderer.tsx'
 import QuizHeader from './QuizHeader.tsx'
@@ -34,6 +35,8 @@ interface DuelConfig {
 export default function QuizSystem({ level: initialLevel = 1, challenge: initialChallenge = 1, mode: initialMode = 'normal', onExit }: QuizSystemProps) {
   const { user } = useAuth()
   const { playSFX, playBGMusic, stopBGMusic, playTrack } = useSound()
+  const { refreshData } = usePlayer()
+  const [isSaving, setIsSaving] = useState(false)
 
   // Gerenciar música de fundo específica do Quiz
   useEffect(() => {
@@ -173,6 +176,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
 
   // 4. Handler para concluir missão e voltar ao início
   const handleFinishMission = () => {
+    if (isSaving) return
     playSFX('click')
     setTotalXp(prev => prev + engine.xp)
     setIsStarted(false)
@@ -192,6 +196,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
     
     console.log('[DEBUG] Iniciando saveResults. isDuel:', isDuel, 'status:', engine.status)
     setHasSaved(true)
+    setIsSaving(true)
 
     // Lógica especial para Duelo
     if (isDuel && duelConfig) {
@@ -434,10 +439,14 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
       await ProgressionService.updateDailyStreak(user.id);
 
       console.log('[QuizSystem] Tudo gravado com sucesso! 🚀');
-
+      
+      // Notifica o app inteiro que os dados mudaram (XP, Nível, etc)
+      await refreshData();
     } catch (err) {
       console.error('[QuizSystem] Erro fatal ao salvar progresso:', err)
       setHasSaved(false) // Permite tentar novamente se falhou
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -542,14 +551,16 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
 
           <button 
             className={styles.startDuelBtn} 
+            disabled={isSaving}
             onClick={() => {
+              if (isSaving) return
               setShowConfetti(false)
               setAnimatedXp(0)
               handleFinishMission()
             }}
-            style={{ backgroundColor: accentColor, transform: 'scale(1.05)' }}
+            style={{ backgroundColor: accentColor, transform: 'scale(1.05)', opacity: isSaving ? 0.7 : 1 }}
           >
-            VOLTAR PARA A BASE ➔
+            {isSaving ? 'SALVANDO...' : 'VOLTAR PARA A BASE ➔'}
           </button>
         </div>
       </div>
@@ -579,8 +590,13 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
           <h2 className={styles.levelTitle}>Desafio {currentChallenge} do Nível {currentLevel} Concluído! 🚀</h2>
           <p className={styles.levelMsg}>Você está indo muito bem, astronauta!</p>
           <div className={styles.xpGained}>+{engine.xp} XP</div>
-          <button className={styles.nextLevelBtn} onClick={handleFinishMission}>
-            PROSSEGUIR JORNADA ➔
+          <button 
+            className={styles.nextLevelBtn} 
+            onClick={handleFinishMission}
+            disabled={isSaving}
+            style={{ opacity: isSaving ? 0.7 : 1 }}
+          >
+            {isSaving ? 'SALVANDO...' : 'PROSSEGUIR JORNADA ➔'}
           </button>
         </div>
       </div>

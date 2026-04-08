@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useAchievement } from '@/context/AchievementContext'
 import { TROPHIES } from '@/data/trophies'
 import { calcLevel } from '@/utils/playerUtils'
+import { CHAPTERS } from '@/data/chapters'
 
 export interface ChapterProgress {
   chapter_id: string
@@ -35,30 +36,53 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user } = useAuth()
   const { showAchievement } = useAchievement()
   
-  const [playerData, setPlayerData] = useState<any>(null)
-  const [playerStats, setPlayerStats] = useState<any>(null)
+  // 🛠️ Sistema de Memória Galáctica (Cache-first)
+  const [playerData, setPlayerData] = useState<any>(() => {
+    const saved = localStorage.getItem(`theo_player_${user?.id}`)
+    return saved ? JSON.parse(saved) : null
+  })
+  const [playerStats, setPlayerStats] = useState<any>(() => {
+    const saved = localStorage.getItem(`theo_stats_${user?.id}`)
+    return saved ? JSON.parse(saved) : null
+  })
   const [progress, setProgress] = useState<any[]>([])
   const [explorationLogs, setExplorationLogs] = useState<any[]>([])
   const [userTrophies, setUserTrophies] = useState<any[]>([])
   const [gameStats, setGameStats] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!playerData)
 
   const fetchPlayerData = useCallback(async () => {
     if (!user?.id) return
 
     try {
       // 1. Perfil e Estatísticas Globais
-      const [profileRes, statsRes, progressRes, logsRes, trophiesRes, gamesRes] = await Promise.all([
+      const [profileRes, statsRes, progressRes, logsRes, trophiesRes, gamesRes, challengesRes] = await Promise.all([
         supabase.from('players').select('*').eq('id', user.id).single(),
         supabase.from('player_global_stats').select('*').eq('player_id', user.id).single(),
         supabase.from('player_chapter_progress').select('*').eq('player_id', user.id),
-        supabase.from('player_exploration_logs').select('*').eq('player_id', user.id).order('created_at', { ascending: false }).limit(20),
+        supabase.from('player_exploration_logs').select('*').eq('player_id', user.id).order('created_at', { ascending: false }).limit(1000),
         supabase.from('user_trophies').select('*').eq('user_id', user.id),
-        supabase.from('player_game_stats').select('*, games(*)').eq('player_id', user.id)
+        supabase.from('player_game_stats').select('*, games(*)').eq('player_id', user.id),
+        supabase.from('quiz_challenges').select('*').eq('status', 'completed').or(`challenger_id.eq.${user.id},challenged_id.eq.${user.id}`)
       ])
 
-      if (profileRes.data) setPlayerData(profileRes.data)
-      if (statsRes.data) setPlayerStats(statsRes.data)
+      if (profileRes.data) {
+        setPlayerData(profileRes.data)
+        localStorage.setItem(`theo_player_${user.id}`, JSON.stringify(profileRes.data))
+      }
+      if (statsRes.data) {
+        // Cálculo de vitórias em duelo (Arena Pvp)
+        const duelWins = (challengesRes.data as any)?.filter((c: any) => {
+          const isChallenger = c.challenger_id === user.id
+          const c1 = c.challenger_score || 0
+          const c2 = c.challenged_score || 0
+          return isChallenger ? c1 > c2 : c2 > c1
+        }).length || 0
+
+        const statsWithWins = { ...statsRes.data, duel_wins: duelWins }
+        setPlayerStats(statsWithWins)
+        localStorage.setItem(`theo_stats_${user.id}`, JSON.stringify(statsWithWins))
+      }
       if (progressRes.data) setProgress(progressRes.data)
       if (logsRes.data) setExplorationLogs(logsRes.data)
       if (trophiesRes.data) setUserTrophies(trophiesRes.data)
@@ -89,10 +113,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return
 
     const rewards: Record<string, { xp: number, trophyId: string }> = {
-      'sistema-solar':        { xp: 500, trophyId: 'exp_first_chapter' },
-      'movimentos-da-terra': { xp: 500, trophyId: 'exp_moon_module' },
-      'constelaçoes':        { xp: 500, trophyId: 'exp_five_chapters' },
-      'fases-da-lua':        { xp: 1000, trophyId: 'exp_all_chapters' }, 
+      'sistema-solar':        { xp: CHAPTERS.find(c => c.id === 'sistema-solar')?.xpAward || 500, trophyId: 'exp_first_chapter' },
+      'movimentos-da-terra': { xp: CHAPTERS.find(c => c.id === 'movimentos-da-terra')?.xpAward || 400, trophyId: 'exp_moon_module' },
+      'constelaçoes':        { xp: CHAPTERS.find(c => c.id === 'constelaçoes')?.xpAward || 500, trophyId: 'exp_five_chapters' },
+      'fases-da-lua':        { xp: CHAPTERS.find(c => c.id === 'fases-da-lua')?.xpAward || 1000, trophyId: 'exp_all_chapters' }, 
     }
 
     const reward = rewards[chapterId]
@@ -151,6 +175,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const saveProgress = useCallback(async (chapter_id: string, sub_step: string, completed = false) => {
     if (!user?.id) return
 
+    // Verifica se este capítulo já foi concluído anteriormente para evitar premiação redundante
+    const wasAlreadyCompleted = progress.some(p => p.chapter_id === chapter_id && p.completed)
+
     try {
       // 1. Persist to DB
       await supabase
@@ -163,8 +190,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           updated_at: new Date().toISOString()
         })
 
-      // 2. Rewards if just completed
-      if (completed) {
+      // 2. Rewards if just completed AND it's the first time
+      if (completed && !wasAlreadyCompleted) {
         await awardChapterRewards(chapter_id)
       }
       
@@ -181,7 +208,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (e) {
       console.error('Error saving progress:', e)
     }
-  }, [user?.id, awardChapterRewards])
+  }, [user?.id, awardChapterRewards, progress])
 
   const saveExploration = useCallback(async (exploration_id: string, xp_to_award: number = 10) => {
     if (!user?.id) return
@@ -202,7 +229,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         p_amount: xp_to_award
       })
 
-      // 3. Level Up detection
+      // 3. Atualizar estado local imediatamente (otimista)
+      setExplorationLogs(prev => [
+        { exploration_id, xp_awarded: xp_to_award, created_at: new Date().toISOString() },
+        ...prev
+      ])
+      
+      // 4. Level Up detection
       const oldXP = playerStats?.galactic_xp || 0
       const newXP = oldXP + xp_to_award
       if (calcLevel(newXP) > calcLevel(oldXP)) {

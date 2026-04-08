@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import '@google/model-viewer'
 import { getPlanetById, planets } from '@/data/planets'
 import FloatingTooltip from '@/components/FloatingTooltip'
+import { useNarrationSequence } from '@/context/NarrationSequenceContext'
+import { getNarrationById } from '@/data/narration'
 import styles from './SolarSystemOverview.module.css'
 
 export default function SolarSystemOverview() {
@@ -9,8 +11,15 @@ export default function SolarSystemOverview() {
   const [isLargeLoaded, setIsLargeLoaded] = useState(false)
   const [useAdaptiveLoading, setUseAdaptiveLoading] = useState(true)
   const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; planetId: string; surfaceId?: string | null } | null>(null)
+  const [isFadingOut, setIsFadingOut] = useState(false)
   const viewerRef = useRef<any>(null)
   const smallViewerRef = useRef<any>(null)
+  const { setActiveNarration } = useNarrationSequence()
+
+  useEffect(() => {
+    const intro = getNarrationById('chapter-1')
+    if (intro) setActiveNarration(intro)
+  }, [setActiveNarration])
 
   useEffect(() => {
     // Detecta qualidade da conexão se disponível
@@ -154,11 +163,22 @@ export default function SolarSystemOverview() {
             display: 'block',
             opacity: (isLargeLoaded && !selectedPlanet) ? 0 : 1, 
             transition: 'opacity 1s ease' 
+          },
+          onLoad: () => {
+            setIsFadingOut(true)
+            setTimeout(() => {
+              setIsFadingOut(false)
+            }, 600)
           }
         }, (
-          <div className={styles.loader} slot="poster">
-             <div className={styles.loaderSpinner} />
-             <span>Explorando...</span>
+          <div className={`${styles.loader} ${isFadingOut ? styles.fadeOut : ''}`} slot="poster">
+            <div className={styles.loaderOrbital}>
+              <div className={styles.loaderRing} />
+              <div className={styles.loaderRing} />
+              <div className={styles.loaderRing} />
+              <div className={styles.loaderCore} />
+            </div>
+            <span className={styles.loaderText}>Explorando</span>
           </div>
         ))
       )}

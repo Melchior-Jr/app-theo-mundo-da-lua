@@ -32,7 +32,7 @@ export const CHAPTERS: Chapter[] = [
     path: '/capitulos/sistema-solar/overview',
     intro: 'O Sistema Solar é o nosso lar no universo! Ele é formado pelo Sol — uma enorme estrela no centro — e oito planetas que giram ao seu redor. Théo vai te mostrar cada um deles!',
     funFact: 'Sabia que o Sol representa 99,8% de toda a massa do Sistema Solar? É gigante mesmo! 🌞',
-    xpAward: 360,
+    xpAward: 1000,
   },
   {
     id: 'movimentos-da-terra',
@@ -47,7 +47,7 @@ export const CHAPTERS: Chapter[] = [
     path: '/capitulos/movimentos-da-terra/overview',
     intro: 'A Terra nunca para de se mover! Ela gira ao redor de si mesma (rotação) e também orbita o Sol (translação). São esses movimentos que criam os dias, as noites e as estações do ano.',
     funFact: 'A Terra gira a mais de 1.600 km/h em torno do seu próprio eixo! É mais rápido que um avião! ✈️',
-    xpAward: 300,
+    xpAward: 700,
   },
   {
     id: 'constelaçoes',
@@ -62,7 +62,7 @@ export const CHAPTERS: Chapter[] = [
     path: '/capitulos/constelaçoes/overview',
     intro: 'Olhar para o céu à noite é como ver um enorme mapa de estrelas! As constelações são grupos de estrelas que, quando ligadas por lines imaginárias, formam desenhos e figuras. Théo adora explorá-las!',
     funFact: 'Existem 88 constelações oficiais reconhecidas pela astronomia. A mais conhecida é Órion! 🌟',
-    xpAward: 300,
+    xpAward: 500,
   },
   {
     id: 'fases-da-lua',
@@ -77,7 +77,7 @@ export const CHAPTERS: Chapter[] = [
     path: '/capitulos/fases-da-lua/overview',
     intro: 'Você já reparou que a Lua parece diferente a cada noite? Às vezes ela é uma bolinha cheia, às vezes uma fatia fina. Isso acontece porque ela orbita a Terra e o Sol ilumina partes diferentes dela!',
     funFact: 'A Lua leva cerca de 29,5 dias para completar todas as suas fases — quase um mês! 🌕',
-    xpAward: 500,
+    xpAward: 1000,
   },
 ]
 

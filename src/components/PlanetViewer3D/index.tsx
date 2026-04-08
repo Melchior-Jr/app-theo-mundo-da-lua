@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
 import '@google/model-viewer'
-import TheoSpinner from '@/components/TheoSpinner'
 import styles from './PlanetViewer3D.module.css'
 
 interface PlanetViewer3DProps {
@@ -33,6 +32,7 @@ export default function PlanetViewer3D({
   fieldOfView = "30deg"
 }: PlanetViewer3DProps) {
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isFadingOut, setIsFadingOut] = useState(false)
   const viewerRef = useRef<any>(null)
   const onLoadRef = useRef(onLoad)
 
@@ -51,10 +51,16 @@ export default function PlanetViewer3D({
     if (!viewerNode) return
 
     const handleLoad = () => {
-      // Pequeno delay para garantir que o model-viewer processou o carregamento interno
       requestAnimationFrame(() => {
-        setIsLoaded(true)
-        // Quando usamos reveal="manual", precisamos dispensar o poster explicitamente para mostrar o 3D
+        // Inicia o fade out antes de remover o loader do DOM
+        setIsFadingOut(true)
+        
+        // Pequeno delay para a animação de fade durar antes de sumir com o componente
+        setTimeout(() => {
+          setIsLoaded(true)
+          setIsFadingOut(false)
+        }, 800) // Sincronizado com o CSS transition
+
         if (viewerNode && typeof viewerNode.dismissPoster === 'function') {
           viewerNode.dismissPoster()
         }
@@ -86,9 +92,17 @@ export default function PlanetViewer3D({
   return (
     <div className={styles.viewerWrapper}>
       {/* Fallback de Carregamento enquanto o 3D/GLB é baixado */}
-      {!isLoaded && (
-        <div className={styles.spinnerOverlay} style={{ '--chapter-color': color } as React.CSSProperties}>
-          <TheoSpinner label={`Buscando segredos de ${alt}...`} silent={true} />
+      {(!isLoaded || isFadingOut) && (
+        <div 
+          className={`${styles.spinnerOverlay} ${isFadingOut ? styles.fadeOut : ''}`} 
+          style={{ '--chapter-color': color } as React.CSSProperties}
+        >
+          <div className={styles.loaderOrbital}>
+            <div className={styles.loaderRing} />
+            <div className={styles.loaderRing} />
+            <div className={styles.loaderCore} />
+          </div>
+          <span className={styles.loaderLabel}>Explorando {alt}</span>
         </div>
       )}
 

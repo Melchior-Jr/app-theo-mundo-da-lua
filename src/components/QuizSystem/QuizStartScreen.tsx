@@ -7,6 +7,7 @@ import { useSound } from '@/context/SoundContext'
 import StarField from '@/components/StarField'
 import ChallengeModal from './ChallengeModal'
 import SettingsModal from './SettingsModal'
+import { usePlayer } from '@/context/PlayerContext'
 import styles from './QuizSystem.module.css'
 
 interface LevelInfo {
@@ -35,12 +36,13 @@ interface QuizStartScreenProps {
 export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: QuizStartScreenProps) {
   const { user } = useAuth()
   const { playSFX } = useSound()
+  const { playerStats } = usePlayer()
 
   // O efeito de narração foi movido para o componente pai (QuizSystem) 
   // para evitar duplicidade e gerenciar a trava de sessão (sessionStorage).
   const [unlockedLevel, setUnlockedLevel] = useState(1)
   const [unlockedChallenge, setUnlockedChallenge] = useState(1)
-  const [xp, setXp] = useState(0)
+  const [xp, setXp] = useState(playerStats?.galactic_xp || 0)
   const [rankingData, setRankingData] = useState<any[]>([])
   const [realTrophies, setRealTrophies] = useState<any[]>([])
   const [challengeData, setChallengeData] = useState<Record<string, any>>({})
@@ -167,6 +169,13 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
       console.error('Erro ao buscar progresso do quiz:', err)
     }
   }, [user, lastProcessedIds, playSFX])
+
+  useEffect(() => {
+    // Sincroniza XP do contexto se mudar
+    if (playerStats?.galactic_xp) {
+      setXp(playerStats.galactic_xp)
+    }
+  }, [playerStats?.galactic_xp])
 
   useEffect(() => {
     fetchQuizProgress()

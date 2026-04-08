@@ -12,6 +12,7 @@ interface ChapterCardProps {
   xpEarned?: number
   xpTotal?: number
   onClick?: (e: React.MouseEvent) => void
+  onXPClick?: (e: React.MouseEvent) => void
 }
 
 /**
@@ -27,6 +28,7 @@ export default function ChapterCard({
   xpEarned,
   xpTotal,
   onClick,
+  onXPClick,
 }: ChapterCardProps) {
   const navigate = useNavigate()
   const { playSFX } = useSound()
@@ -89,7 +91,14 @@ export default function ChapterCard({
 
         {/* CTA */}
         <div className={styles.cta} aria-hidden="true">
-          <div className={styles.rewards}>
+          <div 
+            className={styles.rewards} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onXPClick?.(e);
+            }}
+            title="Ver missões deste capítulo"
+          >
             <span className={styles.star}>⭐</span>
             <span className={styles.xpText}>
               <span className={styles.xpGained}>{xpEarned ?? 0}</span>

@@ -46,7 +46,7 @@ export const NARRATIONS: Narration[] = [
     chapterId: 'sistema-solar',
     title: 'O Sistema Solar',
     text: 'Os astros do universo estão em constante movimento, eles giram em torno de si e de uma estrela chamada Sol. Existem 8 planetas que giram em torno da tal estrela. Mercúrio, Terra, Vênus, Marte, Júpiter, Saturno, Urano e Netuno.',
-    audioPath: '/audio/THEO-cap1-SistemaSolar.MP3',
+    audioPath: '/audio/theo-cap1-sistemasolar.MP3',
     lang: 'pt-BR',
     rate: 0.88,
     pitch: 1.15,

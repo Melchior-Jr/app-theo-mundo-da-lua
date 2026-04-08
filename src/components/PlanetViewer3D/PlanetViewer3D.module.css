@@ -14,10 +14,68 @@
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-void, #050810);
+  background: radial-gradient(circle at center, rgba(10, 19, 41, 0.95) 0%, #030814 100%);
+  gap: 20px;
   z-index: 10;
+  backdrop-filter: blur(12px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spinnerOverlay.fadeOut {
+  opacity: 0;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+/* Reuso do efeito Orbital HUD compactado */
+.loaderOrbital {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loaderCore {
+  width: 8px;
+  height: 8px;
+  background: var(--chapter-color, #FFD166);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--chapter-color, #FFD166);
+  animation: corePulse 2s infinite ease-in-out;
+}
+
+.loaderRing {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  animation: rotate 10s linear infinite;
+}
+
+.loaderRing:nth-child(1) { width: 40px; height: 40px; border-top: 1.5px solid var(--chapter-color, #FFD166); animation-duration: 2s; }
+.loaderRing:nth-child(2) { width: 60px; height: 60px; border-right: 1px solid rgba(255, 255, 255, 0.15); animation-duration: 4s; animation-direction: reverse; }
+
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loaderLabel {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  animation: fadeIn 0.5s ease-out;
 }
 
 /* 
