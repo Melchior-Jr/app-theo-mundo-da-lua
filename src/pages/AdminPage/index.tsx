@@ -14,7 +14,7 @@ import {
   X,
   History
 } from 'lucide-react';
-import { AdminService, AdminStats, RecentActivity } from '@/services/adminService';
+import { AdminService, AdminStats } from '@/services/adminService';
 import styles from './AdminPage.module.css';
 
 const AdminOverview: React.FC = () => {

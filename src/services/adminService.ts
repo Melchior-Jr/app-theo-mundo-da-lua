@@ -87,8 +87,8 @@ export const AdminService = {
     
     if (xpError) console.error('Erro ao buscar XP:', xpError);
     
-    const totalXP = xpData?.reduce((acc, curr) => acc + (curr.galactic_xp || 0), 0) || 0;
-    const xpLastWeek = xpData?.filter(d => new Date(d.updated_at) >= sevenDaysAgo).reduce((acc, curr) => acc + (curr.galactic_xp || 0), 0) || 0;
+    const totalXP = xpData?.reduce((acc: number, curr: any) => acc + (curr.galactic_xp || 0), 0) || 0;
+    const xpLastWeek = xpData?.filter((d: any) => new Date(d.updated_at) >= sevenDaysAgo).reduce((acc: number, curr: any) => acc + (curr.galactic_xp || 0), 0) || 0;
     const xpTrend = totalXP > 0 ? Math.round((xpLastWeek / totalXP) * 100) : 0;
 
     // 4. Pedagógico Profundo
@@ -115,7 +115,7 @@ export const AdminService = {
       const { count: totalChaptersPossible } = await supabase.from('app_subjects').select('*', { count: 'exact', head: true });
       
       const possibleTotal = totalPlayers * (totalChaptersPossible || 10);
-      const completedTotal = progressAll?.filter(p => p.completed === true).length || 0;
+      const completedTotal = progressAll?.filter((p: any) => p.completed === true).length || 0;
       averageProgress = possibleTotal > 0 ? Math.round((completedTotal / possibleTotal) * 100) : 0;
     } catch (e) {
       console.error('Erro ao calcular progresso:', e);
@@ -133,7 +133,7 @@ export const AdminService = {
 
     // 7. Rankings e Atividades Unificadas (Exploração + Games)
     const topPlayers = playersData?.map(p => {
-      const pXP = xpData?.find(x => x.player_id === p.id)?.galactic_xp || 0;
+      const pXP = xpData?.find((x: any) => x.player_id === p.id)?.galactic_xp || 0;
       return { 
         name: p.username || p.full_name || 'Astronauta', 
         xp: pXP, 
@@ -306,7 +306,7 @@ export const AdminService = {
     
     // Tópicos com erros frequentes (Analisando o log de questões de cada sessão)
     const topicErrors: Record<string, number> = {};
-    quizSessions.forEach(session => {
+    quizSessions.forEach((session: any) => {
       const qLog = session.metadata?.questions_log || [];
       qLog.forEach((q: any) => {
         if (!q.isCorrect) {
@@ -444,7 +444,7 @@ export const AdminService = {
     }
 
     // Process sessions and their metadata logs
-    sessions.forEach(session => {
+    sessions?.forEach((session: any) => {
       const topicName = topicMap[session.metadata?.level] || 'Outros';
       const logs = session.metadata?.questions_log || [];
       
@@ -496,7 +496,7 @@ export const AdminService = {
     let firstAttemptCount = 0;
     let subsequentAttemptCount = 0;
 
-    sessions?.forEach(session => {
+    sessions?.forEach((session: any) => {
       const challengeKey = `L${session.metadata?.level}C${session.metadata?.challenge}`;
       const pid = session.player_id;
 
@@ -554,10 +554,10 @@ export const AdminService = {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentSessions = sessions?.filter(s => new Date(s.played_at) >= sevenDaysAgo) || [];
+    const recentSessions = (sessions as any[])?.filter((s: any) => new Date(s.played_at) >= sevenDaysAgo) || [];
     const recentPlayersAccuracy: Record<string, { correct: number, total: number }> = {};
     
-    recentSessions.forEach(session => {
+    recentSessions.forEach((session: any) => {
        const pid = session.player_id;
        if (pid) {
          if (!recentPlayersAccuracy[pid]) recentPlayersAccuracy[pid] = { correct: 0, total: 0 };
@@ -571,9 +571,9 @@ export const AdminService = {
       const acc = stats.correct / stats.total;
       if (acc < 0.7) { // 30% de erro ou mais
         // Encontrar tópicos difíceis para este player nos últimos 7 dias
-        const playerRecentSessions = recentSessions.filter(s => s.player_id === pid);
+        const playerRecentSessions = recentSessions.filter((s: any) => s.player_id === pid);
         const playerTopicErrors: Record<string, number> = {};
-        playerRecentSessions.forEach(s => {
+        playerRecentSessions.forEach((s: any) => {
           const tName = topicMap[s.metadata?.level] || 'Outros';
           const logs = s.metadata?.questions_log || [];
           logs.forEach((l: any) => {
