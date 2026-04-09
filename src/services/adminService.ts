@@ -40,13 +40,16 @@ export const AdminService = {
     
     const totalPlayers = playersData?.length || 0;
     
-    // Identificar jogadores ativos olhando last_login OU atividade recente nos logs (últimos 7 dias)
-    const { data: recentExpo } = await supabase.from('player_exploration_logs').select('player_id').gte('created_at', sevenDaysAgo.toISOString());
-    const { data: recentGame } = await supabase.from('game_pedagogical_logs').select('user_id').gte('created_at', sevenDaysAgo.toISOString());
+    // Identificar jogadores ativos olhando atividades recentes nos logs (últimos 7 dias)
+    const { data: recentExpo } = await supabase.rpc('admin_get_all_exploration_logs');
+    const filteredExpo = recentExpo?.filter((l: any) => new Date(l.created_at) >= sevenDaysAgo) || [];
+    
+    const { data: recentGame } = await supabase.rpc('admin_get_all_game_sessions');
+    const filteredGame = recentGame?.filter((l: any) => new Date(l.played_at) >= sevenDaysAgo) || [];
     
     const activeIdsFromLogs = new Set([
-      ...(recentExpo?.map(l => l.player_id) || []),
-      ...(recentGame?.map(l => l.user_id) || [])
+      ...filteredExpo.map((l: any) => l.player_id),
+      ...filteredGame.map((l: any) => l.player_id)
     ]);
 
     const activePlayers = playersData?.filter(p => {
@@ -63,10 +66,8 @@ export const AdminService = {
     const newUsersPrevWeek = playersData?.filter(p => new Date(p.created_at) >= fourteenDaysAgo && new Date(p.created_at) < sevenDaysAgo).length || 0;
     const newUsersWeekTrend = newUsersPrevWeek > 0 ? Math.round(((newUsersWeek - newUsersPrevWeek) / newUsersPrevWeek) * 100) : (newUsersWeek > 0 ? 100 : 0);
 
-    // 3. XP e Trending
-    const { data: xpData, error: xpError } = await supabase
-      .from('player_global_stats')
-      .select('player_id, galactic_xp, updated_at');
+    // 3. XP e Trending (Global)
+    const { data: xpData, error: xpError } = await supabase.rpc('admin_get_all_player_stats');
     
     if (xpError) console.error('Erro ao buscar XP:', xpError);
     
@@ -94,7 +95,7 @@ export const AdminService = {
     // 5. Progresso Médio da Turma
     let averageProgress = 0;
     try {
-      const { data: progressAll } = await supabase.from('player_chapter_progress').select('player_id, status');
+      const { data: progressAll } = await supabase.rpc('admin_get_all_chapter_progress');
       const { count: totalChaptersPossible } = await supabase.from('app_subjects').select('*', { count: 'exact', head: true });
       
       const possibleTotal = totalPlayers * (totalChaptersPossible || 10);
@@ -118,34 +119,28 @@ export const AdminService = {
       };
     }).sort((a, b) => b.xp - a.xp).slice(0, 3) || [];
 
-    // Busca de logs de exploração
-    const { data: expoLogs } = await supabase
-      .from('player_exploration_logs')
-      .select('id, created_at, exploration_id, player_id')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Busca de logs de exploração (Global via RPC)
+    const { data: expoLogs } = await supabase.rpc('admin_get_all_exploration_logs');
+    const limitedExpo = (expoLogs || []).slice(0, 10);
 
-    // Busca de logs de sessões de jogos (Quizzes e Mini-games)
-    const { data: quizSessions } = await supabase
-      .from('game_sessions')
-      .select('id, played_at, game_id, score, player_id')
-      .order('played_at', { ascending: false })
-      .limit(15);
+    // Busca de logs de sessões de jogos (Global via RPC)
+    const { data: quizSessions } = await supabase.rpc('admin_get_all_game_sessions');
+    const limitedQuiz = (quizSessions || []).slice(0, 15);
 
     // Unificar e formatar
     const unifiedLogs = [
-      ...(expoLogs?.map(log => ({
+      ...(limitedExpo.map((log: any) => ({
         id: `expo-${log.id}`,
         created_at: log.created_at,
         title: `Explorou Capítulo: ${log.exploration_id}`,
         player_id: log.player_id
-      })) || []),
-      ...(quizSessions?.map(log => ({
+      }))),
+      ...(limitedQuiz.map((log: any) => ({
         id: `quiz-${log.id}`,
         created_at: log.played_at,
         title: `Finalizou Quiz/Jogo (Score: ${log.score})`,
         player_id: log.player_id
-      })) || [])
+      })))
     ].sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime())
      .slice(0, 15);
 
@@ -378,11 +373,8 @@ export const AdminService = {
   },
 
   async getPedagogicalStats() {
-    // 1. Fetch data from sessions (where most pedagogical meta is stored)
-    const { data: sessions, error: sessErr } = await supabase
-      .from('game_sessions')
-      .select('*')
-      .order('played_at', { ascending: false });
+    // 1. Fetch data from sessions (Global via RPC for Admin)
+    const { data: sessions, error: sessErr } = await supabase.rpc('admin_get_all_game_sessions');
 
     if (sessErr) throw sessErr;
 
