@@ -229,7 +229,7 @@ export const AdminService = {
 
     // 3. Une os dados no código (Manual Join)
     return players.map(p => {
-      const pStats = statsRes.data?.find(s => s.player_id === p.id);
+      const statsData = statsRes.data?.find(s => s.player_id === p.id);
       
       // Conta ocorrências manualmente para progresso e troféus
       const chapterCount = progressRes.data?.filter(pr => pr.player_id === p.id).length || 0;
@@ -237,10 +237,11 @@ export const AdminService = {
 
       return {
         ...p,
-        player_global_stats: pStats ? { 
-          galactic_xp: pStats.galactic_xp, 
-          level: pStats.level 
-        } : { galactic_xp: 0, level: 1 },
+        player_global_stats: statsData || { 
+          galactic_xp: 0, 
+          total_trophies: 0,
+          total_score: 0
+        },
         player_chapter_progress: { count: chapterCount },
         user_trophies: { count: trophyCount }
       };
@@ -314,12 +315,18 @@ export const AdminService = {
       
       // 3. Limpar conquistas, troféus e notificações
       supabase.from('user_trophies').delete().eq('user_id', playerId),
+      supabase.from('player_trophies').delete().eq('player_id', playerId),
       supabase.from('notifications').delete().eq('user_id', playerId),
       
-      // 4. Resetar estatísticas globais para o valor inicial
+      // 4. Resetar estatísticas globais para o valor inicial (Zerar TUDO)
       supabase.from('player_global_stats').update({ 
         galactic_xp: 0, 
-        level: 1,
+        total_score: 0,
+        total_trophies: 0,
+        total_challenges_completed: 0,
+        total_sessions: 0,
+        streak_days: 0,
+        ranking_score: 0,
         updated_at: new Date().toISOString()
       }).eq('player_id', playerId)
     ]);

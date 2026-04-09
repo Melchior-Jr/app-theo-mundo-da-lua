@@ -80,7 +80,14 @@ export default function UsersManager() {
     try {
       await AdminService.resetPlayerProgress(id);
       alert('Progresso resetado com sucesso.');
+      
+      // Recarregar dados para refletir na UI imediatamente
+      await loadPlayers();
+      if (selectedPlayer && selectedPlayer.profile.id === id) {
+        await handleViewDetails(id);
+      }
     } catch (err) {
+      console.error('Erro ao resetar:', err);
       alert('Falha ao resetar.');
     } finally {
       setActionLoading(false);
