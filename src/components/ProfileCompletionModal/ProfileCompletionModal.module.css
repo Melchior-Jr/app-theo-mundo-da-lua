@@ -1,0 +1,233 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.modal {
+  background: linear-gradient(135deg, rgba(20, 30, 60, 0.98), rgba(10, 15, 30, 0.99));
+  width: 100%;
+  max-width: 500px;
+  border-radius: 2.5rem;
+  padding: 2.5rem;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.6), 
+    0 0 50px rgba(76, 201, 240, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #A8B4CC;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.iconContainer {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #4361EE, #4CC9F0);
+  border-radius: 22px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+  transform: rotate(-5deg);
+}
+
+.planetIcon {
+  font-size: 2.5rem;
+}
+
+.header h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.header p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #A8B4CC;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #4CC9F0;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.field input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.2rem;
+  padding: 1rem 1.25rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.field input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.field input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #4CC9F0;
+  box-shadow: 0 0 0 4px rgba(76, 201, 240, 0.15);
+  transform: translateY(-1px);
+}
+
+.message {
+  padding: 1.1rem;
+  border-radius: 1.2rem;
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.success {
+  background: rgba(14, 203, 129, 0.12);
+  color: #0ECB81;
+  border: 1px solid rgba(14, 203, 129, 0.25);
+}
+
+.error {
+  background: rgba(246, 70, 93, 0.12);
+  color: #F6465D;
+  border: 1px solid rgba(246, 70, 93, 0.25);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.submitBtn {
+  background: linear-gradient(135deg, #FFD166, #FFB703);
+  color: #0A1128;
+  border: none;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 20px rgba(255, 209, 102, 0.15);
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(255, 209, 102, 0.3);
+  filter: brightness(1.05);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.laterBtn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 1.2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.laterBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #A8B4CC;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(40px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+@media (max-width: 480px) {
+  .row { flex-direction: column; }
+  .modal { padding: 1.75rem; border-radius: 2rem; }
+  .header h2 { font-size: 1.4rem; }
+}

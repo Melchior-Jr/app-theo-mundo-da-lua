@@ -6,6 +6,7 @@ import SplashLoader from '@/components/SplashLoader'
 import { usePlayer } from '@/context/PlayerContext'
 import { useAuth } from '@/context/AuthContext'
 import { unlockAudio } from '@/hooks/useNarration'
+import ProfileCompletionModal from '@/components/ProfileCompletionModal'
 import styles from './AppShell.module.css'
 
 /**
@@ -107,17 +108,56 @@ export default function AppShell() {
  
  function AppShellContent() {
    const { activeNarration, themeColor, onNarrationFinish, funFact, canStartLocal, isGlobalLoading } = useNarrationSequence()
+   const { playerData, refreshData, loading: playerLoading } = usePlayer()
+   const [showCompletionModal, setShowCompletionModal] = useState(false)
    const location = useLocation()
    const isHomeOrLogin = ['/', '/login', '/reset-password'].includes(location.pathname)
    
+   // Lógica para verificar dados faltantes e exibir modal uma vez por dia
+   useEffect(() => {
+     if (!playerLoading && playerData && !isHomeOrLogin) {
+       const isIncomplete = !playerData.full_name || 
+                           !playerData.username || 
+                           !playerData.school || 
+                           !playerData.class_name || 
+                           !playerData.birth_date
+
+       if (isIncomplete) {
+         const lastShown = localStorage.getItem('theo_last_profile_reminder')
+         const today = new Date().toDateString()
+         
+         if (lastShown !== today) {
+           const timer = setTimeout(() => {
+             setShowCompletionModal(true)
+           }, 2000)
+           return () => clearTimeout(timer)
+         }
+       }
+     }
+   }, [playerLoading, playerData, isHomeOrLogin])
+
+   const handleCloseCompletionModal = () => {
+     setShowCompletionModal(false)
+     localStorage.setItem('theo_last_profile_reminder', new Date().toDateString())
+   }
+
    const isEarthIntro = location.pathname.includes('movimentos-da-terra') && !canStartLocal
- 
+
    return (
      <div className={styles.shell}>
        <main className={styles.main}>
          <Outlet />
        </main>
- 
+
+       {/* Modal de Conclusão de Perfil */}
+       {showCompletionModal && playerData && (
+         <ProfileCompletionModal 
+           player={playerData}
+           onClose={handleCloseCompletionModal}
+           onUpdate={refreshData}
+         />
+       )}
+
        {/* Théo Flutuante — Guia Global para todas as páginas exceto a Home/Login */}
        {!isHomeOrLogin && activeNarration && !isGlobalLoading && (
          <NarrationPlayer 

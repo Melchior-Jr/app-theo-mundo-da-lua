@@ -12,11 +12,27 @@ export interface AdminStats {
   averageAccuracyTrend: number;
   averageProgress: number;
   atRiskCount: number;
+  atRiskPlayers: AtRiskPlayer[];
   absentCount: number;
-  recentActivity: { id: string | number; title: string; user: string; time: string }[];
+  recentActivity: RecentActivity[];
   popularChapters: { title: string; views: string; completion: string; status: string }[];
   topErrorThemes: { title: string; errorRate: number }[];
   topPlayers: { name: string; xp: number; accuracy: number }[];
+}
+
+export interface AtRiskPlayer {
+  id: string;
+  name: string;
+  accuracy: number;
+  difficultTopics: string[];
+}
+
+export interface RecentActivity {
+  id: string;
+  title: string;
+  user: string;
+  time: string;
+  rawDate: string;
 }
 
 export const AdminService = {
@@ -99,15 +115,21 @@ export const AdminService = {
       const { count: totalChaptersPossible } = await supabase.from('app_subjects').select('*', { count: 'exact', head: true });
       
       const possibleTotal = totalPlayers * (totalChaptersPossible || 10);
-      const completedTotal = progressAll?.filter(p => p.status === 'completed').length || 0;
+      const completedTotal = progressAll?.filter(p => p.completed === true).length || 0;
       averageProgress = possibleTotal > 0 ? Math.round((completedTotal / possibleTotal) * 100) : 0;
     } catch (e) {
       console.error('Erro ao calcular progresso:', e);
     }
 
     // 6. Alunos com Dificuldade (Risco Pedagógico)
-    const riskPct = parseInt(pedagogicalStats.pedagogicalRisk?.replace('%', '') || '0');
-    const atRiskCount = Math.round(riskPct * totalPlayers / 100);
+    const atRiskPlayers = pedagogicalStats.playersWithDifficulty.map((p: any) => {
+      const player = playersData?.find(pl => pl.id === p.id);
+      return {
+        ...p,
+        name: player?.full_name || player?.username || 'Astronauta'
+      };
+    });
+    const atRiskCount = atRiskPlayers.length;
 
     // 7. Rankings e Atividades Unificadas (Exploração + Games)
     const topPlayers = playersData?.map(p => {
@@ -121,11 +143,11 @@ export const AdminService = {
 
     // Busca de logs de exploração (Global via RPC)
     const { data: expoLogs } = await supabase.rpc('admin_get_all_exploration_logs');
-    const limitedExpo = (expoLogs || []).slice(0, 10);
+    const limitedExpo = (expoLogs || []).slice(0, 30);
 
     // Busca de logs de sessões de jogos (Global via RPC)
     const { data: quizSessions } = await supabase.rpc('admin_get_all_game_sessions');
-    const limitedQuiz = (quizSessions || []).slice(0, 15);
+    const limitedQuiz = (quizSessions || []).slice(0, 40);
 
     // Unificar e formatar
     const unifiedLogs = [
@@ -142,15 +164,16 @@ export const AdminService = {
         player_id: log.player_id
       })))
     ].sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime())
-     .slice(0, 15);
+     .slice(0, 50);
 
-    const recentActivity = unifiedLogs.map(log => {
+    const recentActivity: RecentActivity[] = unifiedLogs.map(log => {
       const player = playersData?.find(p => p.id === log.player_id);
       return {
         id: log.id,
         title: log.title,
         user: player?.username || player?.full_name || 'Astronauta',
-        time: this.formatTimeAgo(new Date(log.created_at))
+        time: this.formatTimeAgo(new Date(log.created_at)),
+        rawDate: log.created_at
       };
     });
 
@@ -179,6 +202,7 @@ export const AdminService = {
       averageAccuracyTrend: accuracyTrend,
       averageProgress,
       atRiskCount,
+      atRiskPlayers,
       absentCount,
       recentActivity,
       popularChapters,
@@ -204,7 +228,7 @@ export const AdminService = {
     return num.toString();
   },
 
-  /** Busca lista de alunos com união manual para evitar erros de relacionamento */
+  /** Busca lista de alunos com união manual para evitar erros de relacionamento e respeitar RLS */
   async getPlayersList() {
     // 1. Busca os dados básicos dos jogadores
     const { data: players, error: pError } = await supabase
@@ -215,27 +239,33 @@ export const AdminService = {
     if (pError) throw pError;
     if (!players) return [];
 
-    // 2. Busca as estatísticas em paralelo
+    // 2. Busca as estatísticas via RPCs administrativas (Bypass RLS)
     const [statsRes, progressRes, trophiesRes] = await Promise.all([
-      supabase.from('player_global_stats').select('*'),
-      supabase.from('player_chapter_progress').select('player_id'),
-      supabase.from('user_trophies').select('user_id')
+      supabase.rpc('admin_get_all_player_stats'),
+      supabase.rpc('admin_get_all_chapter_progress'),
+      supabase.rpc('admin_get_all_user_trophies')
     ]);
 
     // 3. Une os dados no código (Manual Join)
     return players.map(p => {
-      const statsData = statsRes.data?.find(s => s.player_id === p.id);
+      const statsData = statsRes.data?.find((s: any) => s.player_id === p.id);
       
       // Conta ocorrências manualmente para progresso e troféus
-      const chapterCount = progressRes.data?.filter(pr => pr.player_id === p.id).length || 0;
-      const trophyCount = trophiesRes.data?.filter(t => t.user_id === p.id).length || 0;
+      // Progresso: conta capítulos que foram concluídos (completed: true)
+      const chapterCount = progressRes.data?.filter((pr: any) => pr.player_id === p.id && pr.completed === true).length || 0;
+      const trophyCount = trophiesRes.data?.filter((t: any) => t.user_id === p.id).length || 0;
+
+      // Fallback para último acesso: usa last_activity_at se last_login estiver vazio
+      const safeLastLogin = p.last_login || statsData?.last_activity_at;
 
       return {
         ...p,
+        last_login: safeLastLogin,
         player_global_stats: statsData || { 
           galactic_xp: 0, 
           total_trophies: 0,
-          total_score: 0
+          total_score: 0,
+          last_activity_at: null
         },
         player_chapter_progress: { count: chapterCount },
         user_trophies: { count: trophyCount }
@@ -243,27 +273,36 @@ export const AdminService = {
     });
   },
 
-  /** Busca dossiê completo de um único usuário com inteligência de dados */
+  /** Busca dossiê completo de um único usuário com inteligência de dados (Bypass RLS via RPCs se necessário) */
   async getUserDetails(playerId: string) {
-    const [profile, stats, progress, logs, trophies, games, totalSubjects] = await Promise.all([
-      supabase.from('players').select('*').eq('id', playerId).single(),
-      supabase.from('player_global_stats').select('*').eq('player_id', playerId).single(),
-      supabase.from('player_chapter_progress').select('*').eq('player_id', playerId),
-      supabase.from('player_exploration_logs').select('*').eq('player_id', playerId).order('created_at', { ascending: false }),
-      supabase.from('user_trophies').select('*').eq('user_id', playerId),
-      supabase.from('game_sessions').select('*').eq('player_id', playerId).order('played_at', { ascending: false }),
+    // Para o dossiê detalhado, buscamos dados globais via RPC e filtramos localmente
+    // Isso garante que o admin veja os dados mesmo com RLS
+    const [statsAll, progressAll, expoLogsAll, trophiesAll, gamesAll, totalSubjects] = await Promise.all([
+      supabase.rpc('admin_get_all_player_stats'),
+      supabase.rpc('admin_get_all_chapter_progress'),
+      supabase.rpc('admin_get_all_exploration_logs'),
+      supabase.rpc('admin_get_all_user_trophies'),
+      supabase.rpc('admin_get_all_game_sessions'),
       supabase.from('app_subjects').select('*', { count: 'exact', head: true })
     ]);
 
+    const { data: profile } = await supabase.from('players').select('*').eq('id', playerId).single();
+
+    const stats = statsAll.data?.find((s: any) => s.player_id === playerId) || null;
+    const progress = progressAll.data?.filter((p: any) => p.player_id === playerId) || [];
+    const logs = expoLogsAll.data?.filter((l: any) => l.player_id === playerId).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+    const trophies = trophiesAll.data?.filter((t: any) => t.user_id === playerId) || [];
+    const games = gamesAll.data?.filter((g: any) => g.player_id === playerId).sort((a: any, b: any) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime()) || [];
+
     // Cálculo de Duração Média (Baseado em metadados de sessões)
-    const durations = games.data?.map(s => s.metadata?.duration || 0).filter(d => d > 0) || [];
+    const durations = games?.map((s: any) => s.metadata?.duration || 0).filter((d: number) => d > 0) || [];
     const avgDuration = durations.length > 0 
-      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length / 60) 
+      ? Math.round(durations.reduce((a: number, b: number) => a + b, 0) / durations.length / 60) 
       : 0;
 
     // Insights Pedagógicos Dinâmicos
     const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253';
-    const quizSessions = games.data?.filter(s => s.game_id === QUIZ_GAME_ID) || [];
+    const quizSessions = (games || []).filter((s: any) => s.game_id === QUIZ_GAME_ID);
     
     // Tópicos com erros frequentes (Analisando o log de questões de cada sessão)
     const topicErrors: Record<string, number> = {};
@@ -283,12 +322,15 @@ export const AdminService = {
       .map(([topic]) => topic);
 
     return {
-      profile: profile.data,
-      stats: stats.data,
-      progress: progress.data || [],
-      logs: logs.data || [],
-      trophies: trophies.data || [],
-      games: games.data || [],
+      profile: {
+        ...profile,
+        last_login: profile?.last_login || stats?.last_activity_at
+      },
+      stats,
+      progress,
+      logs,
+      trophies,
+      games,
       insights: {
         avgDurationMinutes: avgDuration || 12, // Fallback amigável se não houver dados de tempo
         topDifficulties: topDifficulties.length > 0 ? topDifficulties : null,
@@ -360,15 +402,12 @@ export const AdminService = {
   },
 
   async sendPlayerNotification(playerId: string, title: string, content: string) {
-    const { error } = await supabase
-      .from('notifications')
-      .insert([{
-        user_id: playerId,
-        title,
-        message: content,
-        type: 'system',
-        is_read: false
-      }]);
+    const { error } = await supabase.rpc('admin_send_notification', {
+      p_user_id: playerId,
+      p_title: title,
+      p_message: content,
+      p_type: 'system'
+    });
     if (error) throw error;
   },
 
@@ -441,9 +480,9 @@ export const AdminService = {
     const performanceByTopic = Object.entries(topicStats).map(([name, stats]) => ({
       label: name,
       pct: stats.totalQuestions > 0 ? Math.round((stats.totalCorrect / stats.totalQuestions) * 100) : 0,
-      color: (stats.totalCorrect / stats.totalQuestions) > 0.8 ? '#10b981' : 
-             (stats.totalCorrect / stats.totalQuestions) > 0.6 ? '#3b82f6' : 
-             (stats.totalCorrect / stats.totalQuestions) > 0.4 ? '#f59e0b' : '#ef4444'
+      color: (stats.totalCorrect / stats.totalQuestions) > 0.85 ? '#10b981' : 
+             (stats.totalCorrect / stats.totalQuestions) > 0.7 ? '#3b82f6' : 
+             (stats.totalCorrect / stats.totalQuestions) > 0.5 ? '#f59e0b' : '#ef4444'
     }));
 
     const globalAccuracy = globalQuestions > 0 ? Math.round((globalCorrect / globalQuestions) * 100) : 0;
@@ -511,14 +550,56 @@ export const AdminService = {
     const firstAcc = firstAttemptCount > 0 ? Math.round((firstAttemptCorrect / firstAttemptCount) * 100) : 0;
     const subAcc = subsequentAttemptCount > 0 ? Math.round((subsequentAttemptCorrect / subsequentAttemptCount) * 100) : 0;
 
-    // Pedagogical Risk: % players with accuracy < 60%
-    const lowAccuracyPlayers = Object.values(playersAccuracy).filter(p => (p.correct / p.total) < 0.6).length;
-    const totalActivePlayers = Object.keys(playersAccuracy).length;
-    const pedagogicalRisk = totalActivePlayers > 0 ? Math.round((lowAccuracyPlayers / totalActivePlayers) * 100) : 0;
+    // 4. Pedagogical Risk (Last 7 Days, Accuracy < 70% / Errors >= 30%)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentSessions = sessions?.filter(s => new Date(s.played_at) >= sevenDaysAgo) || [];
+    const recentPlayersAccuracy: Record<string, { correct: number, total: number }> = {};
+    
+    recentSessions.forEach(session => {
+       const pid = session.player_id;
+       if (pid) {
+         if (!recentPlayersAccuracy[pid]) recentPlayersAccuracy[pid] = { correct: 0, total: 0 };
+         recentPlayersAccuracy[pid].correct += (session.metadata?.correct_count || 0);
+         recentPlayersAccuracy[pid].total += (session.metadata?.total_questions || 5);
+       }
+    });
+
+    const playersWithDifficulty: any[] = [];
+    Object.entries(recentPlayersAccuracy).forEach(([pid, stats]) => {
+      const acc = stats.correct / stats.total;
+      if (acc < 0.7) { // 30% de erro ou mais
+        // Encontrar tópicos difíceis para este player nos últimos 7 dias
+        const playerRecentSessions = recentSessions.filter(s => s.player_id === pid);
+        const playerTopicErrors: Record<string, number> = {};
+        playerRecentSessions.forEach(s => {
+          const tName = topicMap[s.metadata?.level] || 'Outros';
+          const logs = s.metadata?.questions_log || [];
+          logs.forEach((l: any) => {
+            if (!l.isCorrect) playerTopicErrors[tName] = (playerTopicErrors[tName] || 0) + 1;
+          });
+        });
+
+        const diffTopics = Object.entries(playerTopicErrors)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 2)
+          .map(([t]) => t);
+
+        playersWithDifficulty.push({
+          id: pid,
+          accuracy: Math.round(acc * 100),
+          difficultTopics: diffTopics.length > 0 ? diffTopics : ['Geral']
+        });
+      }
+    });
+
+    const totalRecentPlayers = Object.keys(recentPlayersAccuracy).length;
+    const pedagogicalRisk = totalRecentPlayers > 0 ? Math.round((playersWithDifficulty.length / totalRecentPlayers) * 100) : 0;
 
     // Identify alert zones
     const alertZones = performanceByTopic
-      .filter(t => t.pct > 0 && t.pct < 60)
+      .filter(t => t.pct > 0 && t.pct < 70)
       .map(t => ({
         title: `Dificuldade em '${t.label}'`,
         description: `${t.pct}% de aproveitamento médio da turma. Considere revisar este conteúdo.`,
@@ -550,6 +631,7 @@ export const AdminService = {
       performanceByTopic,
       alertZones,
       villainQuestions,
+      playersWithDifficulty,
       learningCurve: {
         firstAttempt: firstAcc,
         subsequentAttempt: subAcc,

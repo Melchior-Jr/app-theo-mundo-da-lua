@@ -7,14 +7,26 @@ import {
   Zap,
   Target,
   AlertCircle,
-  Play
+  Play,
+  Search,
+  Filter,
+  Calendar,
+  X,
+  History
 } from 'lucide-react';
-import { AdminService, AdminStats } from '@/services/adminService';
+import { AdminService, AdminStats, RecentActivity } from '@/services/adminService';
 import styles from './AdminPage.module.css';
 
 const AdminOverview: React.FC = () => {
   const [statsData, setStatsData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Estados para Modal de Atividade
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityTypeFilter, setActivityTypeFilter] = useState('all');
+  const [activityDateFilter, setActivityDateFilter] = useState('');
 
   useEffect(() => {
     async function loadStats() {
@@ -113,10 +125,16 @@ const AdminOverview: React.FC = () => {
               <h2 className={styles.panelTitle}><AlertCircle size={20} color="#ef4444" /> Alertas Operacionais</h2>
             </div>
             <div className={styles.alertsGrid}>
-              <div className={styles.alertItem}>
+              <div 
+                className={styles.alertItem} 
+                onClick={() => setIsRiskModalOpen(true)}
+                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
                 <div className={styles.alertValue} style={{ color: '#ef4444' }}>{statsData.atRiskCount}</div>
                 <div className={styles.alertLabel}>Alunos com Dificuldade</div>
-                <div className={styles.alertDesc}>Precisão abaixo de 60%</div>
+                <div className={styles.alertDesc}>Erro &gt; 30% (últimos 7 dias)</div>
               </div>
               <div className={styles.alertItem}>
                 <div className={styles.alertValue} style={{ color: '#ffd166' }}>{statsData.absentCount}</div>
@@ -174,7 +192,7 @@ const AdminOverview: React.FC = () => {
             <h2 className={styles.panelTitle}><Zap size={20} /> Atividade Recente</h2>
           </div>
           <div className={styles.activityFeed}>
-            {statsData.recentActivity.map((activity) => (
+            {statsData.recentActivity.slice(0, 5).map((activity) => (
               <div key={activity.id} className={styles.activityItem}>
                 <div className={styles.activityDot} />
                 <div className={styles.activityInfo}>
@@ -189,12 +207,192 @@ const AdminOverview: React.FC = () => {
                 Nenhuma atividade registrada ainda.
               </p>
             )}
-            <button className={styles.primaryBtn} onClick={() => window.location.href='/prof/alunos'} style={{ width: '100%', marginTop: '1.5rem', background: 'rgba(255,255,255,0.05)', boxShadow: 'none' }}>
-              Gerenciar Alunos
-            </button>
+            
+            {statsData.recentActivity.length > 5 && (
+              <button 
+                className={styles.secondaryBtn} 
+                onClick={() => setIsActivityModalOpen(true)}
+                style={{ width: '100%', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <History size={16} /> Ver todas
+              </button>
+            )}
+
           </div>
         </section>
       </div>
+
+      {/* Modal de Histórico de Atividades */}
+      {isActivityModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsActivityModalOpen(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ maxWidth: '900px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div className={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Zap size={24} color="#00e5ff" />
+                <h3>Histórico Completo de Atividades</h3>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setIsActivityModalOpen(false)}>
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Filtros */}
+            <div style={{ padding: '1.5rem 2rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+              <div className={styles.formGroup}>
+                <label><Search size={14} /> Pesquisar Usuário</label>
+                <input 
+                  type="text" 
+                  placeholder="Nome do aluno..." 
+                  value={activitySearch}
+                  onChange={e => setActivitySearch(e.target.value)}
+                  style={{ padding: '0.6rem 1rem' }}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label><Filter size={14} /> Tipo</label>
+                <select 
+                  className={styles.adminSelect}
+                  value={activityTypeFilter}
+                  onChange={e => setActivityTypeFilter(e.target.value)}
+                  style={{ padding: '0.6rem 1rem' }}
+                >
+                  <option value="all">Todos</option>
+                  <option value="Quiz">Desafios/Quizes</option>
+                  <option value="Explorou">Exploração</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label><Calendar size={14} /> Data</label>
+                <input 
+                  type="date" 
+                  value={activityDateFilter}
+                  onChange={e => setActivityDateFilter(e.target.value)}
+                  style={{ padding: '0.6rem 1rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Lista com scroll */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 2rem' }}>
+              <div className={styles.activityFeed}>
+                {statsData.recentActivity
+                  .filter(a => {
+                    const matchSearch = a.user.toLowerCase().includes(activitySearch.toLowerCase());
+                    const matchType = activityTypeFilter === 'all' || a.title.includes(activityTypeFilter);
+                    const matchDate = !activityDateFilter || (a.rawDate && a.rawDate.startsWith(activityDateFilter));
+                    return matchSearch && matchType && matchDate;
+                  })
+                  .map((activity) => (
+                    <div key={activity.id} className={styles.activityItem} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', padding: '1rem 0' }}>
+                      <div className={styles.activityDot} />
+                      <div className={styles.activityInfo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <div>
+                          <div className={styles.activityAction}>{activity.title}</div>
+                          <div className={styles.activityUser}>{activity.user}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div className={styles.activityTime} style={{ color: '#00e5ff', fontWeight: 600 }}>{activity.time}</div>
+                          <div style={{ fontSize: '0.7rem', opacity: 0.3 }}>{activity.rawDate ? new Date(activity.rawDate).toLocaleString() : ''}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button className={styles.secondaryBtn} onClick={() => setIsActivityModalOpen(false)}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Alunos com Dificuldade */}
+      {isRiskModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsRiskModalOpen(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <AlertCircle size={24} color="#ef4444" />
+                <h3>Alunos Precisando de Atenção</h3>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setIsRiskModalOpen(false)}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem 2rem' }}>
+              <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                Estes alunos apresentaram um índice de acerto inferior a 60% nas atividades recentes.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {statsData.atRiskPlayers.map((player) => (
+                  <div 
+                    key={player.id} 
+                    style={{ 
+                      padding: '1.25rem', 
+                      background: 'rgba(255,255,255,0.03)', 
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ fontSize: '1.1rem' }}>{player.name}</strong>
+                      <span style={{ color: '#ef4444', fontWeight: 800, fontSize: '1.1rem' }}>{player.accuracy}%</span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', opacity: 0.5, width: '100%' }}>MAIORES DIFICULDADES EM:</span>
+                      {player.difficultTopics.map((topic, idx) => (
+                        <span 
+                          key={idx} 
+                          style={{ 
+                            fontSize: '0.75rem', 
+                            padding: '4px 10px', 
+                            background: 'rgba(239, 68, 68, 0.1)', 
+                            color: '#ef4444', 
+                            borderRadius: '20px',
+                            fontWeight: 600
+                          }}
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+
+                    <button 
+                      className={styles.secondaryBtn} 
+                      onClick={() => window.location.href = `/prof/alunos?id=${player.id}`}
+                      style={{ marginTop: '8px', padding: '0.5rem', fontSize: '0.8rem', width: 'fit-content' }}
+                    >
+                      Acessar Dossiê
+                    </button>
+                  </div>
+                ))}
+
+                {statsData.atRiskPlayers.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌟</div>
+                    <p style={{ opacity: 0.6 }}>Nenhum aluno com dificuldades críticas no momento!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button className={styles.primaryBtn} onClick={() => setIsRiskModalOpen(false)}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

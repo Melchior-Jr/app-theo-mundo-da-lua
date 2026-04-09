@@ -24,6 +24,7 @@
   padding: 2.5rem;
   overflow-y: auto;
   position: relative;
+  z-index: 20;
 }
 
 .logo {
@@ -291,6 +292,17 @@
   font-weight: 500;
   font-size: 0.875rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.table th[onClick] {
+  cursor: pointer;
+}
+
+.table th[onClick]:hover {
+  color: #00e5ff !important;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .table td {
@@ -324,6 +336,15 @@
 .actionBtn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.villainTableRow {
+  transition: all 0.2s ease;
+}
+
+.villainTableRow:hover {
+  background: rgba(0, 229, 255, 0.05) !important;
+  transform: scale(1.01);
 }
 
 .primaryBtn {
@@ -1206,4 +1227,30 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Modal de Dossiê Tela Cheia */
+.dossierModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #080816; /* Fundo sideral profundo */
+  z-index: 9999;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.dossierModalContent {
+  width: 100%;
+  min-height: 100%;
+  position: relative;
 }

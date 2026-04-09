@@ -9,11 +9,14 @@ import {
   Zap
 } from 'lucide-react';
 import { AdminService } from '@/services/adminService';
+import { THEO_QUIZ_DATA } from '../../data/quizQuestions';
 import styles from './AdminPage.module.css';
+import { X, HelpCircle, Check, Info } from 'lucide-react';
 
 const PedagogicalAnalysis: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
 
   useEffect(() => {
     loadStats();
@@ -44,6 +47,162 @@ const PedagogicalAnalysis: React.FC = () => {
       <p style={{ opacity: 0.6 }}>Não foi possível processar a telemetria pedagógica no momento.</p>
     </div>
   );
+
+  const handleQuestionClick = (questionId: string) => {
+    // THEO_QUIZ_DATA é um array plano de questões
+    const q = THEO_QUIZ_DATA.find((quest: any) => quest.id === questionId);
+    
+    if (q) {
+      const chapterTitles: Record<number, string> = {
+        1: 'Sistema Solar',
+        2: 'Planetas',
+        3: 'Terra e Movimentos',
+        4: 'Lua e Fases',
+        5: 'Constelações'
+      };
+
+      setSelectedQuestion({
+        ...q,
+        chapterTitle: chapterTitles[q.level] || `Nível ${q.level}`
+      });
+    } else {
+      console.warn(`Questão ${questionId} não encontrada nos dados locais.`);
+    }
+  };
+
+  const renderQuestionModal = () => {
+    if (!selectedQuestion) return null;
+
+    return (
+      <div className={styles.modalOverlay} onClick={() => setSelectedQuestion(null)}>
+        <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+          <div className={styles.modalHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <HelpCircle size={24} color="#ffd166" />
+              <h3>Detalhes da Questão</h3>
+            </div>
+            <button className={styles.closeBtn} onClick={() => setSelectedQuestion(null)}>
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className={styles.modalBody}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className={styles.statusBadge} style={{ background: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', fontSize: '0.7rem' }}>
+                {selectedQuestion.chapterTitle}
+              </span>
+              <h4 style={{ fontSize: '1.2rem', margin: '0.75rem 0', lineHeight: 1.4 }}>
+                {selectedQuestion.question}
+              </h4>
+              <p style={{ fontSize: '0.8rem', opacity: 0.5 }}>ID: {selectedQuestion.id}</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {selectedQuestion.type === 'true-false' ? (
+                // Verdadeiro ou Falso
+                [true, false].map((val) => {
+                  const isCorrect = selectedQuestion.correctAnswer === val;
+                  return (
+                    <div 
+                      key={val.toString()}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRadius: '12px', 
+                        background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.08)'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '24px', 
+                        height: '24px', 
+                        borderRadius: '50%', 
+                        background: isCorrect ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 700
+                      }}>
+                        {isCorrect ? <Check size={14} /> : null}
+                      </div>
+                      <span style={{ fontSize: '0.9rem', opacity: isCorrect ? 1 : 0.8 }}>
+                        {val ? 'Verdadeiro' : 'Falso'}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : selectedQuestion.options ? (
+                // Múltipla Escolha ou similar
+                selectedQuestion.options.map((option: string, index: number) => {
+                  const isCorrect = selectedQuestion.correctAnswer === option || index === selectedQuestion.correctAnswer;
+                  return (
+                    <div 
+                      key={index}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRadius: '12px', 
+                        background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.08)'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '24px', 
+                        height: '24px', 
+                        borderRadius: '50%', 
+                        background: isCorrect ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 700
+                      }}>
+                        {isCorrect ? <Check size={14} /> : String.fromCharCode(65 + index)}
+                      </div>
+                      <span style={{ fontSize: '0.9rem', opacity: isCorrect ? 1 : 0.8 }}>{option}</span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', textAlign: 'center' }}>
+                  Resposta Correta: <strong style={{ color: '#10b981' }}>{selectedQuestion.correctAnswer.toString()}</strong>
+                </div>
+              )}
+            </div>
+
+            {selectedQuestion.explanation && (
+              <div style={{ 
+                marginTop: '1.5rem', 
+                padding: '1rem', 
+                borderRadius: '12px', 
+                background: 'rgba(247, 199, 98, 0.05)', 
+                border: '1px solid rgba(247, 199, 98, 0.1)',
+                display: 'flex',
+                gap: '12px'
+              }}>
+                <Info size={18} color="#f7c762" style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f7c762', marginBottom: '4px' }}>Explicação Pedagógica</div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.7, lineHeight: 1.5 }}>{selectedQuestion.explanation}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button className={styles.secondaryBtn} onClick={() => setSelectedQuestion(null)}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.pedagogicalContainer}>
@@ -182,9 +341,14 @@ const PedagogicalAnalysis: React.FC = () => {
                 </thead>
                 <tbody>
                   {stats.villainQuestions.map((q: any) => (
-                    <tr key={q.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem' }}>
-                      <td style={{ padding: '12px 5px', fontWeight: 600 }}>{q.id}</td>
-                      <td style={{ color: '#ef4444' }}>{q.errorRate}%</td>
+                    <tr 
+                      key={q.id} 
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem', cursor: 'pointer' }}
+                      onClick={() => handleQuestionClick(q.id)}
+                      className={styles.villainTableRow}
+                    >
+                      <td style={{ padding: '12px 5px', fontWeight: 600, color: '#00e5ff' }}>{q.id}</td>
+                      <td style={{ color: '#ef4444', fontWeight: 700 }}>{q.errorRate}%</td>
                       <td>{q.avgTime}s</td>
                       <td style={{ opacity: 0.5 }}>{q.totalAttempts} x</td>
                     </tr>
@@ -225,6 +389,8 @@ const PedagogicalAnalysis: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {renderQuestionModal()}
     </div>
   );
 };

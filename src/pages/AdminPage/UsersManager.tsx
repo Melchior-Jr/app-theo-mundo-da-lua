@@ -14,7 +14,10 @@ import {
   Activity,
   ChevronRight,
   ArrowLeft,
-  AlertCircle
+  AlertCircle,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { AdminService } from '@/services/adminService';
 import { calcLevel, getLevelTitle } from '@/utils/playerUtils';
@@ -40,6 +43,7 @@ export default function UsersManager() {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerDetails | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [educatorNotes, setEducatorNotes] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'full_name', direction: 'asc' });
 
   useEffect(() => {
     loadPlayers();
@@ -161,10 +165,57 @@ export default function UsersManager() {
     }
   }
 
-  const filteredPlayers = players.filter(p => 
-    p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedPlayers = [...players]
+    .filter(p => 
+      p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortConfig) return 0;
+      
+      const getValue = (p: any, key: string) => {
+        switch(key) {
+          case 'full_name': return p.full_name?.toLowerCase() || '';
+          case 'xp': {
+            const stats = Array.isArray(p.player_global_stats) ? p.player_global_stats[0] : p.player_global_stats;
+            return stats?.galactic_xp || 0;
+          }
+          case 'created_at': return new Date(p.created_at).getTime();
+          case 'last_login': return p.last_login ? new Date(p.last_login).getTime() : 0;
+          case 'status': {
+            const s = getStatus(p.last_login);
+            return s.label;
+          }
+          case 'progress': {
+            const chapterCount = Array.isArray(p.player_chapter_progress) ? p.player_chapter_progress[0]?.count : p.player_chapter_progress?.count;
+            return chapterCount || 0;
+          }
+          default: return 0;
+        }
+      };
+
+      const aVal = getValue(a, sortConfig.key);
+      const bVal = getValue(b, sortConfig.key);
+
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (!sortConfig || sortConfig.key !== column) return <ArrowUpDown size={14} style={{ marginLeft: 8, opacity: 0.3 }} />;
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp size={14} style={{ marginLeft: 8, color: '#00e5ff' }} /> 
+      : <ChevronDown size={14} style={{ marginLeft: 8, color: '#00e5ff' }} />;
+  };
 
   return (
     <div>
@@ -218,17 +269,29 @@ export default function UsersManager() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Aluno</th>
-              <th>Nível / XP</th>
-              <th>Status</th>
-              <th>Cadastro</th>
-              <th>Último Acesso</th>
-              <th>Progresso</th>
+              <th onClick={() => requestSort('full_name')} style={{ cursor: 'pointer' }}>
+                Aluno <SortIcon column="full_name" />
+              </th>
+              <th onClick={() => requestSort('xp')} style={{ cursor: 'pointer' }}>
+                Nível / XP <SortIcon column="xp" />
+              </th>
+              <th onClick={() => requestSort('status')} style={{ cursor: 'pointer' }}>
+                Status <SortIcon column="status" />
+              </th>
+              <th onClick={() => requestSort('created_at')} style={{ cursor: 'pointer' }}>
+                Cadastro <SortIcon column="created_at" />
+              </th>
+              <th onClick={() => requestSort('last_login')} style={{ cursor: 'pointer' }}>
+                Último Acesso <SortIcon column="last_login" />
+              </th>
+              <th onClick={() => requestSort('progress')} style={{ cursor: 'pointer' }}>
+                Progresso <SortIcon column="progress" />
+              </th>
               <th style={{ textAlign: 'right' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
-            {filteredPlayers.map(p => {
+            {sortedPlayers.map(p => {
               const status = getStatus(p.last_login);
               const stats = Array.isArray(p.player_global_stats) ? p.player_global_stats[0] : p.player_global_stats;
               const chapterCount = Array.isArray(p.player_chapter_progress) ? p.player_chapter_progress[0]?.count : p.player_chapter_progress?.count;
@@ -271,7 +334,7 @@ export default function UsersManager() {
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
                       <Clock size={14} opacity={0.5} />
-                      {p.last_login ? new Date(p.last_login).toLocaleDateString() : 'Nunca'}
+                      {p.last_login ? new Date(p.last_login).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Nunca'}
                     </div>
                   </td>
                   <td>
@@ -349,8 +412,9 @@ export default function UsersManager() {
         }
 
         return (
-          <div className={styles.fullPageDossier}>
-            <div className={styles.dossierHeader}>
+          <div className={styles.dossierModalOverlay}>
+            <div className={styles.dossierModalContent}>
+              <div className={styles.dossierHeader}>
               <button onClick={() => setSelectedPlayer(null)} className={styles.backBtn}>
                 <ArrowLeft size={20} /> Voltar para a Lista
               </button>
@@ -545,7 +609,8 @@ export default function UsersManager() {
               </div>
             </div>
           </div>
-        );
+        </div>
+      );
       })()}
     </div>
   );
