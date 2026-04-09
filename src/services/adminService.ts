@@ -304,32 +304,8 @@ export const AdminService = {
 
   /** Ações de Gestão */
   async resetPlayerProgress(playerId: string) {
-    await Promise.all([
-      // 1. Limpar progresso nos capítulos e exploração
-      supabase.from('player_chapter_progress').delete().eq('player_id', playerId),
-      supabase.from('player_exploration_logs').delete().eq('player_id', playerId),
-      
-      // 2. Limpar estatísticas e sessões de jogos (mini-games e quizes)
-      supabase.from('player_game_stats').delete().eq('player_id', playerId),
-      supabase.from('game_sessions').delete().eq('player_id', playerId),
-      
-      // 3. Limpar conquistas, troféus e notificações
-      supabase.from('user_trophies').delete().eq('user_id', playerId),
-      supabase.from('player_trophies').delete().eq('player_id', playerId),
-      supabase.from('notifications').delete().eq('user_id', playerId),
-      
-      // 4. Resetar estatísticas globais para o valor inicial (Zerar TUDO)
-      supabase.from('player_global_stats').update({ 
-        galactic_xp: 0, 
-        total_score: 0,
-        total_trophies: 0,
-        total_challenges_completed: 0,
-        total_sessions: 0,
-        streak_days: 0,
-        ranking_score: 0,
-        updated_at: new Date().toISOString()
-      }).eq('player_id', playerId)
-    ]);
+    const { error } = await supabase.rpc('reset_player_data', { p_player_id: playerId });
+    if (error) throw error;
   },
 
   async togglePlayerLock(playerId: string, isLocked: boolean) {
