@@ -3,21 +3,24 @@ import { QuizQuestion, QuizState } from '@/types/quiz'
 import { useSound } from '@/context/SoundContext'
 
 export type EngineMode = 'normal' | 'duel'
+export type DuelMode = 'classic' | 'speedrun'
 
 interface EngineOptions {
   mode?: EngineMode
+  duelMode?: DuelMode
   maxTargetScore?: number // Pontuação para vitória imediata
 }
 
 export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | EngineOptions = 'normal') {
   const { playSFX, playTrack } = useSound()
   const mode = typeof options === 'string' ? options : (options.mode || 'normal')
+  const duelMode = typeof options === 'object' ? options.duelMode : 'classic'
   const maxTargetScore = typeof options === 'object' ? options.maxTargetScore : undefined
   const isDuel = mode === 'duel'
 
   const [state, setState] = useState<QuizState>({
     currentIdx: 0,
-    lives: isDuel ? 1 : 3,
+    lives: isDuel ? (duelMode === 'speedrun' ? 3 : 1) : 3,
     xp: 0,
     combo: 0,
     status: 'playing',
@@ -129,15 +132,9 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     setQuestionStartTime(performance.now())
 
     // 1. GAME OVER / VITÓRIA
-    if (isDuel && !state.lastAnswerCorrect) {
-      playSFX('fail')
-      const deathNum = Math.floor(Math.random() * 5) + 1
-      playTrack(`/audio/Quiz Intergaláctico/Death_0${deathNum}.MP3`)
-      setState(prev => ({ ...prev, status: 'gameover' }))
-      return
-    }
-
-    if (isDead) {
+    const isGameOverClassic = isDuel && duelMode === 'classic' && !state.lastAnswerCorrect
+    
+    if (isGameOverClassic || isDead) {
       playSFX('fail')
       const deathNum = Math.floor(Math.random() * 5) + 1
       playTrack(`/audio/Quiz Intergaláctico/Death_0${deathNum}.MP3`)
@@ -182,7 +179,7 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     setQuestionStartTime(performance.now())
     setState({
       currentIdx: 0,
-      lives: isDuel ? 1 : 3,
+      lives: isDuel ? (duelMode === 'speedrun' ? 3 : 1) : 3,
       xp: 0,
       combo: 0,
       status: 'playing',
@@ -192,7 +189,7 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
       maxCombo: 0,
       questionsLog: []
     })
-  }, [isDuel])
+  }, [isDuel, duelMode])
 
   return {
     ...state,

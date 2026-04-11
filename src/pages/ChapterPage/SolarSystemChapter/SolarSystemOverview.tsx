@@ -11,7 +11,7 @@ export default function SolarSystemOverview() {
   const [isLargeLoaded, setIsLargeLoaded] = useState(false)
   const [useAdaptiveLoading, setUseAdaptiveLoading] = useState(true)
   const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; planetId: string; surfaceId?: string | null } | null>(null)
-  const [isFadingOut, setIsFadingOut] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const viewerRef = useRef<any>(null)
   const smallViewerRef = useRef<any>(null)
   const { setActiveNarration } = useNarrationSequence()
@@ -132,88 +132,111 @@ export default function SolarSystemOverview() {
     return config[selectedPlanet.id] || { orbit: "0deg 75deg 20%", fov: "30deg" }
   }
 
-  // Se estivermos em um planeta individual, usamos valores de zoom focados no centro
-  const focusedOrbit = "0deg 75deg 105%" // 105% do raio do planeta
-  const focusedFov = "35deg" // Campo de visão ideal para planetas individuais
+  const { orbit: focusedOrbit, fov: focusedFov } = getCameraView()
+  const defaultOrbit = "0deg 75deg 20%"
+  const defaultFov = "30deg"
 
-  const { orbit, fov } = getCameraView()
+  // Efeito para monitorar o carregamento dos modelos
+  useEffect(() => {
+    const viewerNode = currentModel === 'large' ? viewerRef.current : smallViewerRef.current;
+    if (!viewerNode) return;
+
+    const handleLoadEvent = () => {
+      console.log(`[3D] Modelo ${currentModel} carregado.`);
+      setIsLoaded(true);
+    };
+
+    viewerNode.addEventListener('load', handleLoadEvent);
+    
+    // Fallback: Se não carregar em 5 segundos, mostra o que tiver
+    const fallbackTimer = setTimeout(() => {
+      if (!isLoaded) {
+        console.warn("[3D] Timeout no carregamento, forçando exibição.");
+        setIsLoaded(true);
+      }
+    }, 5000);
+
+    if (viewerNode.loaded) {
+      handleLoadEvent();
+    }
+
+    return () => {
+      viewerNode.removeEventListener('load', handleLoadEvent);
+      clearTimeout(fallbackTimer);
+    };
+  }, [currentModel, selectedPlanet]); // Re-anexa se o modelo ou o planeta mudar
 
   return (
     <div className={styles.overview} onClick={() => setTooltip(null)}>
-      {/* Camada 1: Versão Leve (Exibida primeiro) - Sempre foca no planeta selecionado se houver um */}
-      {currentModel === 'Small' && (
-        React.createElement('model-viewer' as any, {
-          ref: smallViewerRef,
-          src: selectedPlanet ? selectedPlanet.modelPath : "/3D Model/solar_system_animation_Small.glb",
-          alt: selectedPlanet ? selectedPlanet.name : "Sistema Solar",
-          'auto-rotate': !tooltip,
-          'camera-controls': true,
-          autoplay: !tooltip,
-          'shadow-intensity': "1",
-          'environment-image': "neutral",
-          exposure: "1.2",
-          'interaction-prompt': "auto",
-          'camera-orbit': selectedPlanet ? focusedOrbit : orbit,
-          'field-of-view': selectedPlanet ? focusedFov : fov,
-          className: styles.viewer,
-          onClick: handleViewerClick,
-          style: { 
-            width: '100%', 
-            height: '100%', 
-            display: 'block',
-            opacity: (isLargeLoaded && !selectedPlanet) ? 0 : 1, 
-            transition: 'opacity 1s ease' 
-          },
-          onLoad: () => {
-            setIsFadingOut(true)
-            setTimeout(() => {
-              setIsFadingOut(false)
-            }, 600)
-          }
-        }, (
-          <div className={`${styles.loader} ${isFadingOut ? styles.fadeOut : ''}`} slot="poster">
-            <div className={styles.loaderOrbital}>
-              <div className={styles.loaderRing} />
-              <div className={styles.loaderRing} />
-              <div className={styles.loaderRing} />
-              <div className={styles.loaderCore} />
-            </div>
-            <span className={styles.loaderText}>Explorando</span>
+      <div className={styles.viewerContainer}>
+        {/* Loader Progressivo */}
+        <div className={`${styles.loader} ${isLoaded ? styles.fadeOut : ''}`}>
+          <div className={styles.loaderOrbital}>
+            <div className={styles.loaderRing} />
+            <div className={styles.loaderRing} />
+            <div className={styles.loaderRing} />
+            <div className={styles.loaderCore} />
           </div>
-        ))
-      )}
+          <span className={styles.loaderText}>Iniciando Missão...</span>
+        </div>
 
-      {/* Camada 2: Versão HD (Somente para a visão geral) */}
-      {useAdaptiveLoading && !selectedPlanet && (
-        React.createElement('model-viewer' as any, {
-          ref: viewerRef,
-          src: "/3D Model/solar_system_animation_large.glb",
-          alt: "Sistema Solar",
-          'auto-rotate': true,
-          'camera-controls': true,
-          autoplay: true,
-          'shadow-intensity': "1",
-          'environment-image': "neutral",
-          exposure: "1.2",
-          'interaction-prompt': "auto",
-          'camera-orbit': orbit,
-          'field-of-view': fov,
-          className: styles.viewer,
-          onLoad: handleLargeLoad,
-          onClick: handleViewerClick,
-          style: { 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            display: 'block',
-            opacity: isLargeLoaded ? 1 : 0, 
-            pointerEvents: isLargeLoaded ? 'auto' : 'none',
-            transition: 'opacity 1s ease'
-          }
-        })
-      )}
+        {/* HUD de Qualidade Adaptativa */}
+        <div className={styles.intelligentBadge}>
+          {useAdaptiveLoading && !isLargeLoaded && !selectedPlanet && (
+            <div className={styles.loadingInfo}>Otimizando Texturas HD...</div>
+          )}
+          {isLargeLoaded && !selectedPlanet && currentModel === 'large' && (
+            <div className={styles.hdActive}>VISTA HD ATIVA</div>
+          )}
+        </div>
+
+        {/* Camada 1: Versão Leve / Planet Focus */}
+        <div className={styles.viewerWrapper} style={{ zIndex: (currentModel === 'Small' || selectedPlanet) ? 2 : 1 }}>
+          <model-viewer
+            key={selectedPlanet ? `planet-${selectedPlanet.id}` : 'solar-small'}
+            ref={smallViewerRef}
+            src={selectedPlanet ? selectedPlanet.modelPath : "/3D Model/solar_system_animation_Small.glb"}
+            alt={selectedPlanet ? selectedPlanet.name : "Sistema Solar"}
+            auto-rotate={!tooltip ? "" : undefined}
+            camera-controls=""
+            interaction-prompt="none"
+            shadow-intensity="1"
+            environment-image="neutral"
+            exposure="1.2"
+            camera-orbit={selectedPlanet ? focusedOrbit : defaultOrbit}
+            field-of-view={selectedPlanet ? focusedFov : defaultFov}
+            className={styles.viewer}
+            onClick={handleViewerClick}
+          />
+        </div>
+
+        {/* Camada 2: Versão HD (Somente para a visão geral) */}
+        {useAdaptiveLoading && !selectedPlanet && currentModel === 'large' && (
+          <div className={styles.viewerWrapper}>
+            <model-viewer
+              key="solar-large"
+              ref={viewerRef}
+              src="/3D Model/solar_system_animation_large.glb"
+              alt="Sistema Solar HD"
+              auto-rotate=""
+              camera-controls=""
+              interaction-prompt="none"
+              shadow-intensity="1"
+              environment-image="neutral"
+              exposure="1.2"
+              camera-orbit={defaultOrbit}
+              field-of-view={defaultFov}
+              className={styles.viewer}
+              onLoad={handleLargeLoad}
+              onClick={handleViewerClick}
+              style={{ 
+                opacity: isLargeLoaded ? 1 : 0,
+                transition: 'opacity 1s ease'
+              } as any}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Tooltip Centralizada (Modo de Foco) */}
       {tooltip && selectedPlanet && (

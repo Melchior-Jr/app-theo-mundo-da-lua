@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/context/SoundContext'
 import { usePlayer } from '@/context/PlayerContext'
+import { TrophyService } from '@/services/trophyService'
+import { ProgressionService } from '@/services/progressionService'
 import styles from './QuizSystem.module.css'
 import QuestionRenderer from './QuestionRenderer.tsx'
 import QuizHeader from './QuizHeader.tsx'
@@ -12,13 +14,12 @@ import FeedbackLayer from './FeedbackLayer.tsx'
 import QuizResult from './QuizResult.tsx'
 import StarField from '@/components/StarField'
 import QuizStartScreen from './QuizStartScreen.tsx'
-import { TrophyService } from '@/services/trophyService'
-import { ProgressionService } from '@/services/progressionService'
 
 interface QuizSystemProps {
   level?: number
   challenge?: number
   mode?: 'normal' | 'quick' | 'challenge'
+  defaultDuelMode?: 'classic' | 'speedrun' | 'training'
   onExit: () => void
 }
 
@@ -27,12 +28,20 @@ interface DuelConfig {
   targetUserName: string
   levelId: number
   stake: number
+  mode: 'classic' | 'speedrun' | 'training'
   challengeId?: string 
   challengerScore?: number // Pontuação do desafiante para bater
+  challengerTime?: number  // Tempo do desafiante em segundos
   questionIds?: string[]   // IDs das perguntas na ordem original (IDs são strings agora)
 }
 
-export default function QuizSystem({ level: initialLevel = 1, challenge: initialChallenge = 1, mode: initialMode = 'normal', onExit }: QuizSystemProps) {
+export default function QuizSystem({ 
+  level: initialLevel = 1, 
+  challenge: initialChallenge = 1, 
+  mode: initialMode = 'normal', 
+  defaultDuelMode = 'classic',
+  onExit 
+}: QuizSystemProps) {
   const { user } = useAuth()
   const { playSFX, playBGMusic, stopBGMusic, playTrack } = useSound()
   const { refreshData } = usePlayer()
@@ -49,12 +58,13 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
   // --- SISTEMA DE BOAS-VINDAS (Mount Only, respeitando sessão) ---
   const hasGreetedEffect = useRef(false)
   useEffect(() => {
-    if (!user || hasGreetedEffect.current) return
+    // Se estiver em modo desafio, não saudamos aqui (saudamos ao entrar no jogo de fato)
+    if (!user || hasGreetedEffect.current || initialMode === 'challenge') return
     
     // Check session safety guard
     const hasGreetedInSession = sessionStorage.getItem('theo-quiz-session-greeted')
     if (hasGreetedInSession) return
-
+    
     const isFirstAccess = !localStorage.getItem('theo-quiz-first-access')
     
     if (isFirstAccess) {
@@ -69,7 +79,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
     // Marca que a saudação já ocorreu para evitar repetições
     sessionStorage.setItem('theo-quiz-session-greeted', 'true')
     hasGreetedEffect.current = true
-  }, [user, playTrack])
+  }, [user, playTrack, initialMode])
 
   // Handler de saída centralizado para limpar a sessão de saudação
   const handleExit = useCallback(() => {
@@ -113,7 +123,8 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
   // 2. Engine do Quiz
   const engine = useQuizEngine(questions, {
     mode: isDuel ? 'duel' : 'normal',
-    maxTargetScore: isDuel ? duelConfig?.challengerScore : undefined
+    duelMode: isDuel ? (duelConfig?.mode === 'training' ? 'classic' : (duelConfig?.mode || 'classic')) : 'classic',
+    maxTargetScore: isDuel && (duelConfig?.mode === 'classic' || duelConfig?.mode === 'training') ? duelConfig?.challengerScore : undefined
   })
 
   // 3. Handler para começar
@@ -139,7 +150,15 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
     console.log('%c [DEBUG] INICIANDO DUELO COM CONFIG: ', 'background: #ff3d71; color: #fff; padding: 5px;', config)
     playSFX('click')
     setIsDuel(true)
-    setDuelConfig(config)
+    
+    // Se a config já trouxer um mode (ex: convite aceito), usamos ele.
+    // Se não trouxer (ex: novo desafio que estamos lançando), usamos o defaultDuelMode.
+    const finalConfig = {
+      ...config,
+      mode: config.mode || defaultDuelMode
+    }
+    
+    setDuelConfig(finalConfig)
     setIsStarted(true)
     setHasSaved(false)
     engine.reset()
@@ -209,23 +228,35 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
         if (isResponse) {
           // Oponente ACEITOU o desafio e agora terminou de jogar
           const challengerScore = (duelConfig as any).challengerScore || 0
+          const challengerTime = (duelConfig as any).challengerTime || 999999
           const challengedScore = engine.correctCount
-          const stake = duelConfig.stake
-          
-          console.log(`[DEBUG] Scores do Duelo: Desafiante=${challengerScore} | Você=${challengedScore}`)
+          const challengedTime = engine.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0)
+          const mode = duelConfig.mode
+          const stake = duelConfig.stake || 0
 
           let winStatus = 'draw';
           let winnerId = null;
           let loserId = null;
 
-          if (challengedScore > challengerScore) {
-            winStatus = 'win';
-            winnerId = user.id; // Você venceu
-            loserId = duelConfig.targetUserId; // Desafiante perdeu
-          } else if (challengerScore > challengedScore) {
-            winStatus = 'loss';
-            winnerId = duelConfig.targetUserId; // Desafiante venceu
-            loserId = user.id; // Você perdeu
+          if (mode === 'classic') {
+            if (challengedScore > challengerScore) winStatus = 'win';
+            else if (challengerScore > challengedScore) winStatus = 'loss';
+          } else {
+            // SpeedRun: Score primeiro, depois tempo
+            if (challengedScore > challengerScore) winStatus = 'win';
+            else if (challengerScore > challengedScore) winStatus = 'loss';
+            else {
+              if (challengedTime < challengerTime) winStatus = 'win';
+              else if (challengerTime < challengedTime) winStatus = 'loss';
+            }
+          }
+
+          if (winStatus === 'win') {
+            winnerId = user.id; 
+            loserId = duelConfig.targetUserId;
+          } else if (winStatus === 'loss') {
+            winnerId = duelConfig.targetUserId;
+            loserId = user.id;
           }
 
           // 1. Atualizar o registro do desafio
@@ -233,6 +264,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
             .from('quiz_challenges')
             .update({
               challenged_score: challengedScore,
+              challenged_time: challengedTime,
               status: 'completed'
             })
             .eq('id', challengeId)
@@ -271,12 +303,16 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
           return;
         } else {
           // Início de um NOVO desafio
+          const totalTimeSpent = engine.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0)
+          
           const { error: insertErr } = await supabase.from('quiz_challenges').insert({
             challenger_id: user.id,
             challenged_id: duelConfig.targetUserId,
             level_id: duelConfig.levelId,
-            stake: duelConfig.stake,
+            stake: duelConfig.mode === 'training' ? 0 : duelConfig.stake,
+            mode: duelConfig.mode,
             challenger_score: engine.correctCount,
+            challenger_time: totalTimeSpent,
             question_ids: questions.map(q => q.id), // Salva a ordem das perguntas!
             status: 'pending'
           })
@@ -480,20 +516,36 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
 
   // 5. Tela de Início
   if (!isStarted) {
-    return <QuizStartScreen mode={initialMode} onStart={handleStart} onExit={handleExit} onStartDuel={handleStartDuel} />
+    return <QuizStartScreen mode={initialMode} defaultDuelMode={defaultDuelMode} onStart={handleStart} onExit={handleExit} onStartDuel={handleStartDuel} />
   }
 
   // 6. Resultado do Duelo (Lúdico e Animado)
   if (isDuel && (engine.status === 'gameover' || engine.status === 'finished')) {
     const isResponse = !!(duelConfig as any).challengeId
     const challengerScore = (duelConfig as any).challengerScore || 0
+    const challengerTime = (duelConfig as any).challengerTime || 999999
     const myScore = engine.correctCount
-    const winStatus = isResponse ? (myScore > challengerScore ? 'win' : myScore < challengerScore ? 'loss' : 'draw') : 'launched'
+    const totalTimeSpent = engine.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0)
+    const mode = duelConfig?.mode || 'classic'
+
+    let winStatus = 'launched'
+    if (isResponse) {
+      if (mode === 'classic' || mode === 'training') {
+        winStatus = myScore > challengerScore ? 'win' : myScore < challengerScore ? 'loss' : 'draw'
+      } else {
+        if (myScore > challengerScore) winStatus = 'win'
+        else if (challengerScore > myScore) winStatus = 'loss'
+        else {
+          winStatus = totalTimeSpent < challengerTime ? 'win' : challengerTime < totalTimeSpent ? 'loss' : 'draw'
+        }
+      }
+    }
 
     let title = "DUELO LANÇADO! ⚔️"
     let message = (
       <>
-        Você acertou <strong>{engine.correctCount}</strong> perguntas seguídas!<br/>
+        Você acertou <strong>{engine.correctCount}</strong> perguntas {mode === 'speedrun' ? 'usando 3 vidas' : 'seguidas'}!<br/>
+        {mode === 'speedrun' && <span>Tempo total: <strong>{totalTimeSpent}s</strong><br/></span>}
         Agora vamos ver se <strong>{duelConfig?.targetUserName}</strong> consegue te superar.
       </>
     )
@@ -502,20 +554,22 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
     
     if (winStatus === 'win') {
       title = "VITÓRIA ESTELAR! 🏆"
+      const timeMsg = mode === 'speedrun' ? ` com ${totalTimeSpent}s (contra ${challengerTime}s)` : ''
       message = (
         <>
           Incrível! Você superou os <strong>{challengerScore}</strong> pontos <br/>
-          de <strong>{duelConfig?.targetUserName}</strong> e conquistou o prêmio!
+          de <strong>{duelConfig?.targetUserName}</strong>{timeMsg} e conquistou o prêmio!
         </>
       )
       accentColor = '#00e096'
       emoji = "🚀"
     } else if (winStatus === 'loss') {
       title = "DUELO PERDIDO... 🌑"
+      const timeMsg = mode === 'speedrun' && myScore === challengerScore ? ` por tempo (${totalTimeSpent}s vs ${challengerTime}s)` : ''
       message = (
         <>
           Não foi dessa vez! <strong>{duelConfig?.targetUserName}</strong> <br/>
-          defendeu a marca de <strong>{challengerScore}</strong> pontos.
+          defendeu a marca de <strong>{challengerScore}</strong> pontos{timeMsg}.
         </>
       )
       accentColor = '#ff3d71'
@@ -524,7 +578,7 @@ export default function QuizSystem({ level: initialLevel = 1, challenge: initial
       title = "EMPATE TÉCNICO! ⚖️"
       message = (
         <>
-          Ambos fizeram <strong>{myScore}</strong> pontos. <br/>
+          Ambos fizeram <strong>{myScore}</strong> pontos {mode === 'speedrun' && `em ${totalTimeSpent}s`}. <br/>
           Ninguém ganha ou perde XP neste duelo!
         </>
       )

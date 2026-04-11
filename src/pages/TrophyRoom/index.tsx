@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import {
-  Trophy as TrophyIcon, Star, Zap, Medal, ArrowLeft, Crown, Lock,
+  Trophy as TrophyIcon, Star, Zap, Medal, Crown, Lock,
   CheckCircle2, Target, Rocket, Compass, Brain,
   Heart, Search, HelpCircle
 } from 'lucide-react'
@@ -9,6 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTrophies } from '@/hooks/useTrophies'
 import { TROPHIES, TrophyCategory } from '@/data/trophies'
 import StarField from '@/components/StarField'
+import { Navbar } from '@/components/Navbar'
 import styles from './TrophyRoom.module.css'
 
 // Mapeamento de Ícones
@@ -31,7 +31,6 @@ export default function TrophyRoom() {
   const { user } = useAuth()
   const { userTrophies, loading, fetchProgress } = useTrophies()
   const [activeTab, setActiveTab] = useState<'all' | TrophyCategory>('all')
-
   useEffect(() => {
     if (user?.id) fetchProgress()
   }, [user, fetchProgress])
@@ -53,24 +52,15 @@ export default function TrophyRoom() {
 
   return (
     <div className={styles.page}>
-      <StarField />
+      <div className={styles.decorContainer}>
+        <StarField />
+        {/* Nebulae */}
+        <div className={styles.nebula1} aria-hidden="true" />
+        <div className={styles.nebula2} aria-hidden="true" />
+      </div>
 
-      {/* Nebulae */}
-      <div className={styles.nebula1} aria-hidden="true" />
-      <div className={styles.nebula2} aria-hidden="true" />
+      <Navbar />
 
-      {/* ── NAV ───────────────────────────────────────────── */}
-      <header className={styles.nav}>
-        <Link to="/jogos" className={styles.backBtn}>
-          <ArrowLeft size={18} />
-          <span>Voltar para Estação</span>
-        </Link>
-        <div className={styles.navTitle}>
-          <TrophyIcon size={20} className={styles.navIcon} />
-          <span>Sala de Troféus</span>
-        </div>
-        <div style={{ width: 140 }} />
-      </header>
 
       <div className={styles.content}>
         

@@ -7,13 +7,22 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  max-width: 100vw;
   background: radial-gradient(circle at 70% 20%, #0d1b3e 0%, #060c1a 55%, #02040a 100%);
   color: #fff;
   font-family: 'Outfit', sans-serif;
-  overflow: hidden;
   position: relative;
-  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.decorContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* --- SIDEBAR (HUD LATERAL) --- */
@@ -26,7 +35,7 @@
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  z-index: 100;
+  z-index: 400;
   height: 100vh;
 }
 
@@ -108,15 +117,13 @@
 /* --- MAIN CONTENT (ESTAÇÃO DE TRABALHO) --- */
 .mainContent {
   flex: 1;
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
   padding: 2.5rem 3rem;
   position: relative;
-  z-index: 10;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* ─── NAVBAR (Matching GamesPage) ───────────────────────────── */
@@ -127,17 +134,18 @@
   height: 80px;
   align-items: center;
   z-index: 1000;
-  background: rgba(10, 15, 30, 0.7);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 15, 30, 0.4);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navbarContainer {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   height: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -229,22 +237,17 @@
     position: fixed;
     left: -100%;
     top: 0;
+    width: 280px;
+    height: 100vh;
     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1001;
+    z-index: 2000;
     box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+    background: rgba(8, 10, 25, 0.95);
+    backdrop-filter: blur(25px);
   }
 
   .sidebarOpen {
     left: 0;
-  }
-
-  .closeSidebarBtn {
-    display: flex;
-    margin-left: auto;
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.3);
-    cursor: pointer;
   }
 
   .navbar {
@@ -252,7 +255,8 @@
   }
 
   .mainContent {
-    padding: 100px 1.5rem 2.5rem;
+    padding: 100px 1rem 2rem;
+    width: 100vw;
   }
 }
 
@@ -262,7 +266,16 @@
   }
   
   .navbarContainer {
-    padding: 0 15px;
+    padding: 0 10px;
+    gap: 0.5rem;
+  }
+
+  .navActions {
+    gap: 0.4rem;
+  }
+
+  .logo {
+    gap: 6px;
   }
 
   .mainContent {
@@ -275,7 +288,6 @@
   width: 100%;
   margin: 0 auto;
   position: relative;
-  z-index: 2;
   flex: 1;
 }
 
@@ -308,20 +320,4 @@
   50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(139, 249, 255, 0.6)); }
 }
 
-/* Scrollbar Custom */
-.mainContent::-webkit-scrollbar {
-  width: 8px;
-}
 
-.mainContent::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.mainContent::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-}
-
-.mainContent::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.1);
-}

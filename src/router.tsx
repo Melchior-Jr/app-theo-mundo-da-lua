@@ -14,6 +14,8 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const InstallPage = lazy(() => import('@/pages/InstallPage'))
 const RankingPage = lazy(() => import('@/pages/RankingPage'))
 const InvasoresPage = lazy(() => import('@/pages/InvasoresPage'))
+const MemoriaAstralPage = lazy(() => import('@/pages/MemoriaAstralPage'))
+const ArenaDuelosPage = lazy(() => import('@/pages/ArenaDuelosPage'))
 const TrophyRoomPage = lazy(() => import('@/pages/TrophyRoom'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
@@ -88,6 +90,14 @@ export const router = createBrowserRouter([
       {
         path: 'jogos/invasores',
         element: <InvasoresPage />,
+      },
+      {
+        path: 'jogos/memoria-astral',
+        element: <MemoriaAstralPage />,
+      },
+      {
+        path: 'jogos/arena-duelos',
+        element: <ArenaDuelosPage />,
       },
       {
         path: 'trofeus',

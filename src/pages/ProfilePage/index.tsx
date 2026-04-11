@@ -3,19 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { 
   Camera, Edit2, Save, X, Trophy, Star, Zap, 
   Target, Calendar, School, User, Hash,
-  ChevronRight, LogOut, CheckCircle2, Shield, Bell, Menu, Settings,
+  ChevronRight, LogOut, CheckCircle2, Shield, Bell,
   Volume2, VolumeX, Music, Headphones, MessageSquare, RotateCcw
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { usePlayer } from '@/context/PlayerContext'
-import { SettingsModal } from '@/components/SettingsModal'
 import { useSound } from '@/context/SoundContext'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
 import { TROPHIES } from '@/data/trophies'
 import StarField from '@/components/StarField'
-import { NotificationDropdown } from '@/components/NotificationDropdown'
-import { NotificationService } from '@/services/notificationService'
+import { Navbar } from '@/components/Navbar'
 import styles from './ProfilePage.module.css'
 
 export default function ProfilePage() {
@@ -33,8 +31,6 @@ export default function ProfilePage() {
   
   const [uploading, setUploading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const [formData, setFormData] = useState({
     full_name: '',
     username: '',
@@ -43,10 +39,7 @@ export default function ProfilePage() {
     birth_date: ''
   })
   const [message, setMessage] = useState({ type: '', text: '' })
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [testMessage, setTestMessage] = useState({ type: '', text: '' })
-  const [showSettings, setShowSettings] = useState(false)
   
   // -- NOTIFICATION SETTINGS LOGIC --
   const [notifSettings, setNotifSettings] = useState<any>(null)
@@ -172,16 +165,6 @@ export default function ProfilePage() {
     }
   }
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop
-    setScrolled(top > 60)
-  }
-
-  useEffect(() => {
-    if (user?.id) {
-      NotificationService.countUnread(user.id).then(setUnreadCount)
-    }
-  }, [user])
 
   useEffect(() => {
     if (!session) {
@@ -308,105 +291,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={styles.page} onScroll={handleScroll}>
+    <div className={styles.page}>
       <StarField />
       
-      {/* ── NAVBAR ────────────────────────────────────────── */}
-      <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
-        <div className={styles.navbarContainer}>
-          {/* Logo */}
-          <Link to="/jogos" className={styles.logo}>
-            {!scrolled ? (
-              <div className={styles.logoMoon}>
-                <div className={styles.moon} />
-                <div className={styles.glow} />
-              </div>
-            ) : (
-              <div className={styles.logoText}>
-                <span className={styles.theo}>THÉO</span>
-                <span className={styles.noMundo}>NO MUNDO</span>
-                <span className={styles.daLuaNav}>DA LUA <span className={styles.moonEmojiNav}>🌙</span></span>
-              </div>
-            )}
-          </Link>
-
-          <div className={styles.navActions}>
-            {session && (
-              <div className={styles.mobileBell} style={{ position: 'relative' }}>
-                <button 
-                  className={styles.bellBtn} 
-                  title="Notificações"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell size={18} />
-                  {unreadCount > 0 && <div className={styles.bellDot} />}
-                </button>
-                
-                <NotificationDropdown 
-                  userId={user?.id || ''}
-                  isOpen={showNotifications}
-                  onClose={() => setShowNotifications(false)}
-                  onUnreadChange={setUnreadCount}
-                />
-              </div>
-            )}
-            <button className={styles.menuToggle} onClick={() => setMenuOpen(!menuOpen)}>
-              <Menu size={24} />
-            </button>
-          </div>
-
-          {/* Desktop Links & User Widget */}
-          <div className={`${styles.navLinks} ${menuOpen ? styles.navLinksOpen : ''}`}>
-            <Link to="/ranking"   className={styles.navLink}>RANKING</Link>
-            <Link to="/trofeus"   className={styles.navLink}>TROFÉUS</Link>
-            
-            {session && (
-              <div className={styles.userWidget}>
-                <div className={styles.desktopBell} style={{ position: 'relative' }}>
-                  <button 
-                    className={styles.bellBtn} 
-                    title="Notificações"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell size={18} />
-                    {unreadCount > 0 && <div className={styles.bellDot} />}
-                  </button>
-                  
-                  <NotificationDropdown 
-                    userId={user?.id || ''}
-                    isOpen={showNotifications}
-                    onClose={() => setShowNotifications(false)}
-                    onUnreadChange={setUnreadCount}
-                  />
-                </div>
-                <div className={styles.userCard}>
-                  <div className={styles.userAvatarWrap}>
-                    {player?.avatar_url ? (
-                      <img src={player.avatar_url} className={styles.userAvatar} />
-                    ) : (
-                      <div className={styles.userAvatarFallback}>{player?.username?.charAt(0) || '?'}</div>
-                    )}
-                  </div>
-                  <div className={styles.userInfoNav}>
-                    <span className={styles.userNameNav}>{player?.username || 'Astronauta'}</span>
-                    <div className={styles.userMetaNav}>
-                      <span className={styles.userLevelNav}>NIV. {level}</span>
-                      <span className={styles.userXpNav}>{globalStats?.galactic_xp || 0} XP</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => { playSFX('click'); setShowSettings(true); }} 
-                  className={styles.settingsBtnNav} 
-                  title="Configurações"
-                >
-                  <Settings size={18} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      {/* ── NAVBAR (Matching GamesPage) ───────────────────────────── */}
+      <Navbar />
 
       <main className={styles.content}>
         <div className={styles.grid}>
@@ -810,13 +699,6 @@ export default function ProfilePage() {
             </form>
           </div>
         </div>
-      )}
-      
-      {showSettings && (
-        <SettingsModal 
-          isOpen={showSettings} 
-          onClose={() => setShowSettings(false)} 
-        />
       )}
     </div>
   )

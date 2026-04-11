@@ -75,7 +75,6 @@ export default function ShareButton({ title, text, url, className = '', onShare 
         aria-label="Compartilhar no WhatsApp"
       >
         <ExternalLink size={18} />
-        <span>WhatsApp</span>
       </button>
     </div>
   )

@@ -1,9 +1,9 @@
 .page {
   position: relative;
-  height: 100dvh; /* Força a página a ter a altura da viewport */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: visible;
   background: linear-gradient(
     175deg,
     #050810 0%,

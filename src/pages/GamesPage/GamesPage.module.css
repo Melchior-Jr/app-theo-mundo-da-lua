@@ -6,13 +6,22 @@
 /* ─── BASE ───────────────────────────────────────────────────── */
 .page {
   position: relative;
-  height: 100%;
+  min-height: 100%;
   width: 100%;
   background: radial-gradient(circle at 70% 20%, #0d1b3e 0%, #060c1a 55%, #02040a 100%);
   font-family: 'Outfit', sans-serif;
   color: #fff;
-  overflow-y: auto;
-  overflow-x: hidden;
+}
+
+.decorContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .nebula1, .nebula2 {
@@ -20,7 +29,6 @@
   border-radius: 50%;
   filter: blur(100px);
   pointer-events: none;
-  z-index: 0;
 }
 .nebula1 { width: 700px; height: 700px; background: rgba(75,123,237,0.07); top: -250px; left: -250px; }
 .nebula2 { width: 500px; height: 500px; background: rgba(255,209,102,0.05); bottom: -180px; right: -180px; }
@@ -32,7 +40,7 @@
   height: 80px;
   display: flex;
   align-items: center;
-  z-index: 1000;
+  z-index: 2500;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
@@ -56,6 +64,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .navbarContainer {
+    padding: 0 20px;
+  }
+}
+@media (max-width: 480px) {
+  .navbarContainer {
+    padding: 0 10px;
+    gap: 0.5rem;
+  }
+  .navActions {
+    gap: 0.4rem;
+  }
+  .logo {
+    gap: 6px;
+  }
 }
 
 /* Logo — Moon */
@@ -133,9 +159,17 @@
 
 /* Hamburger */
 .menuToggle {
-  display: none; background: none; border: none;
-  color: #fff; cursor: pointer; padding: 8px; z-index: 1003;
-  transition: transform 0.3s ease;
+  display: none; 
+  background: none; 
+  border: none;
+  color: #fff; 
+  cursor: pointer; 
+  padding: 12px; 
+  margin: -4px;
+  z-index: 2505;
+  transition: all 0.3s ease;
+  align-items: center;
+  justify-content: center;
 }
 .menuToggle:hover { color: #FFD166; }
 
@@ -159,11 +193,52 @@
 @media (min-width: 769px) {
   .menuToggle { display: none; }
 }
-@media (max-width: 768px) {
-  .navLinks { display: none; }
-  .menuToggle { display: flex !important; }
+@media (max-width: 1024px) {
+  .navLinks {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: rgba(6, 12, 26, 0.98);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    padding: 80px 2rem 2rem;
+    gap: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 2510;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .navLinks.menuOpen {
+    right: 0;
+    box-shadow: -20px 0 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .navLink {
+    width: 100%;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 1.1rem;
+  }
+
+  .menuToggle {
+    display: flex !important;
+    z-index: 2101;
+  }
+
+  .userWidget {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 1.5rem;
+  }
+
   .desktopBell { display: none; }
-  .mobileBell  { display: block; }
+  .mobileBell  { display: flex; }
 }
 
 .bellBtn,

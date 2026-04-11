@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { AdminService } from '@/services/adminService';
 import { calcLevel, getLevelTitle } from '@/utils/playerUtils';
+import { THEO_QUIZ_DATA } from '@/data/quizQuestions';
 import styles from './AdminPage.module.css';
 
 interface PlayerDetails {
@@ -44,6 +45,8 @@ export default function UsersManager() {
   const [actionLoading, setActionLoading] = useState(false);
   const [educatorNotes, setEducatorNotes] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'full_name', direction: 'asc' });
+  const [activeTab, setActiveTab] = useState('resumo');
+  const [historyFilter, setHistoryFilter] = useState('todos');
 
   useEffect(() => {
     loadPlayers();
@@ -266,7 +269,8 @@ export default function UsersManager() {
       </div>
 
       <section className={styles.glassPanel}>
-        <table className={styles.table}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
           <thead>
             <tr>
               <th onClick={() => requestSort('full_name')} style={{ cursor: 'pointer' }}>
@@ -361,7 +365,8 @@ export default function UsersManager() {
             })}
           </tbody>
         </table>
-      </section>
+      </div>
+    </section>
 
       {/* --- MODO DOSSIÊ (PÁGINA CHEIA) --- */}
       {selectedPlayer && (() => {
@@ -415,202 +420,458 @@ export default function UsersManager() {
           <div className={styles.dossierModalOverlay}>
             <div className={styles.dossierModalContent}>
               <div className={styles.dossierHeader}>
-              <button onClick={() => setSelectedPlayer(null)} className={styles.backBtn}>
-                <ArrowLeft size={20} /> Voltar para a Lista
-              </button>
-              
-              <div className={styles.dossierAvatarWrapper}>
-                <div style={{ position: 'relative' }}>
-                  <img src={selectedPlayer.profile.avatar_url} alt="" className={styles.dossierAvatar} />
-                  <div className={styles.riskOrb} style={{ background: riskStatus.color }} />
-                </div>
-                <div className={styles.dossierNameInfo}>
-                  <h1>{selectedPlayer.profile.full_name}</h1>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <span className={styles.dossierBadge}>Lvl {calcLevel(selectedPlayer.stats?.galactic_xp || 0)}</span>
-                    <span style={{ color: '#00e5ff', fontWeight: 500 }}>{getLevelTitle(calcLevel(selectedPlayer.stats?.galactic_xp || 0))}</span>
-                    <span style={{ opacity: 0.5 }}>• @{selectedPlayer.profile.username}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.headerStats}>
-                <div className={styles.hStatItem}>
-                  <div className={styles.hStatValue}>{selectedPlayer.stats?.galactic_xp || 0}</div>
-                  <div className={styles.hStatLabel}>XP TOTAL</div>
-                </div>
-                <div className={styles.hStatItem}>
-                  <div className={styles.hStatValue}>{selectedPlayer.trophies.length}</div>
-                  <div className={styles.hStatLabel}>TROFÉUS</div>
-                </div>
-                <div className={styles.hStatItem} style={{ background: 'rgba(255, 209, 102, 0.1)' }}>
-                  <div className={styles.hStatValue} style={{ color: '#ffd166' }}>{streak}</div>
-                  <div className={styles.hStatLabel}>STREAK (DIAS)</div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.dossierContent}>
-              {/* Ficha Cadastral e Dados Frios */}
-              <div className={styles.dossierMetaGrid}>
-                <div className={styles.metricCard}>
-                  <span className={styles.mLabel}>Idade / Série</span>
-                  <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>
-                    {selectedPlayer.profile.birth_date 
-                      ? `${Math.floor((new Date().getTime() - new Date(selectedPlayer.profile.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 365.25))} Anos` 
-                      : '---'} • {selectedPlayer.profile.class_name || 'NI'}
-                  </div>
-                  <div className={styles.mSub}>{selectedPlayer.profile.school || 'Escola não informada'}</div>
-                </div>
-                <div className={styles.metricCard}>
-                  <span className={styles.mLabel}>Último Acesso</span>
-                  <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{selectedPlayer.profile.last_login ? new Date(selectedPlayer.profile.last_login).toLocaleDateString() : '---'}</div>
-                  <div className={styles.mSub}>{selectedPlayer.profile.last_login ? new Date(selectedPlayer.profile.last_login).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Nunca entrou'}</div>
-                </div>
-                <div className={styles.metricCard}>
-                  <span className={styles.mLabel}>Cadastro</span>
-                  <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{new Date(selectedPlayer.profile.created_at).toLocaleDateString()}</div>
-                  <div className={styles.mSub}>Inscrito há {Math.floor((new Date().getTime() - new Date(selectedPlayer.profile.created_at).getTime()) / (1000 * 60 * 60 * 24))} dias</div>
-                </div>
-                <div className={styles.metricCard}>
-                  <span className={styles.mLabel}>Presença Mensal</span>
-                  <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{uniqueDays} Dias</div>
-                  <div className={styles.mSub}>Total de dias ativos</div>
-                </div>
-              </div>
-              <div className={styles.dossierGrid}>
+                <button onClick={() => setSelectedPlayer(null)} className={styles.backBtn}>
+                  <ArrowLeft size={20} /> Voltar para a Lista
+                </button>
                 
-                {/* Coluna Esquerda: BI Analítico */}
-                <div className={styles.dossierCol}>
-                  <div className={styles.sectionTitle}><Activity size={18} /> Diagnóstico de Engajamento</div>
-                  
-                  <div className={styles.metricGrid}>
-                    <div className={styles.metricCard}>
-                      <span className={styles.mLabel}>Taxa de Retorno (7d)</span>
-                      <div className={styles.mValue}>{((weeklyFreq / 7) * 100).toFixed(0)}%</div>
-                      <div className={styles.mSub}>{weeklyFreq} dias ativos esta semana</div>
-                    </div>
-                    <div className={styles.metricCard}>
-                      <span className={styles.mLabel}>Ausência Atual</span>
-                      <div className={styles.mValue} style={{ color: riskStatus.color }}>{daysSinceLast} dias</div>
-                      <div className={styles.mSub}>{riskStatus.label}</div>
-                    </div>
-                    <div className={styles.metricCard}>
-                      <span className={styles.mLabel}>Duração p/ Sessão</span>
-                      <div className={styles.mValue}>~{selectedPlayer.insights.avgDurationMinutes}m</div>
-                      <div className={styles.mSub}>Tempo médio de exploração</div>
+                <div className={styles.dossierAvatarWrapper}>
+                  <div style={{ position: 'relative' }}>
+                    <img src={selectedPlayer.profile.avatar_url} alt="" className={styles.dossierAvatar} />
+                    <div className={styles.riskOrb} style={{ background: riskStatus.color }} />
+                  </div>
+                  <div className={styles.dossierNameInfo}>
+                    <h1>{selectedPlayer.profile.full_name}</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '5px', flexWrap: 'wrap' }}>
+                      <span className={styles.dossierBadge}>Lvl {calcLevel(selectedPlayer.stats?.galactic_xp || 0)}</span>
+                      <span style={{ color: '#00e5ff', fontWeight: 500 }}>{getLevelTitle(calcLevel(selectedPlayer.stats?.galactic_xp || 0))}</span>
+                      <span style={{ opacity: 0.5 }}>• @{selectedPlayer.profile.username}</span>
                     </div>
                   </div>
+                </div>
 
-                  <div className={styles.glassPanel} style={{ padding: '2rem' }}>
-                    <div className={styles.sectionTitle}><TrendingUp size={18} /> Cobertura Pedagógica</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
-                      <div className={styles.progressRow}>
-                        <div className={styles.pInfo}><span>Módulos de Astronomia</span> <span>{chaptersVisited}/{selectedPlayer.insights.totalChaptersAvailable}</span></div>
-                        <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${(chaptersVisited / selectedPlayer.insights.totalChaptersAvailable) * 100}%`, background: '#00e5ff' }} /></div>
+                <div className={styles.headerStats}>
+                  <div className={styles.hStatItem}>
+                    <div className={styles.hStatValue}>{selectedPlayer.stats?.galactic_xp || 0}</div>
+                    <div className={styles.hStatLabel}>XP TOTAL</div>
+                  </div>
+                  <div className={styles.hStatItem} style={{ background: 'rgba(255, 209, 102, 0.1)', padding: '8px 15px', borderRadius: '12px' }}>
+                    <div className={styles.hStatValue} style={{ color: '#ffd166' }}>{streak}</div>
+                    <div className={styles.hStatLabel}>STREAK (DIAS)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.tabsNav}>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'resumo' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('resumo')}
+                >
+                  <TrendingUp size={18} /> Resumo do Aluno
+                </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'historico' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('historico')}
+                >
+                  <Activity size={18} /> Histórico Detalhado
+                </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'conversa' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('conversa')}
+                >
+                  <Zap size={18} /> Conversa & Notas
+                </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'config' ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab('config')}
+                >
+                  <ShieldAlert size={18} /> Configurações
+                </button>
+              </div>
+
+              <div className={styles.dossierContent}>
+                
+                {activeTab === 'resumo' && (
+                  <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <div className={styles.dossierMetaGrid}>
+                      <div className={styles.metricCard}>
+                        <span className={styles.mLabel}>Idade / Série</span>
+                        <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>
+                          {selectedPlayer.profile.birth_date 
+                            ? `${Math.floor((new Date().getTime() - new Date(selectedPlayer.profile.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 365.25))} Anos` 
+                            : '---'} • {selectedPlayer.profile.class_name || 'NI'}
+                        </div>
+                        <div className={styles.mSub}>{selectedPlayer.profile.school || 'Escola não informada'}</div>
                       </div>
-                      <div className={styles.progressRow}>
-                        <div className={styles.pInfo}><span>Desafios Concluídos</span> <span>{lessonsDone} quizes</span></div>
-                        <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${Math.min(100, (lessonsDone / (selectedPlayer.insights.totalChaptersAvailable * 2)) * 100)}%`, background: '#10b981' }} /></div>
+                      <div className={styles.metricCard}>
+                        <span className={styles.mLabel}>Último Acesso</span>
+                        <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{selectedPlayer.profile.last_login ? new Date(selectedPlayer.profile.last_login).toLocaleDateString() : '---'}</div>
+                        <div className={styles.mSub}>{selectedPlayer.profile.last_login ? new Date(selectedPlayer.profile.last_login).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Nunca entrou'}</div>
                       </div>
-                      <div className={styles.progressRow}>
-                        <div className={styles.pInfo}><span>Missões e Jogos</span> <span>{gamesPlayed} explorados / {games.length} sessões</span></div>
-                        <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${Math.min(100, (gamesPlayed / 15) * 100)}%`, background: '#ffd166' }} /></div>
+                      <div className={styles.metricCard}>
+                        <span className={styles.mLabel}>Cadastro</span>
+                        <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{new Date(selectedPlayer.profile.created_at).toLocaleDateString()}</div>
+                        <div className={styles.mSub}>Inscrito há {Math.floor((new Date().getTime() - new Date(selectedPlayer.profile.created_at).getTime()) / (1000 * 60 * 60 * 24))} dias</div>
+                      </div>
+                      <div className={styles.metricCard}>
+                        <span className={styles.mLabel}>Presença Mensal</span>
+                        <div className={styles.mValue} style={{ fontSize: '1.2rem' }}>{uniqueDays} Dias</div>
+                        <div className={styles.mSub}>Total de dias ativos</div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className={styles.glassPanel} style={{ padding: '2rem' }}>
-                    <div className={styles.sectionTitle} style={{ color: '#ef4444' }}><AlertCircle size={18} /> Dificuldades Recorrentes</div>
-                    <div style={{ marginTop: '1rem', fontSize: '0.95rem' }}>
-                      {selectedPlayer.insights.topDifficulties ? (
-                        <p style={{ opacity: 0.8 }}>O sistema detectou menor aproveitamento em módulos de: <strong style={{ color: '#ef4444' }}>{selectedPlayer.insights.topDifficulties.join(', ')}</strong>.</p>
-                      ) : lessonsDone > 0 ? (
-                        <p style={{ opacity: 0.8, color: '#10b981' }}>Excelente! O explorador demonstra domínio sólido em todos os temas analisados.</p>
-                      ) : (
-                        <p style={{ opacity: 0.4, fontStyle: 'italic' }}>Dados insuficientes para análise de dificuldades.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={styles.glassPanel} style={{ padding: '2rem' }}>
-                    <div className={styles.sectionTitle}><Clock size={18} /> Histórico de Atividades Recentes</div>
-                    <div className={styles.activityTimeline}>
-                      {logs.slice(0, 10).map((log: any, i: number) => (
-                        <div key={i} className={styles.timelineItem}>
-                          <div className={styles.timelinePoint} />
-                          <div className={styles.timelineContent}>
-                            <div className={styles.tHeader}>
-                              <strong>{log.exploration_id}</strong>
-                              <span>{new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                            <div className={styles.tDesc}>Recompensa Galáctica: +{log.xp_awarded} XP</div>
+                    <div className={styles.dossierGrid}>
+                      <div className={styles.dossierCol}>
+                        <div className={styles.sectionTitle}><Activity size={18} /> Diagnóstico de Engajamento</div>
+                        <div className={styles.metricGrid}>
+                          <div className={styles.metricCard}>
+                            <span className={styles.mLabel}>Taxa de Retorno (7d)</span>
+                            <div className={styles.mValue}>{((weeklyFreq / 7) * 100).toFixed(0)}%</div>
+                            <div className={styles.mSub}>{weeklyFreq} dias ativos esta semana</div>
+                          </div>
+                          <div className={styles.metricCard}>
+                            <span className={styles.mLabel}>Ausência Atual</span>
+                            <div className={styles.mValue} style={{ color: riskStatus.color }}>{daysSinceLast} dias</div>
+                            <div className={styles.mSub}>{riskStatus.label}</div>
+                          </div>
+                          <div className={styles.metricCard}>
+                            <span className={styles.mLabel}>Duração p/ Sessão</span>
+                            <div className={styles.mValue}>~{selectedPlayer.insights.avgDurationMinutes}m</div>
+                            <div className={styles.mSub}>Tempo médio de exploração</div>
                           </div>
                         </div>
-                      ))}
+
+                        <div className={styles.glassPanel} style={{ padding: '2rem' }}>
+                          <div className={styles.sectionTitle}><TrendingUp size={18} /> Cobertura Pedagógica</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
+                            <div className={styles.progressRow}>
+                              <div className={styles.pInfo}><span>Módulos de Astronomia</span> <span>{chaptersVisited}/{selectedPlayer.insights.totalChaptersAvailable}</span></div>
+                              <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${(chaptersVisited / selectedPlayer.insights.totalChaptersAvailable) * 100}%`, background: '#00e5ff' }} /></div>
+                            </div>
+                            <div className={styles.progressRow}>
+                              <div className={styles.pInfo}><span>Desafios Concluídos</span> <span>{lessonsDone} quizes</span></div>
+                              <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${Math.min(100, (lessonsDone / (selectedPlayer.insights.totalChaptersAvailable * 2)) * 100)}%`, background: '#10b981' }} /></div>
+                            </div>
+                            <div className={styles.progressRow}>
+                              <div className={styles.pInfo}><span>Missões e Jogos</span> <span>{gamesPlayed} explorados / {games.length} sessões</span></div>
+                              <div className={styles.pBar}><div className={styles.pFill} style={{ width: `${Math.min(100, (gamesPlayed / 15) * 100)}%`, background: '#ffd166' }} /></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.dossierCol}>
+                        <div className={styles.glassPanel} style={{ padding: '2rem' }}>
+                          <div className={styles.sectionTitle} style={{ color: '#ef4444' }}><AlertCircle size={18} /> Dificuldades Recorrentes</div>
+                          <div style={{ marginTop: '1rem', fontSize: '0.95rem' }}>
+                            {selectedPlayer.insights.topDifficulties ? (
+                              <p style={{ opacity: 0.8 }}>O sistema detectou menor aproveitamento em módulos de: <strong style={{ color: '#ef4444' }}>{selectedPlayer.insights.topDifficulties.join(', ')}</strong>.</p>
+                            ) : lessonsDone > 0 ? (
+                              <p style={{ opacity: 0.8, color: '#10b981' }}>Excelente! O explorador demonstra domínio sólido em todos os temas analisados.</p>
+                            ) : (
+                              <p style={{ opacity: 0.4, fontStyle: 'italic' }}>Dados insuficientes para análise de dificuldades.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={styles.sectionTitle}><Trophy size={18} /> Galeria de Conquistas</div>
+                        <div className={styles.trophyWall}>
+                          {selectedPlayer.trophies.map((t: any, i: number) => (
+                            <div key={i} className={styles.trophyItem} title={t.trophy_id}>🏆</div>
+                          ))}
+                          {selectedPlayer.trophies.length === 0 && <div style={{ opacity: 0.3 }}>Nenhum troféu conquistado ainda.</div>}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Coluna Direita: Gestão e Conquistas */}
-                <div className={styles.dossierCol}>
-                  <div className={styles.sectionTitle}><Trophy size={18} /> Galeria de Conquistas</div>
-                  <div className={styles.trophyWall}>
-                    {selectedPlayer.trophies.map((t: any, i: number) => (
-                      <div key={i} className={styles.trophyItem} title={t.trophy_id}>🏆</div>
-                    ))}
-                    {selectedPlayer.trophies.length === 0 && <div style={{ opacity: 0.3 }}>Nenhum troféu conquistado ainda.</div>}
-                  </div>
-
-                  <div className={styles.glassPanel} style={{ padding: '2rem', marginTop: '2rem' }}>
-                    <div className={styles.sectionTitle} style={{ color: '#ef4444' }}><ShieldAlert size={18} /> Gestão Discente</div>
-                    <p style={{ fontSize: '0.9rem', opacity: 0.6, marginBottom: '1.5rem' }}>Ações de intervenção direta no progresso e acesso do aluno.</p>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <button onClick={() => handleResetProgress(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.managementBtn}>
-                        <RotateCcw size={18} /> Reiniciar Jornada (Reset)
+                {activeTab === 'historico' && (
+                  <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <div className={styles.filtersRow} style={{ marginBottom: '2rem' }}>
+                      <button 
+                        className={`${styles.filterChip} ${historyFilter === 'todos' ? styles.filterChipActive : ''}`}
+                        onClick={() => setHistoryFilter('todos')}
+                      >
+                        Todos
                       </button>
                       <button 
-                        onClick={() => handleToggleLock(selectedPlayer.profile.id, selectedPlayer.profile.is_locked)} 
-                        disabled={actionLoading}
-                        className={styles.managementBtn}
-                        style={{ color: selectedPlayer.profile.is_locked ? '#10b981' : '#ef4444' }}
+                        className={`${styles.filterChip} ${historyFilter === 'jornada' ? styles.filterChipActive : ''}`}
+                        onClick={() => setHistoryFilter('jornada')}
                       >
-                        {selectedPlayer.profile.is_locked ? <Unlock size={18} /> : <Lock size={18} />}
-                        {selectedPlayer.profile.is_locked ? 'Desbloquear Acesso' : 'Bloquear Acesso'}
+                        Jornada
                       </button>
-                      <button onClick={() => handleAwardTrophy(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.managementBtn}>
-                        <Award size={18} /> Conceder Troféu Especial
+                      <button 
+                        className={`${styles.filterChip} ${historyFilter === 'quiz' ? styles.filterChipActive : ''}`}
+                        onClick={() => setHistoryFilter('quiz')}
+                      >
+                        Quizes
                       </button>
-                      <button onClick={() => handleSendNotification(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.primaryBtn} style={{ marginTop: '1rem' }}>
-                        Enviar Notificação no App
+                      <button 
+                        className={`${styles.filterChip} ${historyFilter === 'jogos' ? styles.filterChipActive : ''}`}
+                        onClick={() => setHistoryFilter('jogos')}
+                      >
+                        Jogos
+                      </button>
+                    </div>
+
+                    <div className={styles.glassPanel} style={{ padding: '2rem' }}>
+                      <div className={styles.sectionTitle}><Clock size={18} /> Histórico Expandido</div>
+                      <div className={styles.activityTimeline}>
+                        {(() => {
+                          const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253';
+
+                          const constellations: Record<string, string> = {
+                            orion: 'Órion', 'tres-marias': 'Três Marias', cruzeiro: 'Cruzeiro do Sul',
+                            aries: 'Áries', touro: 'Touro', gemeos: 'Gêmeos', cancer: 'Câncer',
+                            leao: 'Leão', virgem: 'Virgem', libra: 'Libra', escorpiao: 'Escorpião',
+                            sagitario: 'Sagitário', capricornio: 'Capricórnio', aquario: 'Aquário', peixes: 'Peixes'
+                          };
+
+                          const celestial: Record<string, string> = {
+                            mercurio: 'Mercúrio', venus: 'Vênus', terra: 'Terra', marte: 'Marte',
+                            jupiter: 'Júpiter', saturno: 'Saturno', urano: 'Urano', netuno: 'Netuno',
+                            sol: 'Sol', lua: 'Lua'
+                          };
+
+                          const translateAction = (slug: string) => {
+                            if (!slug) return 'Atividade Desconhecida';
+                            
+                            // Mapeamento específico para Constelações
+                            const constMatch = slug.match(/(view|reveal)-constellation-(.+)/);
+                            if (constMatch) {
+                              const [,, id] = constMatch;
+                              const name = constellations[id] || id.replace(/-/g, ' ');
+                              return `${constMatch[1] === 'view' ? 'Observou' : 'Revelou'} a Constelação de ${name}`;
+                            }
+
+                            // Mapeamento específico para Planetas
+                            const planetMatch = slug.match(/(view|interact-3d)-planet-(.+)/);
+                            if (planetMatch) {
+                              const [,, id] = planetMatch;
+                              const name = celestial[id] || id.replace(/-/g, ' ');
+                              return `${planetMatch[1] === 'view' ? 'Visitou' : 'Explorou 3D de'} ${name}`;
+                            }
+
+                            if (slug.startsWith('stat-detail-')) {
+                              const id = slug.split('-').pop() || '';
+                              return `Estudou ficha técnica: ${celestial[id] || id}`;
+                            }
+                            
+                            if (slug.startsWith('view-moon-phase-')) {
+                              const id = slug.replace('view-moon-phase-', '');
+                              const phases: Record<string, string> = {
+                                'nova': 'Lua Nova', 'quarto-crescente': 'Quarto Crescente',
+                                'cheia': 'Lua Cheia', 'quarto-minguante': 'Quarto Minguante'
+                              };
+                              return `Observou a fase: ${phases[id] || 'da Lua'}`;
+                            }
+
+                            if (slug.includes('const-intro-guide')) return 'Seguiu o guia estelar do Théo';
+                            
+                            if (slug.startsWith('completion-')) {
+                              const id = slug.replace('completion-', '');
+                              const chapters: Record<string, string> = {
+                                'sistema-solar': 'Sistema Solar',
+                                'movimentos-da-terra': 'Movimentos da Terra',
+                                'constelacoes': 'Constelações',
+                                'fases-da-lua': 'Fases da Lua'
+                              };
+                              return `Concluiu a jornada: ${chapters[id] || id}`;
+                            }
+
+                            if (slug.startsWith('share-')) return 'Compartilhou descobertas com a turma';
+                            
+                            // Fallback para slugs limpos
+                            return slug
+                              .replace(/view-constellation-/g, 'Observou ')
+                              .replace(/reveal-constellation-/g, 'Revelou ')
+                              .replace(/view-planet-/g, 'Visitou ')
+                              .replace(/-/g, ' ')
+                              .replace(/\b\w/g, l => l.toUpperCase());
+                          };
+
+                          const translateGame = (gameId: string) => {
+                            if (gameId === QUIZ_GAME_ID || gameId === 'quiz-espacial') return 'Quiz Espacial';
+                            const gamesMap: Record<string, string> = {
+                              'invasores-conhecimento': 'Invasores do Conhecimento',
+                              'invasores': 'Invasores do Conhecimento',
+                              'memoria-astral': 'Memória Astral',
+                              'memoria': 'Memória Astral',
+                              'quebra-cabeca': 'Quebra-cabeça Galáctico'
+                            };
+                            return gamesMap[gameId] || `Jogo: ${gameId}`;
+                          };
+                          
+                          // Unifica e filtra os logs conforme a aba
+                          const unified = [
+                            ...logs.map(l => ({ 
+                              ...l, 
+                              type: 'jornada', 
+                              date: l.created_at, 
+                              title: translateAction(l.exploration_id), 
+                              xp: l.xp_awarded 
+                            })),
+                            ...games.map(g => ({ 
+                              ...g, 
+                              type: g.game_id === QUIZ_GAME_ID ? 'quiz' : 'jogos', 
+                              date: g.played_at, 
+                              title: g.game_id === QUIZ_GAME_ID 
+                                ? `Respondeu Quiz (Nível ${g.metadata?.level}, Desafio ${g.metadata?.challenge})` 
+                                : `Jogou: ${translateGame(g.game_id)}`,
+                              xp: g.metadata?.xp_earned || 0
+                            }))
+                          ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                          const filtered = unified.filter(item => {
+                            if (historyFilter === 'todos') return true;
+                            return item.type === historyFilter;
+                          });
+
+                          if (filtered.length === 0) return <p style={{ opacity: 0.4, fontStyle: 'italic', padding: '2rem' }}>Nenhuma atividade encontrada neste filtro.</p>;
+
+                          return filtered.map((item: any, i: number) => (
+                            <div key={i} className={styles.timelineItem}>
+                              <div className={styles.timelinePoint} />
+                              <div className={styles.timelineContent}>
+                                <div className={styles.tHeader}>
+                                  <strong>{item.title}</strong>
+                                  <span>{new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div className={styles.tDesc}>
+                                  Recompensa Galáctica: +{item.xp || 0} XP
+                                  {item.type === 'quiz' && item.metadata && (
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                      <div style={{ color: '#10b981', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                        Aproveitamento: {item.metadata.correct_count}/{item.metadata.total_questions} ({((item.metadata.correct_count / (item.metadata.total_questions || 1)) * 100).toFixed(0)}%)
+                                      </div>
+                                      
+                                      {item.metadata.questions_log && item.metadata.questions_log.some((q: any) => !q.isCorrect) && (
+                                        <div style={{ 
+                                          marginTop: '1rem', 
+                                          padding: '1.25rem', 
+                                          background: 'rgba(239, 68, 68, 0.08)', 
+                                          borderRadius: '16px', 
+                                          border: '1px solid rgba(239, 68, 68, 0.15)',
+                                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                                        }}>
+                                          <div style={{ color: '#ef4444', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <AlertCircle size={14} /> Questões que Precisam de Atenção
+                                          </div>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            {item.metadata.questions_log.filter((q: any) => !q.isCorrect).map((q: any, idx: number) => {
+                                              const qid = q.questionId || q.id;
+                                              const qData = THEO_QUIZ_DATA.find(tq => tq.id === qid);
+                                              return (
+                                                <div key={idx} style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', paddingLeft: '1rem', borderLeft: '2px solid rgba(239, 68, 68, 0.3)' }}>
+                                                  {qData?.question || `Questão: Identificador ${qid}`}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'conversa' && (
+                  <div style={{ animation: 'fadeIn 0.3s ease', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                    <div className={styles.glassPanel} style={{ padding: '2rem' }}>
+                      <div className={styles.sectionTitle}><Zap size={18} /> Interação Direta</div>
+                      <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '2rem' }}>Envie mensagens em tempo real para o tablet do aluno durante a jornada.</p>
+                      
+                      <button 
+                        onClick={() => handleSendNotification(selectedPlayer.profile.id)} 
+                        disabled={actionLoading} 
+                        className={styles.primaryBtn} 
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                      >
+                        <Zap size={18} /> Enviar Mensagem Instantânea
+                      </button>
+                      
+                      <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255, 209, 102, 0.05)', borderRadius: '16px', border: '1px solid rgba(255, 209, 102, 0.1)' }}>
+                        <h4 style={{ color: '#ffd166', margin: '0 0 10px 0' }}>Dica do Mestre</h4>
+                        <p style={{ fontSize: '0.85rem', opacity: 0.8, margin: 0 }}>Você pode usar as notificações para dar feedbacks motivacionais ou orientar o aluno a revisar algum tópico específico.</p>
+                      </div>
+                    </div>
+
+                    <div className={styles.glassPanel} style={{ padding: '2rem' }}>
+                      <div className={styles.sectionTitle}><Activity size={18} /> Prontuário do Educador</div>
+                      <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '1rem' }}>Notas internas visíveis apenas para professores e administradores.</p>
+                      
+                      <textarea 
+                        placeholder="Adicione notas sobre o progresso ou dificuldades específicas deste aluno..."
+                        value={educatorNotes}
+                        onChange={(e) => setEducatorNotes(e.target.value)}
+                        className={styles.dossierNotesArea}
+                        style={{ marginBottom: '1rem' }}
+                      />
+                      <button 
+                        onClick={handleSaveNotes}
+                        disabled={actionLoading}
+                        className={styles.secondaryBtn} 
+                        style={{ width: '100%' }}
+                      >
+                        {actionLoading ? 'Salvando...' : 'Salvar no Prontuário'}
                       </button>
                     </div>
                   </div>
+                )}
 
-                  <div className={styles.glassPanel} style={{ padding: '2rem', marginTop: '2rem', background: 'linear-gradient(135deg, rgba(0,229,255,0.05) 0%, rgba(26,26,64,0) 100%)' }}>
-                    <h4 style={{ margin: '0 0 10px 0' }}>Observações do Educador</h4>
-                    <textarea 
-                      placeholder="Adicione notas sobre o progresso ou dificuldades específicas deste aluno..."
-                      value={educatorNotes}
-                      onChange={(e) => setEducatorNotes(e.target.value)}
-                      className={styles.dossierNotesArea}
-                    />
-                    <button 
-                      onClick={handleSaveNotes}
-                      disabled={actionLoading}
-                      className={styles.secondaryBtn} 
-                      style={{ width: '100%', marginTop: '10px' }}
-                    >
-                      {actionLoading ? 'Salvando...' : 'Salvar Notas'}
-                    </button>
+                {activeTab === 'config' && (
+                  <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <div className={styles.sectionTitle} style={{ color: '#ef4444' }}><ShieldAlert size={18} /> Central de Controle Discente</div>
+                    <p style={{ fontSize: '0.9rem', opacity: 0.6, marginBottom: '2.5rem' }}>Ações críticas de intervenção técnica e administrativa.</p>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                      <div className={styles.managementCard}>
+                        <div className={styles.mgmtIcon} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><RotateCcw size={24} /></div>
+                        <div className={styles.mgmtInfo}>
+                          <h4>Resetar Jornada</h4>
+                          <p>Apaga todo o XP, troféus e progresso. O aluno começará do zero.</p>
+                          <button onClick={() => handleResetProgress(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.dangerActionBtn}>
+                            Reiniciar do Zero
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.managementCard}>
+                        <div className={styles.mgmtIcon} style={{ 
+                          background: selectedPlayer.profile.is_locked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                          color: selectedPlayer.profile.is_locked ? '#10b981' : '#ef4444' 
+                        }}>
+                          {selectedPlayer.profile.is_locked ? <Unlock size={24} /> : <Lock size={24} />}
+                        </div>
+                        <div className={styles.mgmtInfo}>
+                          <h4>Status de Acesso</h4>
+                          <p>{selectedPlayer.profile.is_locked ? 'O aluno está bloqueado e não pode entrar no app.' : 'O aluno tem acesso total à plataforma.'}</p>
+                          <button 
+                            onClick={() => handleToggleLock(selectedPlayer.profile.id, selectedPlayer.profile.is_locked)} 
+                            disabled={actionLoading}
+                            className={selectedPlayer.profile.is_locked ? styles.successActionBtn : styles.dangerActionBtn}
+                          >
+                            {selectedPlayer.profile.is_locked ? 'Desbloquear Acesso' : 'Bloquear Acesso'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.managementCard}>
+                        <div className={styles.mgmtIcon} style={{ background: 'rgba(255, 209, 102, 0.1)', color: '#ffd166' }}><Award size={24} /></div>
+                        <div className={styles.mgmtInfo}>
+                          <h4>Premiação Manual</h4>
+                          <p>Conceda troféus exclusivos para incentivar o engajamento.</p>
+                          <button onClick={() => handleAwardTrophy(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.warningActionBtn}>
+                            Dar Troféu Especial
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
               </div>
             </div>
           </div>
-        </div>
-      );
+        );
       })()}
     </div>
   );

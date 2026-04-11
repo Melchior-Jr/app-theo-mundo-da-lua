@@ -77,28 +77,36 @@
 }
 
 /* --- Base --- */
-html, 
-body, 
-#root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
 html {
+  min-height: 100%;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto; /* Apenas o html gerencia a rolagem vertical */
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  width: 100%;
+}
+
+body, #root {
+  min-height: 100vh;
+  width: 100%;
+  overflow: visible; /* IMPORTANTE: Não use hidden aqui para evitar double scrollbars */
+  position: relative;
 }
 
 body {
-  font-family: var(--font-body);
+  margin: 0;
+  padding: 0;
   background-color: var(--color-void);
   color: var(--color-star);
+  font-family: var(--font-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
 
 /* --- Cursor Customizado (Somente Desktop) --- */
 @media (pointer: fine) {

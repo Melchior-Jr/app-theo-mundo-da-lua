@@ -1,9 +1,10 @@
 .wrapper {
   position: absolute;
-  top: 50px;
-  right: -80px;
+  top: 55px;
+  right: 0;
   width: 320px;
-  max-height: 400px;
+  max-width: calc(100vw - 32px);
+  max-height: 480px;
   background: rgba(10, 15, 28, 0.9);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);

@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, Bell, Settings, GraduationCap } from 'lucide-react'
+import { Trophy, Medal, BookOpen, Lock, ChevronRight, Star, LayoutGrid, GraduationCap } from 'lucide-react'
 import { calcLevel, getLevelTitle, calcLevelProgress } from '@/utils/playerUtils'
 import StarField from '@/components/StarField'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/context/SoundContext'
 import { supabase } from '@/lib/supabase'
-import { NotificationDropdown } from '@/components/NotificationDropdown'
-import { NotificationService } from '@/services/notificationService'
-import { SettingsModal } from '@/components/SettingsModal'
+import { Navbar } from '@/components/Navbar'
 import FeaturedBanner from '@/components/FeaturedBanner'
 import { useNarrationSequence } from '@/context/NarrationSequenceContext'
 import { usePlayer } from '@/context/PlayerContext'
@@ -117,7 +115,7 @@ const STATIC_GAMES = [
     title: 'Arena de Duelos',
     sub: 'Arena Pvp',
     difficulty: 'Difícil',
-    path: '/quiz?mode=challenge',
+    path: '/jogos/arena-duelos',
     color: '#b5179e',
     Art: DuelArt,
     locked: false,
@@ -139,10 +137,10 @@ const STATIC_GAMES = [
     title: 'Memória Astral',
     sub: 'Memória lúdica',
     difficulty: 'Fácil',
-    path: '#',
+    path: '/jogos/memoria-astral',
     color: '#ef476f',
     Art: MemoryArt,
-    locked: true,
+    locked: false,
     type: 'jogo',
     unlocked_challenge: 0
   }
@@ -171,10 +169,11 @@ interface ExtendedActivity extends Activity {
 
 const CATEGORIES = ['Tudo', 'Aulas', 'Jogos'] as const
 type CategoryType = typeof CATEGORIES[number]
+
 const DIFF_COLOR = { Fácil: '#06d6a0', Médio: '#FFD166', Difícil: '#ef476f' }
 
 export default function GamesPage() {
-  const { session, user } = useAuth()
+  const { session } = useAuth()
   const { 
     playerData, 
     playerStats, 
@@ -184,20 +183,12 @@ export default function GamesPage() {
   } = usePlayer()
   
   const { playBGMusic, playSFX } = useSound()
+  const { isGlobalLoading } = useNarrationSequence()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [showAuth, setShowAuth] = useState(false)
-  const [topPlayers, setTopPlayers] = useState<any[]>([])
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const { isGlobalLoading } = useNarrationSequence()
   const [activeCategory, setActiveCategory] = useState<CategoryType>('Tudo')
-  const [scrolled, setScrolled] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [topPlayers, setTopPlayers] = useState<any[]>([])
   const [showLockModal, setShowLockModal] = useState<{ show: boolean, title: string, message: string }>({ show: false, title: '', message: '' })
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
-  const closeMenu = () => setIsMenuOpen(false)
 
   useEffect(() => {
     async function loadSubjects() {
@@ -220,44 +211,6 @@ export default function GamesPage() {
   useEffect(() => {
     fetchTopPlayers()
   }, [])
-
-  useEffect(() => {
-    if (!user?.id) return
-
-    // 1. Carga inicial do contador
-    NotificationService.countUnread(user.id).then(setUnreadCount)
-
-    // 2. RADAR GALÁCTICO: Escuta notificações em tempo real
-    const channel = supabase
-      .channel(`notif_radar_${user.id}`)
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        () => NotificationService.countUnread(user.id).then(setUnreadCount)
-      )
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'quiz_challenges', filter: `challenged_id=eq.${user.id}` },
-        () => NotificationService.countUnread(user.id).then(setUnreadCount)
-      )
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'quiz_challenges', filter: `challenger_id=eq.${user.id}` },
-        () => NotificationService.countUnread(user.id).then(setUnreadCount)
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [user?.id])
-
-  useEffect(() => {
-    fetchTopPlayers()
-  }, [])
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop
-    setScrolled(top > 60)
-  }
 
   const fetchTopPlayers = async () => {
     try {
@@ -365,108 +318,17 @@ export default function GamesPage() {
   const progress = calcLevelProgress(playerStats?.galactic_xp)
 
   return (
-    <div className={styles.page} onScroll={handleScroll}>
+    <div className={styles.page}>
       <StarField />
-      <div className={styles.nebula1} />
-      <div className={styles.nebula2} />
+      <div className={styles.decorContainer}>
+        <div className={styles.nebula1} />
+        <div className={styles.nebula2} />
+      </div>
 
-      <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''} ${isMenuOpen ? styles.navbarMenuOpen : ''}`}>
-        <div className={styles.navbarContainer}>
-          <Link to="/" className={styles.logo} onClick={() => { playSFX('click'); closeMenu(); }}>
-            {!scrolled ? (
-              <div className={styles.logoMoon}><div className={styles.moon}></div><div className={styles.glow}></div></div>
-            ) : (
-              <div className={styles.logoText}>
-                <span className={styles.theo}>Théo</span>
-                <span className={styles.noMundo}> no Mundo</span>
-                <span className={styles.daLuaNav}>da Lua<span className={styles.moonEmojiNav}>🌙</span></span>
-              </div>
-            )}
-          </Link>
-          <div className={styles.navActions}>
-            {session && (
-              <div className={styles.mobileBell} style={{ position: 'relative' }}>
-                <button
-                  className={styles.bellBtn}
-                  title="Notificações"
-                  onClick={() => { playSFX('click'); setShowNotifications(!showNotifications); }}
-                >
-                  <Bell size={18} />
-                  {unreadCount > 0 && <div className={styles.bellDot} />}
-                </button>
-
-                <NotificationDropdown
-                  userId={user?.id || ''}
-                  isOpen={showNotifications}
-                  onClose={() => setShowNotifications(false)}
-                  onUnreadChange={setUnreadCount}
-                />
-              </div>
-            )}
-
-            <button className={styles.menuToggle} onClick={() => { playSFX('click'); toggleMenu(); }} aria-label="Menu">
-              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
-
-          <div className={`${styles.navLinks} ${isMenuOpen ? styles.menuOpen : ''}`}>
-            <button className={`${styles.navLink} ${activeCategory === 'Aulas' ? styles.navLinkActive : ''}`} onClick={() => { playSFX('click'); setActiveCategory('Aulas'); closeMenu(); }}>AULAS</button>
-            <button className={`${styles.navLink} ${activeCategory === 'Jogos' ? styles.navLinkActive : ''}`} onClick={() => { playSFX('click'); setActiveCategory('Jogos'); closeMenu(); }}>JOGOS</button>
-            <Link to="/ranking" className={styles.navLink} onClick={() => { playSFX('click'); closeMenu(); }}>RANKING</Link>
-            <Link to="/trofeus" className={styles.navLink} onClick={() => { playSFX('click'); closeMenu(); }}>TROFÉUS</Link>
-
-            {session ? (
-              <div className={styles.userWidget}>
-                <div className={styles.desktopBell} style={{ position: 'relative' }}>
-                  <button
-                    className={styles.bellBtn}
-                    title="Notificações"
-                    onClick={() => {
-                      playSFX('click')
-                      setShowNotifications(!showNotifications)
-                    }}
-                  >
-                    <Bell size={18} />
-                    {unreadCount > 0 && <div className={styles.bellDot} />}
-                  </button>
-
-                  <NotificationDropdown
-                    userId={user?.id || ''}
-                    isOpen={showNotifications}
-                    onClose={() => setShowNotifications(false)}
-                    onUnreadChange={setUnreadCount}
-                  />
-                </div>
-
-                <button 
-                  className={styles.settingsBtn} 
-                  title="Configurações"
-                  onClick={() => {
-                    playSFX('click')
-                    setShowSettings(true)
-                  }}
-                >
-                  <Settings size={18} />
-                </button>
-                <Link to="/perfil" className={styles.userCard} onClick={() => playSFX('click')}>
-                  <div className={styles.userAvatarWrap}>
-                    {playerData?.avatar_url ? <img src={playerData.avatar_url} className={styles.userAvatar} /> : <div className={styles.userAvatarFallback}>{playerData?.username?.charAt(0) || '?'}</div>}
-                  </div>
-                  <div className={styles.userInfo}>
-                    <span className={styles.userName}>{playerData?.username || 'Astronauta'}</span>
-                    <div className={styles.userMeta}>
-                      <span className={styles.userLevel}>NIV. {level}</span>
-                      <span className={styles.userXp}>{playerStats?.galactic_xp || 0} XP</span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <Link to="/login" className={styles.loginBtn} onClick={() => playSFX('click')}>ENTRAR</Link>
-            )}
-          </div>
-        </div>
-      </nav>
+      <Navbar 
+        activeCategory={activeCategory as any} 
+        onCategoryChange={setActiveCategory as any}
+      />
 
       <div className={styles.content}>
         <header className={styles.pageHeader}>
@@ -685,11 +547,6 @@ export default function GamesPage() {
           </div>
         </div>
       )}
-
-      <SettingsModal 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
-      />
     </div>
   )
 }

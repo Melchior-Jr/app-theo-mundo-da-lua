@@ -28,18 +28,17 @@ const LEVELS: LevelInfo[] = [
 
 interface QuizStartScreenProps {
   mode?: string
+  defaultDuelMode?: 'classic' | 'speedrun' | 'training'
   onStart: (level: number, challenge: number) => void
   onExit: () => void
   onStartDuel: (config: any) => void
 }
 
-export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: QuizStartScreenProps) {
+export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit, onStartDuel }: QuizStartScreenProps) {
   const { user } = useAuth()
   const { playSFX } = useSound()
   const { playerStats } = usePlayer()
 
-  // O efeito de narração foi movido para o componente pai (QuizSystem) 
-  // para evitar duplicidade e gerenciar a trava de sessão (sessionStorage).
   const [unlockedLevel, setUnlockedLevel] = useState(1)
   const [unlockedChallenge, setUnlockedChallenge] = useState(1)
   const [xp, setXp] = useState(playerStats?.galactic_xp || 0)
@@ -64,7 +63,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
     try {
       const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253'
 
-      // 1. Fetch Stats & XP
       const { data: stats } = await supabase
         .from('player_global_stats')
         .select('galactic_xp')
@@ -73,7 +71,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
       
       if (stats) setXp(stats.galactic_xp)
 
-      // 2. Fetch Progress (Unlocked Levels)
       const { data: gameStats } = await supabase
         .from('player_game_stats')
         .select('metadata')
@@ -90,7 +87,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
         setChallengeData(gameStats.metadata.challenge_data)
       }
 
-      // 3. Fetch Trophies (Real)
       const { data: trophies } = await supabase
         .from('player_trophies')
         .select('*, trophies(*)')
@@ -98,7 +94,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
       
       if (trophies) setRealTrophies(trophies)
 
-      // 4. Fetch Ranking (Top 5)
       const { data: topPlayers } = await supabase
         .from('player_global_stats')
         .select('galactic_xp, players(full_name, username)')
@@ -116,15 +111,12 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
         setRankingData(formattedRanking)
       }
 
-      // 5. Fetch Notifications (Invitations + Results)
-      // A - Desafios PENDENTES para mim
       const { data: pending } = await supabase
         .from('quiz_challenges')
         .select('*')
         .eq('challenged_id', user.id)
         .eq('status', 'pending')
       
-      // B - Resultados de duelos que EU lancei e não vi ainda
       const { data: results } = await supabase
         .from('quiz_challenges')
         .select('*')
@@ -147,17 +139,14 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
         setNotifications(enriched)
         setUnreadCount(enriched.length)
 
-        // 6. Detect New Incoming Challenges for Toast
         const newInvitations = enriched.filter(n => n.type === 'invitation' && !lastProcessedIds.has(n.id))
         if (newInvitations.length > 0) {
           const newest = newInvitations[0]
           setActiveToast(newest)
-          playSFX('bonus') // Som de alerta
+          playSFX('bonus')
           
-          // Adicionar aos processados
           setLastProcessedIds(prev => new Set([...Array.from(prev), ...newInvitations.map(i => i.id)]))
           
-          // Auto-hide toast após 8s
           setTimeout(() => setActiveToast(null), 8000)
         }
       } else {
@@ -171,7 +160,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
   }, [user, lastProcessedIds, playSFX])
 
   useEffect(() => {
-    // Sincroniza XP do contexto se mudar
     if (playerStats?.galactic_xp) {
       setXp(playerStats.galactic_xp)
     }
@@ -180,7 +168,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
   useEffect(() => {
     fetchQuizProgress()
     
-    // Polling para novos desafios a cada 10 segundos
     const duelInterval = setInterval(fetchQuizProgress, 10000)
     return () => clearInterval(duelInterval)
   }, [user, fetchQuizProgress])
@@ -192,14 +179,15 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
 
   const handleAcceptChallenge = async (challenge: any) => {
     playSFX('click')
-    // Inicia o duelo no lado do desafiado
     onStartDuel({
       targetUserId: challenge.challenger_id,
-      targetUserName: challenge.challenger?.full_name || challenge.challenger?.username || 'Oponente',
+      targetUserName: challenge.opponent?.full_name || challenge.opponent?.username || 'Oponente',
       levelId: challenge.level_id,
       stake: challenge.stake,
       challengeId: challenge.id,
       challengerScore: challenge.challenger_score,
+      challengerTime: challenge.challenger_time,
+      mode: challenge.mode || 'classic',
       questionIds: challenge.question_ids 
     })
   }
@@ -239,7 +227,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
       <StarField />
       <div className={styles.nebulaBackground} />
 
-      {/* TOAST POPUP DE NOVO DESAFIO */}
       {activeToast && (
         <div className={styles.duelToast} onClick={(e) => { e.stopPropagation(); setActiveToast(null); }}>
           <div className={styles.toastIcon}>⚔️</div>
@@ -411,7 +398,6 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
                       })}
                     </div>
 
-                    {/* DESAFIO BÔNUS DE REVISÃO */}
                     {((unlockedLevel === level.id + 1 && unlockedChallenge >= 3) || (unlockedLevel > level.id + 1)) && level.id < 5 && (
                       <div className={styles.bonusSection}>
                         <div className={styles.bonusDivider}>
@@ -491,14 +477,19 @@ export default function QuizStartScreen({ mode, onStart, onExit, onStartDuel }: 
 
       {showDueloModal && (
         <ChallengeModal 
-          onClose={() => setShowDueloModal(false)}
+          onClose={() => {
+            setShowDueloModal(false);
+            if (mode === 'challenge') onExit();
+          }}
+          isTraining={defaultDuelMode === 'training'}
           onChallenge={(config) => {
             setShowDueloModal(false)
             onStartDuel({
               targetUserId: config.challengedId,
-              targetUserName: 'Astronauta', // Placeholder, vai ser buscado no modal se necessário ou já temos
+              targetUserName: 'Astronauta',
               levelId: config.levelId,
-              stake: config.betAmount
+              stake: config.betAmount,
+              mode: defaultDuelMode
             })
           }}
         />

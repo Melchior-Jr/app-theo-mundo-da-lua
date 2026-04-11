@@ -45,6 +45,8 @@ export class InvasoresEngine {
   private alertTimer: number = 0;
   private slowdownFactor: number = 1.0;
   private challengeGlow: number = 0;
+  private isTouching: boolean = false;
+  private isMobileDevice: boolean = false;
   
   // CALLBACKS
   public onGameOver: (score: number) => void = () => {};
@@ -99,6 +101,7 @@ export class InvasoresEngine {
       speed: 10 // Aumentado para resposta mais rápida
     };
 
+    this.isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     this.initControls();
     this.initStars();
   }
@@ -151,8 +154,25 @@ export class InvasoresEngine {
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
 
     // Touch Controls
-    this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
+    this.canvas.addEventListener('touchstart', (e) => {
+      this.isTouching = true;
+      this.handleTouch(e);
+      // Atirar imediatamente no toque inicial se estiver no modo desafio
+      if (this.state === 'MODO_DESAFIO') {
+        const now = Date.now();
+        if (now - this.lastShotTime > 250) {
+          this.shoot();
+          this.lastShotTime = now;
+        }
+      }
+    }, { passive: false });
     this.canvas.addEventListener('touchmove', (e) => this.handleTouch(e), { passive: false });
+    this.canvas.addEventListener('touchend', () => {
+      this.isTouching = false;
+    }, { passive: false });
+    this.canvas.addEventListener('touchcancel', () => {
+      this.isTouching = false;
+    }, { passive: false });
   }
 
   private handleTouch(e: TouchEvent) {
@@ -249,9 +269,9 @@ export class InvasoresEngine {
     }
 
     // Gerenciar Slowdown e Transição
-    const extraSlow = this.comboPerks.extraSlowdown ? 0.4 : 0;
+    const minSlow = this.comboPerks.extraSlowdown ? 0.4 : 0.6;
     if (this.state === 'MODO_DESAFIO') {
-        this.slowdownFactor = Math.max(0.4 - extraSlow, this.slowdownFactor - 0.05);
+        this.slowdownFactor = Math.max(minSlow, this.slowdownFactor - 0.05);
         this.challengeGlow = Math.min(1, this.challengeGlow + 0.05);
     } else {
         this.slowdownFactor = Math.min(1.0, this.slowdownFactor + 0.05);
@@ -287,10 +307,15 @@ export class InvasoresEngine {
       }
     }
 
-    // Auto-fire (Sempre ativo no combate, desativado no desafio para precisão)
+    // Auto-fire (Sempre ativo no combate, desativado no desafio para precisão no Desktop)
+    // No Mobile, mantemos o auto-fire ou permitimos tiro via segurar toque
     const fireInterval = this.comboPerks.laser ? 150 : 400;
     const isChallenge = this.state === 'MODO_DESAFIO';
-    if (!isChallenge && now - this.lastShotTime > fireInterval) {
+    
+    // Condição para atirar no Mobile: se estiver tocando
+    const shouldFireMobile = this.isMobileDevice && this.isTouching;
+    
+    if ((!isChallenge || shouldFireMobile) && now - this.lastShotTime > fireInterval) {
       this.shoot();
       this.lastShotTime = now;
     }
@@ -727,7 +752,7 @@ export class InvasoresEngine {
         y: -300 - (i * 150),
         width: ANSWER_WIDTH,
         height: ANSWER_HEIGHT,
-        speedY: 1.0 + (Math.random() * 0.5),
+        speedY: 1.5 + (Math.random() * 0.8), // Aumentado
         speedX: 0.03,
         amplitude: 2.5,
         creationTime: now + (i * 200),

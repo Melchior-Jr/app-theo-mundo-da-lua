@@ -160,7 +160,7 @@ export const AdminService = {
       ...(limitedQuiz.map((log: any) => ({
         id: `quiz-${log.id}`,
         created_at: log.played_at,
-        title: `Finalizou Quiz/Jogo (Score: ${log.score})`,
+        title: `Respondeu Quiz (Nível ${log.metadata?.level || '?'}, Desafio ${log.metadata?.challenge || '?'})`,
         player_id: log.player_id
       })))
     ].sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime())

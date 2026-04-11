@@ -1,0 +1,24 @@
+.page {
+  min-height: 100vh;
+  background: #050510;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+
+
+.main {
+  flex: 1;
+}
+
+.footer {
+  padding: 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}

@@ -29,8 +29,10 @@ const TeacherLayout: React.FC = () => {
   return (
     <div className={styles.adminContainer}>
       <StarField />
-      <div className={styles.nebula1} />
-      <div className={styles.nebula2} />
+      <div className={styles.decorContainer}>
+        <div className={styles.nebula1} />
+        <div className={styles.nebula2} />
+      </div>
 
       {/* Navbar Mobile (Matching GamesPage) */}
       <nav className={styles.navbar}>

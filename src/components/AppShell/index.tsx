@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { NarrationSequenceProvider, useNarrationSequence } from '@/context/NarrationSequenceContext'
 import NarrationPlayer from '@/components/NarrationPlayer'
@@ -21,24 +21,31 @@ export default function AppShell() {
    // List of routes that SHOULD show the splash (heavy pages: games/lessons)
    const isHeavyPage = [
      '/quiz',
-     '/jogos/invasores'
+     '/jogos/invasores',
+     '/jogos/memoria-astral',
+     '/jogos/arena-duelos'
    ].includes(location.pathname) || (location.pathname.startsWith('/capitulos/') && location.pathname !== '/capitulos')
  
    // List of routes that NEVER show the splash (hubs/public)
    const isSimplePage = ['/', '/login', '/reset-password', '/jogos', '/ranking', '/perfil', '/capitulos', '/trofeus', '/install'].includes(location.pathname) || location.pathname.startsWith('/admin') || location.pathname.startsWith('/prof')
  
    const [isLoaded, setIsLoaded] = useState(false)
+   const prevIsHeavy = useRef(false)
 
    // Determina se a aplicação está "pronta" para ser exibida
    const appIsReady = !playerLoading || !user
- 
+
    // Auto-load if we are on a simple page AND data is ready
    useEffect(() => {
      if (isSimplePage && appIsReady) {
        setIsLoaded(true)
+       prevIsHeavy.current = false
      } else if (isHeavyPage) {
-        // Reset loaded state when entering a heavy page to trigger splash again if desired
-        setIsLoaded(false)
+       // Only trigger splash if we were NOT already in a heavy context
+       if (!prevIsHeavy.current) {
+         setIsLoaded(false)
+       }
+       prevIsHeavy.current = true
      }
    }, [location.pathname, isHeavyPage, isSimplePage, appIsReady])
  
@@ -95,13 +102,16 @@ export default function AppShell() {
            loading={playerLoading && !!user} 
          />
        )}
-       <div style={{ 
-         visibility: isLoaded ? 'visible' : 'hidden',
-         height: '100%',
-         width: '100%'
-       }}>
-         <AppShellContent />
-       </div>
+        <div style={{ 
+          visibility: isLoaded ? 'visible' : 'hidden',
+          minHeight: '100%',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'visible'
+        }}>
+          <AppShellContent />
+        </div>
      </>
    )
  }

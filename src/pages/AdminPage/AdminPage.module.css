@@ -4,7 +4,6 @@
   background: transparent;
   color: #fff;
   font-family: 'Outfit', sans-serif;
-  overflow: hidden;
 }
 
 .sidebar {
@@ -22,7 +21,6 @@
 .mainContent {
   flex: 1;
   padding: 2.5rem;
-  overflow-y: auto;
   position: relative;
   z-index: 20;
 }
@@ -280,6 +278,25 @@
   align-items: center;
 }
 
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.2);
+  border-radius: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -391,7 +408,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000;
   padding: 2rem;
 }
 
@@ -1237,7 +1254,7 @@
   width: 100vw;
   height: 100vh;
   background: #080816; /* Fundo sideral profundo */
-  z-index: 9999;
+  z-index: 10000;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1254,3 +1271,179 @@
   min-height: 100%;
   position: relative;
 }
+
+.tabsNav {
+  display: flex;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 3rem;
+  gap: 2rem;
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  padding: 1.5rem 0.5rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tabBtn:hover {
+  color: #fff;
+}
+
+.tabBtnActive {
+  color: #00e5ff;
+}
+
+.tabBtnActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e5ff, #0099ff);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  border-radius: 3px 3px 0 0;
+}
+
+.filtersRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.5rem 1.25rem;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterChip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.filterChipActive {
+  background: #00e5ff;
+  border-color: #00e5ff;
+  color: #080816;
+  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+}
+
+.managementCard {
+  background: rgba(18, 18, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
+  transition: all 0.3s;
+}
+
+.managementCard:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(18, 18, 46, 0.8);
+}
+
+.mgmtIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mgmtInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mgmtInfo h4 {
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
+}
+
+.mgmtInfo p {
+  margin: 0 0 1.5rem 0;
+  font-size: 0.85rem;
+  opacity: 0.5;
+  line-height: 1.4;
+}
+
+.dangerActionBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dangerActionBtn:hover {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.successActionBtn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.successActionBtn:hover {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.warningActionBtn {
+  background: rgba(255, 209, 102, 0.1);
+  color: #ffd166;
+  border: 1px solid rgba(255, 209, 102, 0.2);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.warningActionBtn:hover {
+  background: #ffd166;
+  color: #080816;
+  box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+}
+

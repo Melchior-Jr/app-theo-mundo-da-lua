@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Trophy, Star, Zap, Medal, ArrowLeft, Crown } from 'lucide-react'
+import { Star, Zap, Medal, Crown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { calcLevel, getLevelTitle } from '@/utils/playerUtils'
 import { useAuth } from '@/context/AuthContext'
 import StarField from '@/components/StarField'
+import { Navbar } from '@/components/Navbar'
 import styles from './RankingPage.module.css'
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -36,7 +36,6 @@ export default function RankingPage() {
   const [loading, setLoading]   = useState(true)
   const [filter, setFilter]     = useState<FilterKey>('xp')
   const [userRank, setUserRank] = useState<RankedPlayer | null>(null)
-
   useEffect(() => { fetchRanking() }, [filter])
 
   const fetchRanking = async () => {
@@ -89,24 +88,15 @@ export default function RankingPage() {
 
   return (
     <div className={styles.page}>
-      <StarField />
+      <div className={styles.decorContainer}>
+        <StarField />
+        {/* Nebulae */}
+        <div className={styles.nebula1} aria-hidden="true" />
+        <div className={styles.nebula2} aria-hidden="true" />
+      </div>
 
-      {/* Nebulae */}
-      <div className={styles.nebula1} aria-hidden="true" />
-      <div className={styles.nebula2} aria-hidden="true" />
+      <Navbar />
 
-      {/* ── NAV ───────────────────────────────────────────── */}
-      <header className={styles.nav}>
-        <Link to="/jogos" className={styles.backBtn}>
-          <ArrowLeft size={18} />
-          <span>Estação Espacial</span>
-        </Link>
-        <div className={styles.navTitle}>
-          <Trophy size={20} className={styles.navIcon} />
-          <span>Ranking Galáctico</span>
-        </div>
-        <div style={{ width: 140 }} /> {/* spacer */}
-      </header>
 
       <div className={styles.content}>
 
@@ -176,7 +166,10 @@ export default function RankingPage() {
                         {p.name.split(' ')[0]}
                         {p.isCurrentUser && <span className={styles.youTag}>você</span>}
                       </p>
-                      <p className={styles.podiumLevel}><span className={styles.accentTit}>{p.levelTitle}</span> • NIV. {p.level}</p>
+                      <div className={styles.podiumLevel}>
+                        <span>NIV. {p.level}</span>
+                        <span className={styles.accentTit}>{p.levelTitle}</span>
+                      </div>
                       <div className={styles.podiumScore}>
                         {filter === 'xp'
                           ? <><Zap  size={12} /> {p.xp.toLocaleString()} XP</>
@@ -185,7 +178,7 @@ export default function RankingPage() {
                       </div>
                       <div
                         className={styles.podiumBar}
-                        style={{ height: `${60 + (realIdx === 0 ? 80 : 40)}px` }}
+                        style={{ height: `${realIdx === 0 ? 50 : 0}px` }}
                       />
                     </div>
                   )

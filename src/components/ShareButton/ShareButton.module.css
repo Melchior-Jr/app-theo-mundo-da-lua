@@ -35,6 +35,10 @@
 
 .whatsapp {
   border-color: rgba(37, 211, 102, 0.3);
+  padding: var(--space-3);
+  width: 44px;
+  justify-content: center;
+  gap: 0;
 }
 
 .whatsapp:hover {
