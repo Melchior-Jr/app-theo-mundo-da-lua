@@ -252,8 +252,9 @@ export class InvasoresEngine {
     this.updateParticles();
     this.checkCollisions();
     
-    // Spawners
-    this.alienSpawnTimer += _deltaTime;
+    // Spawners - Limitador de dt para evitar saltos gigantes no primeiro frame
+    const dtAdjusted = Math.min(_deltaTime, 100); 
+    this.alienSpawnTimer += dtAdjusted;
     if (this.alienSpawnTimer > 2000) {
       this.spawnAlienWave();
       this.alienSpawnTimer = 0;
@@ -533,6 +534,10 @@ export class InvasoresEngine {
       p.life -= 0.02 * (this.state === 'MODO_DESAFIO' ? 0.5 : 1);
       return p.life > 0;
     });
+
+    if (this.particles.length > 300) {
+      this.particles = this.particles.slice(-300);
+    }
   }
 
   private checkCollisions() {
@@ -646,8 +651,11 @@ export class InvasoresEngine {
     const isChallengeActive = this.state === 'MODO_DESAFIO';
     if (isBossActive || isChallengeActive) return; // Não spawna aliens durante Boss ou Perguntas
 
-    const count = 3 + Math.floor(this.score / 1500);
+    let count = 3 + Math.floor(this.score / 1500);
+    count = Math.min(count, 15); // Limite de segurança por onda
+    
     for (let i = 0; i < count; i++) {
+
         const x = Math.random() * (this.canvas.width - ALIEN_WIDTH);
         const rand = Math.random();
         let type: AlienType = 'NORMAL';
@@ -700,7 +708,7 @@ export class InvasoresEngine {
           width: ANSWER_WIDTH, height: ANSWER_HEIGHT,
           speedY: 2, speedX: 0.05, amplitude: 5,
           creationTime: Date.now(),
-          health: 10, maxHealth: 10
+          health: 2, maxHealth: 2
       });
   }
 
@@ -756,8 +764,8 @@ export class InvasoresEngine {
         speedX: 0.03,
         amplitude: 2.5,
         creationTime: now + (i * 200),
-        health: 10,
-        maxHealth: 10
+        health: 2,
+        maxHealth: 2
       });
     });
 
@@ -775,8 +783,8 @@ export class InvasoresEngine {
             speedX: 0.05,
             amplitude: 3,
             creationTime: now,
-            health: 10,
-            maxHealth: 10
+            health: 2,
+            maxHealth: 2
         });
     }
 
@@ -793,8 +801,8 @@ export class InvasoresEngine {
             speedX: 0.08,
             amplitude: 4,
             creationTime: now,
-            health: 10,
-            maxHealth: 10
+            health: 1,
+            maxHealth: 1
         });
     }
 
@@ -1242,9 +1250,19 @@ export class InvasoresEngine {
     this.ctx.beginPath();
     this.ctx.ellipse(x + width/2, y + height*0.45, width*0.2, height*0.25, 0, 0, Math.PI*2);
     this.ctx.fill();
+    
+    // Antenas da Nave
+    this.ctx.strokeStyle = '#00e5ff';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + width*0.2, y + height*0.2);
+    this.ctx.lineTo(x + width*0.1, y - 5);
+    this.ctx.moveTo(x + width*0.8, y + height*0.2);
+    this.ctx.lineTo(x + width*0.9, y - 5);
+    this.ctx.stroke();
 
-    this.ctx.shadowBlur = 0;
   }
+
 
   private drawAlien(a: Alien) {
     const time = this.frame * 0.05;
@@ -1252,161 +1270,220 @@ export class InvasoresEngine {
     
     this.ctx.save();
     this.ctx.translate(a.x + a.width / 2, a.y + a.height / 2 + hover);
-    this.ctx.shadowBlur = 15;
+    
+    // Configurações Comuns de Estilo
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+    
+    // Efeito de Aura Alienígena
+    this.ctx.shadowBlur = 10 + Math.sin(time * 2) * 5;
     
     if (a.type === 'CHEFÃO_CÓSMICO') {
-        const glow = Math.sin(this.frame * 0.05) * 10 + 20;
+        const glow = Math.sin(this.frame * 0.05) * 15 + 25;
         this.ctx.shadowBlur = glow;
         this.ctx.shadowColor = '#ff3d71';
         
-        // Nave Mãe
-        const grad = this.ctx.createLinearGradient(0, -60, 0, 60);
-        grad.addColorStop(0, '#2b1b10');
-        grad.addColorStop(0.5, '#4a148c');
-        grad.addColorStop(1, '#060c1a');
+        // Nave Mãe Orgânica
+        const grad = this.ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+        grad.addColorStop(0, '#4a148c');
+        grad.addColorStop(0.7, '#1a237e');
+        grad.addColorStop(1, '#000000');
         this.ctx.fillStyle = grad;
         
+        // Corpo principal (Forma de Água-Viva Espacial)
         this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, 100, 40, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(0, 0, 110, 50, 0, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.strokeStyle = '#ff3d71';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 4;
         this.ctx.stroke();
         
-        // Domo Superior
+        // Tentáculos Orgânicos Pulsantes
+        for(let i=0; i<8; i++) {
+            const angle = (i * Math.PI / 4) + (time * 0.2);
+            const tx = Math.cos(angle) * 85;
+            const ty = Math.sin(angle) * 35 + 35;
+            this.ctx.beginPath();
+            this.ctx.moveTo(tx*0.6, ty*0.6);
+            const wave = Math.sin(time*2 + i)*20;
+            this.ctx.bezierCurveTo(tx*1.2, ty + wave, tx*0.5, ty + wave + 40, tx*1.1, ty + 60);
+            this.ctx.strokeStyle = `rgba(255, 61, 113, ${0.3 + Math.sin(time+i)*0.4})`;
+            this.ctx.lineWidth = 6 - (i % 3);
+            this.ctx.stroke();
+        }
+
+        // Domo de Energia com Reflexos
         this.ctx.beginPath();
-        this.ctx.arc(0, -10, 30, Math.PI, 0);
-        this.ctx.fillStyle = 'rgba(255, 61, 113, 0.3)';
+        this.ctx.arc(0, -20, 45, Math.PI, 0);
+        const domeGrad = this.ctx.createLinearGradient(0, -65, 0, -20);
+        domeGrad.addColorStop(0, 'rgba(255, 61, 113, 0.6)');
+        domeGrad.addColorStop(1, 'rgba(255, 105, 180, 0.1)');
+        this.ctx.fillStyle = domeGrad;
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Barra de Vida do Boss
-        this.ctx.save();
-        const healthPct = Math.max(0, a.health / (a.maxHealth || 100));
-        const barWidth = 120;
-        const barHeight = 8;
-        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        this.ctx.fillRect(-barWidth/2, -80, barWidth, barHeight);
-        this.ctx.fillStyle = '#ff3d71';
-        this.ctx.fillRect(-barWidth/2, -80, barWidth * healthPct, barHeight);
-        this.ctx.restore();
-        
-        // Luzes Inferiores
-        for(let i=0; i<8; i++) {
-            const angle = (this.frame * 0.05) + (i * Math.PI / 4);
-            const lx = Math.cos(angle) * 70;
-            const ly = Math.sin(angle) * 15;
-            this.ctx.fillStyle = (this.frame + i * 10) % 40 < 20 ? '#ff3d71' : '#fff';
-            this.ctx.beginPath();
-            this.ctx.arc(lx, ly, 4, 0, Math.PI*2);
-            this.ctx.fill();
-        }
-    } else if (a.type === 'MESTRE') {
-        this.ctx.shadowColor = '#aa00ff';
-        this.ctx.fillStyle = '#aa00ff';
-        this.ctx.beginPath();
-        for(let i=0; i<4; i++) {
-            const r = i % 2 === 0 ? a.width/2 : a.width/4;
-            const ang = i * Math.PI / 2;
-            this.ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
-        }
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#fff';
-        this.ctx.stroke();
-        
+        // Olho Central (Estilo Sauron Futurista)
         this.ctx.fillStyle = '#fff';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 5 + Math.sin(this.frame * 0.2) * 3, 0, Math.PI*2);
+        this.ctx.ellipse(0, -22, 20, 10, 0, 0, Math.PI*2);
         this.ctx.fill();
-    } else if (a.type === 'GUARDIAN') {
-        const glow = 15 + Math.sin(this.frame * 0.1) * 5;
-        this.ctx.shadowColor = '#00f2fe';
-        this.ctx.shadowBlur = glow;
-        
-        this.ctx.strokeStyle = '#00f2fe';
-        this.ctx.lineWidth = 2;
+        this.ctx.fillStyle = '#ff3d71';
         this.ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const angle = (i * Math.PI / 3) + (this.frame * 0.02);
-            const r = a.width/2 + 5;
-            this.ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-        }
-        this.ctx.closePath();
-        this.ctx.stroke();
-        
-        this.ctx.fillStyle = '#060c1a';
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, a.width/3, 0, Math.PI*2);
+        this.ctx.arc(Math.sin(time*0.5)*8, -22, 5, 0, Math.PI*2);
         this.ctx.fill();
-        this.ctx.stroke();
-    } else if (a.type === 'CONFUSOR') {
-        this.ctx.shadowColor = '#ffd600';
-        this.ctx.fillStyle = '#263456';
-        this.ctx.fillRect(-15, -15, 30, 30);
-        this.ctx.strokeStyle = '#ffd600';
-        this.ctx.strokeRect(-15, -15, 30, 30);
         
-        this.ctx.beginPath();
-        this.ctx.moveTo(-15, 0); this.ctx.lineTo(-40, -10 + Math.sin(this.frame*0.1)*5);
-        this.ctx.moveTo(15, 0); this.ctx.lineTo(40, 10 + Math.sin(this.frame*0.1)*5);
-        this.ctx.stroke();
-        
-        if (this.frame % 30 < 15) {
-            this.ctx.fillStyle = '#ffd600';
-            this.ctx.font = 'bold 16px "Orbitron"';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('?', 0, 5);
-        }
-    } else if (a.type === 'EXPLORADOR') {
-        this.ctx.shadowColor = '#00ffa3';
-        this.ctx.fillStyle = '#00ffa3';
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, -a.height/2);
-        this.ctx.lineTo(a.width/2, a.height/2);
-        this.ctx.lineTo(0, a.height/6);
-        this.ctx.lineTo(-a.width/2, a.height/2);
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#fff';
-        this.ctx.stroke();
-    } else if (a.type === 'SHOOTER') {
+    } else if (a.type === 'MESTRE') {
+        // Alien Cristalino / Geométrico
+        const pulse = Math.sin(time * 2) * 8;
         this.ctx.shadowColor = '#aa00ff';
-        this.ctx.fillStyle = '#1a2340';
+        this.ctx.shadowBlur = 25 + pulse;
+        
+        // Forma de Diamante Estilizada
+        this.ctx.fillStyle = '#4a148c';
         this.ctx.beginPath();
-        this.ctx.moveTo(0, -a.height/2);
-        this.ctx.lineTo(a.width/2, 0);
-        this.ctx.lineTo(0, a.height/2);
-        this.ctx.lineTo(-a.width/2, 0);
+        this.ctx.moveTo(0, -35 - pulse);
+        this.ctx.lineTo(25, 0);
+        this.ctx.lineTo(0, 35 + pulse);
+        this.ctx.lineTo(-25, 0);
         this.ctx.closePath();
         this.ctx.fill();
-        this.ctx.strokeStyle = '#aa00ff';
-        this.ctx.lineWidth = 2;
+        
+        this.ctx.strokeStyle = '#e040fb';
+        this.ctx.lineWidth = 3;
         this.ctx.stroke();
         
-        this.ctx.fillStyle = '#aa00ff';
-        this.ctx.fillRect(-a.width/2 - 5, -3, 8, 6);
-        this.ctx.fillRect(a.width/2 - 3, -3, 8, 6);
-    } else {
-        this.ctx.shadowColor = '#00e5ff';
-        this.ctx.fillStyle = '#1a2340';
-        this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, a.width/2, a.height/2.5, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#00e5ff';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-        
-        this.ctx.fillStyle = '#00e5ff';
+        // Fragmentos orbitando
         for(let i=0; i<3; i++) {
+            const rot = time + (i * Math.PI*2/3);
+            const ox = Math.cos(rot) * 40;
+            const oy = Math.sin(rot) * 15;
+            this.ctx.fillStyle = '#aa00ff';
+            this.ctx.fillRect(ox-3, oy-3, 6, 6);
+        }
+
+    } else if (a.type === 'GUARDIAN') {
+        // Escudo Bio-Mecânico
+        this.ctx.shadowColor = '#00f2fe';
+        this.ctx.shadowBlur = 20;
+        
+        // Carapaça Hexagonal
+        this.ctx.fillStyle = '#01579b';
+        this.ctx.beginPath();
+        for(let i=0; i<6; i++) {
+            const ang = i * Math.PI/3;
+            const px = Math.cos(ang) * 25;
+            const py = Math.sin(ang) * 25;
+            if(i === 0) this.ctx.moveTo(px, py);
+            else this.ctx.lineTo(px, py);
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#00f2fe';
+        this.ctx.stroke();
+        
+        // Núcleo de Energia
+        this.ctx.fillStyle = '#fff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 10 + Math.sin(time*4)*2, 0, Math.PI*2);
+        this.ctx.fill();
+
+    } else if (a.type === 'CONFUSOR') {
+        // Cérebro Alienígena
+        this.ctx.shadowColor = '#ffd600';
+        this.ctx.fillStyle = '#5d4037';
+        
+        // Lóbulos pulsantes
+        const lPulse = Math.sin(time*2)*3;
+        this.ctx.beginPath();
+        this.ctx.arc(-12 - lPulse, -5, 18, 0, Math.PI*2);
+        this.ctx.arc(12 + lPulse, -5, 18, 0, Math.PI*2);
+        this.ctx.fill();
+        
+        this.ctx.strokeStyle = '#ffd600';
+        this.ctx.stroke();
+        
+        // Olhos múltiplos que piscam
+        for(let i=0; i<4; i++) {
+            const ex = -15 + i*10;
+            const ey = 5 + Math.sin(time + i)*5;
+            const blink = Math.sin(time*5 + i) > 0.8;
+            this.ctx.fillStyle = blink ? '#000' : '#ffd600';
             this.ctx.beginPath();
-            this.ctx.arc(-10 + i * 10, 0, 3, 0, Math.PI*2);
+            this.ctx.arc(ex, ey, 3, 0, Math.PI*2);
             this.ctx.fill();
         }
+
+    } else if (a.type === 'EXPLORADOR') {
+        // Insectoide Espacial
+        this.ctx.shadowColor = '#00ffa3';
+        this.ctx.fillStyle = '#1b5e20';
+        
+        // Cabeça e Pinças
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 25);
+        this.ctx.lineTo(15, -15);
+        this.ctx.quadraticCurveTo(0, -35, -15, -15);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // Asas Neon em movimento rápido
+        const wingY = Math.sin(time * 20) * 15;
+        this.ctx.fillStyle = 'rgba(0, 255, 163, 0.5)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(-18, -5, 25, 10 + wingY, Math.PI/6, 0, Math.PI*2);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.ellipse(18, -5, 25, 10 + wingY, -Math.PI/6, 0, Math.PI*2);
+        this.ctx.fill();
+
+    } else if (a.type === 'SHOOTER') {
+        // Medusa Cibernética
+        this.ctx.shadowColor = '#aa00ff';
+        this.ctx.fillStyle = '#311b92';
+        
+        // Domo superior
+        this.ctx.beginPath();
+        this.ctx.arc(0, -15, 22, Math.PI, 0);
+        this.ctx.fill();
+        
+        // Tentáculos mecânicos disparadores
+        this.ctx.strokeStyle = '#aa00ff';
+        this.ctx.lineWidth = 3;
+        for(let i=0; i<4; i++) {
+            const tx = -20 + i*13;
+            const ty = 10 + Math.sin(time*3 + i)*12;
+            this.ctx.beginPath();
+            this.ctx.moveTo(tx, -10);
+            this.ctx.lineTo(tx + Math.cos(time+i)*5, ty);
+            this.ctx.stroke();
+            
+            // Pontas brilhantes
+            this.ctx.fillStyle = '#fff';
+            this.ctx.beginPath();
+            this.ctx.arc(tx + Math.cos(time+i)*5, ty, 3, 0, Math.PI*2);
+            this.ctx.fill();
+        }
+    } else {
+        // Alien Básico / Genérico
+        this.ctx.fillStyle = '#ff5722';
+        this.ctx.shadowColor = '#ff5722';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 20, 0, Math.PI*2);
+        this.ctx.fill();
+        
+        // Antenas básicas
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.beginPath();
+        this.ctx.moveTo(-10, -15);
+        this.ctx.lineTo(-15, -25 + Math.sin(time)*5);
+        this.ctx.moveTo(10, -15);
+        this.ctx.lineTo(15, -25 + Math.cos(time)*5);
+        this.ctx.stroke();
     }
     
     this.ctx.restore();
   }
+
 
   private drawAnswer(ans: AnswerItem) {
     this.ctx.save();
@@ -1450,8 +1527,7 @@ export class InvasoresEngine {
     }
 
     this.ctx.fillStyle = isCorrect ? 'rgba(0, 40, 60, 0.9)' : 'rgba(10, 15, 30, 0.8)';
-    this.ctx.beginPath();
-    this.ctx.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
+    this.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
     this.ctx.fill();
     if (isCorrect) this.ctx.stroke();
     
@@ -1501,7 +1577,7 @@ export class InvasoresEngine {
         // Alerta de quase quebrando
         if (ans.health <= 2 && this.frame % 10 < 5) {
             this.ctx.fillStyle = 'rgba(255, 61, 113, 0.2)';
-            this.ctx.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
+            this.roundRect(ans.x, ans.y, ans.width, ans.height, 8);
             this.ctx.fill();
         }
         this.ctx.restore();

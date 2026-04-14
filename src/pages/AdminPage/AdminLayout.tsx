@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { NavLink, Outlet, Navigate } from 'react-router-dom';
+import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -18,6 +18,12 @@ import styles from './AdminPage.module.css';
 const AdminLayout: React.FC = () => {
   const { isAdmin, loading } = useAdmin();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/jogos');
+  };
 
   if (loading) {
     return (
@@ -45,6 +51,7 @@ const AdminLayout: React.FC = () => {
     { to: '/admin/notifications', icon: <Bell size={20} />, label: 'Notificações' },
     { to: '/admin/users', icon: <Users size={20} />, label: 'Alunos' },
     { to: '/admin/pedagogical', icon: <BarChart2 size={20} />, label: 'Análise' },
+    { to: '/admin/access', icon: <ShieldCheck size={20} />, label: 'Acesso' },
   ];
 
   return (
@@ -73,7 +80,7 @@ const AdminLayout: React.FC = () => {
         </nav>
 
         <div style={{ marginTop: 'auto' }}>
-          <button onClick={() => signOut()} className={styles.navItem} style={{ width: '100%', background: 'none', border: 'none' }}>
+          <button onClick={handleSignOut} className={styles.navItem} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
             <LogOut size={20} />
             <span>Sair do Painel</span>
           </button>

@@ -346,7 +346,7 @@ export default function GamesPage() {
         <FeaturedBanner
           badgeText="MISSÃO PRINCIPAL"
           BadgeIcon={Star}
-          title="Jornada do Conhecimento"
+          title="Astronomia | Jornada Galáctica"
           subtitle="Embarque na aventura de Théo e descubra os segredos do universo em 4 capítulos épicos!"
           ctaText="IR PARA AULA"
           ctaPath="/capitulos"
@@ -446,7 +446,7 @@ export default function GamesPage() {
                 </div>
                 <div className={styles.gameCardBody}>
                   <div className={styles.gameCardMeta}>
-                    <span className={styles.gameCardSub}>{item.type === 'aula' ? 'Caminho do Conhecimento' : item.sub}</span>
+                    <span className={styles.gameCardSub}>{item.type === 'aula' ? 'Aula' : item.sub}</span>
                     <span className={styles.gameCardDiff} style={{ color: DIFF_COLOR[item.difficulty as keyof typeof DIFF_COLOR] }}>{item.difficulty}</span>
                   </div>
                   <h3 className={styles.gameCardTitle}>{item.title}</h3>

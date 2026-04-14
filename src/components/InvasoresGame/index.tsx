@@ -9,41 +9,41 @@ import { useSound } from '@/context/SoundContext';
 import { useAuth } from '@/context/AuthContext';
 import { TrophyService } from '@/services/trophyService';
 import { AnalyticsService } from '@/services/analyticsService';
-import { Chapter, UserProgressData, GameState, Question } from './types';
+import { Chapter, UserProgressData, GameState, Question, GameResult } from './types';
 import TheoAvatar from '../TheoAvatar';
 
 const CHAPTERS: Chapter[] = [
   {
     id: 1,
     slug: 'sistema-solar',
-    title: 'Capítulo 1: Sistema Solar',
+    title: 'Capítulo 1: O Sistema Solar',
     category: 'Sistema Solar',
     minScoreToUnlock: 0,
-    palette: { primary: '#00e5ff', secondary: '#00838f', background: '#05070a', accent: '#00ffa3' }
+    palette: { primary: '#ffd600', secondary: '#f57f17', background: '#05070a', accent: '#ffffff' }
   },
   {
     id: 2,
-    slug: 'terra',
-    title: 'Capítulo 2: Terra em Movimento',
-    category: 'Terra',
-    minScoreToUnlock: 2000,
-    palette: { primary: '#00ffa3', secondary: '#00695c', background: '#010a05', accent: '#4db6ac' }
+    slug: 'a-lua',
+    title: 'Capítulo 2: Domínio da Lua',
+    category: 'Lua',
+    minScoreToUnlock: 1500,
+    palette: { primary: '#b0bec5', secondary: '#455a64', background: '#010a05', accent: '#ffffff' }
   },
   {
     id: 3,
-    slug: 'constelacoes',
-    title: 'Capítulo 3: Constelações',
-    category: 'Constelações',
-    minScoreToUnlock: 2000,
-    palette: { primary: '#aa00ff', secondary: '#4a148c', background: '#08050a', accent: '#ea80fc' }
+    slug: 'planetas',
+    title: 'Capítulo 3: Planetas Gigantes',
+    category: 'Planetas',
+    minScoreToUnlock: 3000,
+    palette: { primary: '#00e5ff', secondary: '#00838f', background: '#08050a', accent: '#00ffa3' }
   },
   {
     id: 4,
-    slug: 'lua',
-    title: 'Capítulo 4: Fases da Lua',
-    category: 'Lua',
-    minScoreToUnlock: 2000,
-    palette: { primary: '#cfd8dc', secondary: '#455a64', background: '#0a0a0c', accent: '#ffffff' }
+    slug: 'estrelas-galaxias',
+    title: 'Capítulo 4: Estrelas e Galáxias',
+    category: 'Estrelas',
+    minScoreToUnlock: 5000,
+    palette: { primary: '#aa00ff', secondary: '#4a148c', background: '#0a0a0c', accent: '#ea80fc' }
   }
 ];
 
@@ -59,6 +59,7 @@ const InvasoresGame: React.FC = () => {
   });
   const [hud, setHud] = useState({ score: 0, lives: 3, combo: 0, question: '', shield: false });
   const [dialogue, setDialogue] = useState<{ text: string, timeout: number, type: string } | null>(null);
+  const [finalResult, setFinalResult] = useState<GameResult | null>(null);
   
   const THEO_PHRASES = {
     SUCCESS: ["Boa! Mandou bem!", "Essa você acertou fácil!", "Uau! Direto no alvo!", "Você é demais! 🚀"],
@@ -132,50 +133,57 @@ const InvasoresGame: React.FC = () => {
     }
   }, [gameState, playTrack, isMuted, selectedChapter]);
 
-  // Inicializar Engine
+  const playSFXRef = useRef(playSFX);
+  useEffect(() => { playSFXRef.current = playSFX; }, [playSFX]);
+
+  const selectedChapterRef = useRef(selectedChapter);
+  useEffect(() => { selectedChapterRef.current = selectedChapter; }, [selectedChapter]);
+
+  const progressRef = useRef(progress);
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  // Inicializar Engine e Loop
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    const engine = new InvasoresEngine(canvasRef.current);
-    engineRef.current = engine;
+    // Criar engine apenas se não existir
+    if (!engineRef.current) {
+      const engine = new InvasoresEngine(canvasRef.current);
+      engineRef.current = engine;
 
-    // Configurar Callbacks
-    engine.onGameOver = () => {
-      setGameState('GAMEOVER');
-      playSFX?.('fail');
-    };
+      // Configurar Callbacks (Apenas uma vez)
+      engine.onGameOver = () => {
+        // O engine.ts agora chama onResult que salvamos no finalResult
+      };
 
-    engine.onResult = async (result) => {
-        if (!user) return;
+      engine.onResult = async (result) => {
+        setFinalResult(result); // Persistir para a UI de Game Over
+        setGameState('GAMEOVER');
+        playSFXRef.current?.('fail');
+        
+        if (!userRef.current) return;
+        const userId = userRef.current.id;
+        const currentSelected = selectedChapterRef.current;
         
         // --- PERSISTÊNCIA DE RECORDES POR CAPÍTULO ---
-        const chapterId = selectedChapter?.id || 1;
-        const currentHighScore = progress.highScores[chapterId] || 0;
+        const chapterId = currentSelected?.id || 1;
+        const currentHighScore = progressRef.current.highScores[chapterId] || 0;
         const newHighScore = Math.max(currentHighScore, result.score);
         
-        const newHighScores = { ...progress.highScores, [chapterId]: newHighScore };
-        const newUnlocked = [...progress.unlockedChapters];
+        const newHighScores = { ...progressRef.current.highScores, [chapterId]: newHighScore };
+        const newUnlocked = [...progressRef.current.unlockedChapters];
         
-        // Regra de desbloqueio: se atingiu 80% da pontuação do próximo alvo, ou recorde alto
+        // Regra de desbloqueio de novos capítulos
         CHAPTERS.forEach(c => {
             if (!newUnlocked.includes(c.id) && result.score >= c.minScoreToUnlock) {
                 newUnlocked.push(c.id);
             }
         });
 
-        setProgress({ unlockedChapters: newUnlocked, highScores: newHighScores });
-
-        // Salvar no Supabase
-        await supabase
-          .from('player_global_stats')
-          .upsert({
-            user_id: user.id,
-            game_slug: 'invasores-conhecimento',
-            invasores_progress: { unlockedChapters: newUnlocked, highScores: newHighScores },
-            updated_at: new Date().toISOString()
-          });
-        
-        const nextChapter = CHAPTERS.find(c => c.id === selectedChapter.id + 1);
+        const nextChapter = CHAPTERS.find(c => c.id === (currentSelected?.id || 0) + 1);
         if (nextChapter && result.score >= nextChapter.minScoreToUnlock && !newUnlocked.includes(nextChapter.id)) {
             newUnlocked.push(nextChapter.id);
         }
@@ -184,67 +192,71 @@ const InvasoresGame: React.FC = () => {
         setProgress(newProgress);
         localStorage.setItem('invasores_progress', JSON.stringify(newProgress));
 
-        // --- PERSISTÊNCIA NO SUPABASE (Global) ---
-        const INVASORES_GAME_ID = 'invasores-do-conhecimento';
-        const score = result.score;
-        const xpGain = Math.floor(score / 10);
-
+        // Salvar Estatísticas Globais
         try {
+            await supabase
+              .from('player_global_stats')
+              .upsert({
+                user_id: userId,
+                game_slug: 'invasores-conhecimento',
+                invasores_progress: { unlockedChapters: newUnlocked, highScores: newHighScores },
+                updated_at: new Date().toISOString()
+              });
+
             await supabase.from('game_sessions').insert({
-                player_id: user.id,
-                game_id: INVASORES_GAME_ID,
-                score: score,
+                player_id: userId,
+                game_id: 'invasores-do-conhecimento',
+                score: result.score,
                 completed: true,
-                metadata: { ...result, chapter_id: selectedChapter.id }
+                metadata: { ...result, chapter_id: currentSelected?.id }
             });
 
-            const { data: global } = await supabase.from('player_global_stats').select('*').eq('player_id', user.id).maybeSingle();
+            const { data: global } = await supabase.from('player_global_stats').select('*').eq('player_id', userId).maybeSingle();
             await supabase.from('player_global_stats').upsert({
-                player_id: user.id,
-                total_score: (global?.total_score || 0) + score,
-                galactic_xp: (global?.galactic_xp || 0) + xpGain,
+                player_id: userId,
+                total_score: (global?.total_score || 0) + result.score,
+                galactic_xp: (global?.galactic_xp || 0) + Math.floor(result.score / 10),
                 total_sessions: (global?.total_sessions || 0) + 1,
                 updated_at: new Date().toISOString()
             });
-        } catch (e) {
-            console.error('[Invasores] Erro ao salvar progresso:', e);
+        } catch (e) { 
+            console.error('[Invasores] Erro ao salvar progresso:', e); 
         }
 
         // Trophies - Sistema de Conquistas
         if (result.aliens_destroyed > 0) {
-          await TrophyService.updateProgress(user.id, 'game_kills_50', result.aliens_destroyed);
-          await TrophyService.updateProgress(user.id, 'inv_kills_100', result.aliens_destroyed);
+          await TrophyService.updateProgress(userId, 'game_kills_50', result.aliens_destroyed);
+          await TrophyService.updateProgress(userId, 'inv_kills_100', result.aliens_destroyed);
         }
 
         if (result.max_streak >= 10) {
-          await TrophyService.updateProgress(user.id, 'inv_streak_10', 1, true);
+          await TrophyService.updateProgress(userId, 'inv_streak_10', 1, true);
         }
 
         if (result.max_combo >= 20) {
-          await TrophyService.updateProgress(user.id, 'inv_combo_20', 1, true);
+          await TrophyService.updateProgress(userId, 'inv_combo_20', 1, true);
         }
 
-        const moonAnswers = result.correct_answers_by_category['Lua'] || 0;
-        if (moonAnswers > 0) {
-          await TrophyService.updateProgress(user.id, 'inv_moon_master', moonAnswers);
+        const alphabetAnswers = result.correct_answers_by_category['Alfabeto'] || 0;
+        if (alphabetAnswers > 0) {
+          await TrophyService.updateProgress(userId, 'game_correct_answers', alphabetAnswers);
         }
 
         if (result.is_perfect_run && result.score > 1000) {
-          await TrophyService.updateProgress(user.id, 'inv_nodamage', 1, true);
+          await TrophyService.updateProgress(userId, 'inv_nodamage', 1, true);
         }
 
         if (result.wrong_answers_destroyed > 0) {
-          await TrophyService.updateProgress(user.id, 'inv_wrong_50', result.wrong_answers_destroyed);
+          await TrophyService.updateProgress(userId, 'inv_wrong_50', result.wrong_answers_destroyed);
         }
+      };
     };
 
     // Responsive Canvas
     const handleResize = () => {
-        if (!containerRef.current || !canvasRef.current) return;
+        if (!containerRef.current || !canvasRef.current || !engineRef.current) return;
         
-        // No desktop mantém o tamanho projetivo 800x600, no mobile preenche
         const isMobile = window.innerWidth <= 768;
-        
         if (isMobile) {
             canvasRef.current.width = window.innerWidth;
             canvasRef.current.height = window.innerHeight;
@@ -253,75 +265,93 @@ const InvasoresGame: React.FC = () => {
             canvasRef.current.height = 600;
         }
         
-        engine.resize();
+        engineRef.current.resize();
     };
 
     window.addEventListener('resize', handleResize);
     handleResize();
 
-    engine.onQuestionStart = (q) => {
-      setGameState('MODO_DESAFIO');
-      setHud(prev => ({ ...prev, question: q.text }));
-      showDialogue('CHALLENGE');
-      playSFX?.('bonus');
-    };
+    if (engineRef.current) {
+        engineRef.current.onQuestionStart = (q) => {
+          setGameState('MODO_DESAFIO');
+          setHud(prev => ({ ...prev, question: q.text }));
+          showDialogue('CHALLENGE');
+          playSFXRef.current?.('bonus');
+        };
 
-    engine.onQuestionEnd = (correct, details) => {
-      const currentQ = engineRef.current?.currentQuestion as Question;
-      const explanation = currentQ?.explanation || '';
-      
-      setHud(prev => ({ ...prev, question: '' }));
-      
-      if (correct) {
-        playSFX?.('success');
-        showDialogue('EXPLANATION', `✨ BOA! ${explanation}`);
-      } else {
-        playSFX?.('wrong');
-        showDialogue('EXPLANATION', `🚀 QUASE! ${explanation}`);
-      }
+        engineRef.current.onQuestionEnd = (correct, details) => {
+          const currentQ = engineRef.current?.currentQuestion as Question;
+          const explanation = currentQ?.explanation || '';
+          
+          setHud(prev => ({ ...prev, question: '' }));
+          
+          if (correct) {
+            playSFXRef.current?.('success');
+            showDialogue('EXPLANATION', `✨ BOA! ${explanation}`);
+          } else {
+            playSFXRef.current?.('wrong');
+            showDialogue('EXPLANATION', `🚀 QUASE! ${explanation}`);
+          }
 
-      setGameState('MODO_COMBATE');
-      if (engineRef.current) engineRef.current.state = 'MODO_COMBATE';
+          setGameState('MODO_COMBATE');
+          if (engineRef.current) engineRef.current.state = 'MODO_COMBATE';
 
-      // Analytics Log
-      if (user && details) {
-        AnalyticsService.logQuestionEvent({
-          user_id: user.id,
-          game_slug: 'invasores-conhecimento',
-          chapter_id: selectedChapter?.id || 1,
-          question_id: details.question_id,
-          choice_text: details.choice,
-          is_correct: correct,
-          response_time_ms: details.responseTime,
-          difficulty: details.difficulty
-        });
-      }
-    };
+          // Analytics Log
+          if (userRef.current && details) {
+            AnalyticsService.logQuestionEvent({
+              user_id: userRef.current.id,
+              game_slug: 'invasores-conhecimento',
+              chapter_id: selectedChapterRef.current?.id || 1,
+              question_id: details.question_id,
+              choice_text: details.choice,
+              is_correct: correct,
+              response_time_ms: details.responseTime,
+              difficulty: details.difficulty
+            });
+          }
+        };
+    }
 
     // Game Loop
     let lastTime = 0;
+    let frameCount = 0;
     const loop = (time: number) => {
+
+      const engine = engineRef.current;
+      if (!engine) return;
+
+      // Evitar salto gigante de dt no primeiro frame
+      if (lastTime === 0) {
+        lastTime = time;
+        requestAnimationFrame(loop);
+        return;
+      }
+
       const dt = time - lastTime;
       lastTime = time;
 
       engine.update(dt || 0);
       engine.draw();
       
-      // Sincronizar HUD pro React
-      setHud(prev => {
-        // Monitorar Combo para Falas do Théo
-        if (engine.combo > prev.combo && [5, 10, 15, 20].includes(engine.combo)) {
-          showDialogue('COMBO');
-        }
-        
-        return {
-          ...prev,
-          score: engine.score,
-          lives: engine.player.lives,
-          combo: engine.combo,
-          shield: engine.shieldActive
-        };
-      });
+      // Sincronizar HUD pro React apenas a cada 10 frames para performance
+      frameCount++;
+      if (frameCount % 10 === 0) {
+        setHud(prev => {
+            // Monitorar Combo para Falas do Théo (apenas na mudança)
+            if (engine.combo > prev.combo && [5, 10, 15, 20].includes(engine.combo)) {
+                showDialogue('COMBO');
+            }
+            
+            return {
+                ...prev,
+                score: engine.score,
+                lives: engine.player.lives,
+                combo: engine.combo,
+                shield: engine.shieldActive
+            };
+        });
+      }
+
 
       requestAnimationFrame(loop);
     };
@@ -331,7 +361,7 @@ const InvasoresGame: React.FC = () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [playSFX]);
+  }, []); // Vazio para executar apenas uma vez e manter a engine estável
 
   const handleStart = () => {
     setGameState('CHAPTER_SELECT');
@@ -355,22 +385,23 @@ const InvasoresGame: React.FC = () => {
     if (score >= 1500 && score < 4000) targetLevel = 'Médio';
     else if (score >= 4000) targetLevel = 'Difícil';
 
+    const currentChapter = selectedChapterRef.current;
+    if (!currentChapter) return;
+
     // 2. Filtrar perguntas pela CATEGORIA do capítulo e dificuldade
     let pool = QUESTIONS_DATABASE.filter(q => 
-        q.category === selectedChapter.category &&
+        q.category === currentChapter.category &&
         q.level === targetLevel && 
         !questionHistory.current.includes(q.id)
     );
 
-    // Complementar com Sistema Solar se estiver vazio
+    // 3. Se o pool estiver vazio, limpa histórico e tenta novamente (circular)
     if (pool.length === 0) {
-        pool = QUESTIONS_DATABASE.filter(q => q.category === 'Sistema Solar' && q.level === targetLevel);
-    }
-
-    // 3. Se o pool estiver vazio, limpa metade do histórico e tenta novamente
-    if (pool.length === 0) {
-        questionHistory.current = questionHistory.current.slice(Math.floor(QUESTIONS_DATABASE.length / 2));
-        pool = QUESTIONS_DATABASE.filter(q => q.level === targetLevel);
+        questionHistory.current = [];
+        pool = QUESTIONS_DATABASE.filter(q => 
+            q.category === currentChapter.category && 
+            q.level === targetLevel
+        );
     }
 
     // 4. Seleção Aleatória
@@ -392,7 +423,7 @@ const InvasoresGame: React.FC = () => {
   }, [gameState]);
 
   return (
-    <div className={styles.gameWrapper}>
+    <div className={styles.gameWrapper} ref={containerRef}>
       {/* HUD SUPERIOR */}
       <div className={styles.hudTop}>
         <div className={styles.hudLeft}>
@@ -567,35 +598,44 @@ const InvasoresGame: React.FC = () => {
 
       {gameState === 'GAMEOVER' && (
         <div className={styles.overlay}>
-          <div className={styles.modal}>
-            <div className={styles.gameOverTitle}>MISSÃO ENCERRADA</div>
-            <div className={styles.finalScore}>
-               <span>PONTUAÇÃO FINAL</span>
-               <h2>{hud.score.toLocaleString()}</h2>
+          <div className={`${styles.modal} ${styles.resultCard}`}>
+            <div className={styles.resultIconWrapper}>
+                <FaTrophy className={styles.victoryTrophy} />
             </div>
-            <div className={styles.resultsGrid}>
-               <div className={styles.resItem}>
-                  <FaTrophy className={styles.resIcon} /> 
-                  <div className={styles.resData}>
-                     <span className={styles.resLabel}>Combo Máx</span>
-                     <span className={styles.resValue}>{engineRef.current?.maxCombo}</span>
-                  </div>
-               </div>
-               <div className={styles.resItem}>
-                  <span className={styles.resEmoji}>🛸</span>
-                  <div className={styles.resData}>
-                     <span className={styles.resLabel}>Aliens</span>
-                     <span className={styles.resValue}>{engineRef.current?.aliensDestroyed}</span>
-                  </div>
-               </div>
-               <div className={styles.resItem}>
-                  <span className={styles.resEmoji}>✅</span>
-                  <div className={styles.resData}>
-                     <span className={styles.resLabel}>Acertos</span>
-                     <span className={styles.resValue}>{engineRef.current?.correctAnswers}</span>
-                  </div>
-               </div>
-            </div>
+            
+            <div className={styles.gameOverTitle}>MISSÃO COMPLETA!</div>
+            
+             <div className={styles.finalScore}>
+                <span>PONTUAÇÃO ALCANÇADA</span>
+                <h2>{(finalResult?.score || hud.score).toLocaleString()}</h2>
+             </div>
+
+             <div className={styles.resultsGrid}>
+                <div className={styles.resItem}>
+                   <FaRocket className={styles.resIcon} /> 
+                   <div className={styles.resData}>
+                      <span className={styles.resLabel}>Combo Máx</span>
+                      <span className={styles.resValue}>{finalResult?.max_combo || 0}</span>
+                   </div>
+                </div>
+                <div className={styles.resItem}>
+                   <span className={styles.resEmoji}>🛸</span>
+                   <div className={styles.resData}>
+                      <span className={styles.resLabel}>Invasores</span>
+                      <span className={styles.resValue}>{finalResult?.aliens_destroyed || 0}</span>
+                   </div>
+                </div>
+                <div className={styles.resItem}>
+                   <span className={styles.resEmoji}>🎯</span>
+                   <div className={styles.resData}>
+                      <span className={styles.resLabel}>Precisão</span>
+                      <span className={styles.resValue}>
+                         {finalResult ? Math.round((finalResult.correct_answers / (Math.max(1, finalResult.correct_answers + finalResult.wrong_answers_hit))) * 100) : 0}%
+                      </span>
+                   </div>
+                </div>
+             </div>
+
             <div className={styles.actions}>
                <button className={styles.retryBtn} onClick={handleStart}>
                   <FaRedo /> Tentar Novamente

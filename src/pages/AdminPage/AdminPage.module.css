@@ -340,6 +340,18 @@
 .statusDraft { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 .statusComing { background: rgba(255, 209, 102, 0.15); color: #FFD166; }
 
+.userClickableInfo {
+  padding: 8px;
+  margin: -8px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.userClickableInfo:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .actionBtn {
   background: transparent;
   border: none;

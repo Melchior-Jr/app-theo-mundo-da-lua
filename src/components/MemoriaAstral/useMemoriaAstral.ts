@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AstralCardInstance, GameState, GameMode, GameCategory, GameSettings } from './types';
 import { ASTRAL_DATA } from './data';
+import { useSound } from '@/context/SoundContext';
 
 export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode = 'EDUCATIONAL', initialCategory: GameCategory = 'PLANETS') => {
   const [state, setState] = useState<GameState>({
@@ -29,15 +30,13 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
     currentExplanation: undefined
   });
 
+  const { playSFX, playBGMusic, stopBGMusic } = useSound();
   const [isGameOver, setIsGameOver] = useState(false);
 
   const HIT_MESSAGES = ["Incrível!", "Uau!", "Estelar!", "Você é demais!", "Foco total!"];
   const MISS_MESSAGES = ["Quase lá!", "Tente de novo!", "Continue explorando!", "Ops, quase!"];
 
   const getRapidTimeLimit = () => 45; // 45 segundos para o modo rápido
-  const getPairsCount = () => {
-    return state.settings.difficulty === 'EASY' ? 4 : state.settings.difficulty === 'HARD' ? 8 : 6;
-  };
 
   const timeLeft = state.settings.mode === 'RAPID' 
     ? getRapidTimeLimit() - state.timeSeconds 
@@ -120,6 +119,7 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
           
           if (prev.settings.mode === 'RAPID' && newTime >= 45) {
             setIsGameOver(true);
+            if (prev.settings.soundEnabled) playSFX('fail');
             return { ...prev, timeSeconds: 45 };
           }
           
@@ -135,13 +135,23 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
 
   // Funções de Configuração
   const toggleSetting = (setting: keyof GameSettings) => {
-    setState(prev => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        [setting]: !prev.settings[setting]
+    setState(prev => {
+      const newValue = !prev.settings[setting];
+      
+      // Se estiver mutando a música especificamente
+      if (setting === 'soundEnabled') {
+        if (!newValue) stopBGMusic();
+        else playBGMusic();
       }
-    }));
+      
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          [setting]: newValue
+        }
+      };
+    });
   };
 
   const handleCardClick = (index: number) => {
@@ -159,12 +169,15 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
     newCards[index] = { ...newCards[index], status: 'FLIPPED' };
     const newFlipped = [...flippedIndices, index];
 
-    setState(prev => ({
-      ...prev,
-      cards: newCards,
-      flippedIndices: newFlipped,
-      theoState: 'THINKING'
-    }));
+    setState(prev => {
+      if (prev.settings.soundEnabled) playSFX('flipCard');
+      return {
+        ...prev,
+        cards: newCards,
+        flippedIndices: newFlipped,
+        theoState: 'THINKING'
+      };
+    });
 
     if (newFlipped.length === 2) {
       verifyMatch(newCards, newFlipped);
@@ -182,21 +195,30 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
             i === idx1 || i === idx2 ? { ...c, status: 'MATCHED' as const } : c
           );
           
-          const currentPairsCount = getPairsCount();
+          const totalPairs = prev.cards.length / 2;
           const newMatchesCount = prev.matchesCount + 1;
-          const isFinished = newMatchesCount === currentPairsCount;
+          const isFinished = newMatchesCount === totalPairs;
           const newCombo = prev.combo + 1;
           
           // Pontuação removida no modo Exploração
           const pointsGained = prev.settings.mode === 'EXPLORATION' ? 0 : (100 + (prev.combo * 50));
           
+          if (prev.settings.soundEnabled) {
+            if (isFinished) playSFX('success');
+            else playSFX('correct');
+          }
+
           const randomHit = HIT_MESSAGES[Math.floor(Math.random() * HIT_MESSAGES.length)];
-          
+
+          const now = Date.now();
+          const finalTime = prev.startTime ? Math.floor((now - prev.startTime) / 1000) : 0;
+
           return {
             ...prev,
             cards: updatedCards,
             flippedIndices: [],
             isProcessing: false,
+            attempts: prev.attempts + 1,
             matchesCount: newMatchesCount,
             score: prev.score + pointsGained,
             combo: newCombo,
@@ -204,6 +226,7 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
             message: isFinished ? "Setor explorado com sucesso!" : randomHit,
             currentExplanation: prev.settings.mode === 'EDUCATIONAL' ? card1.description : undefined,
             isGameFinished: isFinished,
+            timeSeconds: isFinished ? finalTime : prev.timeSeconds,
             lastMatchIndices: [idx1, idx2],
             theoState: 'HAPPY'
           };
@@ -217,6 +240,7 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
     } else {
       setTimeout(() => {
         setState(prev => {
+          if (prev.settings.soundEnabled) playSFX('wrong');
           const updatedCards = prev.cards.map((c, i) => 
             i === idx1 || i === idx2 ? { ...c, status: 'HIDDEN' as const } : c
           );
@@ -230,6 +254,7 @@ export const useMemoriaAstral = (initialPairs: number = 6, initialMode: GameMode
             cards: updatedCards,
             flippedIndices: [],
             isProcessing: false,
+            attempts: prev.attempts + 1,
             combo: 0,
             message: randomMiss,
             theoState: 'SAD'

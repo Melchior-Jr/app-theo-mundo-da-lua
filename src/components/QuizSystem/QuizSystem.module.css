@@ -2035,6 +2035,22 @@
   box-shadow: 0 0 20px rgba(181, 23, 158, 0.3);
 }
 
+.suggestedTitle {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #b5179e;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 10px 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(181, 23, 158, 0.05);
+  border-radius: 8px;
+  border: 1px dashed rgba(181, 23, 158, 0.2);
+}
+
 .resultsList {
   display: flex;
   flex-direction: column;

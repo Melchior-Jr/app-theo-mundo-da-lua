@@ -8,7 +8,7 @@
  */
 export interface Narration {
   id: string
-  chapterId: 'home' | 'chapters-selection' | 'sistema-solar' | 'movimentos-da-terra' | 'constelaçoes' | 'fases-da-lua' | 'planet-detail' | 'system' | 'quiz'
+  chapterId: 'home' | 'chapters-selection' | 'sistema-solar' | 'movimentos-da-terra' | 'constelaçoes' | 'fases-da-lua' | 'planet-detail' | 'system' | 'quiz' | string
   title: string
   text: string
   /** Caminho relativo a /public. null = usar síntese de voz */
@@ -522,6 +522,97 @@ export const NARRATIONS: Narration[] = [
     audioPath: '/audio/Alerta-pular ser ver todos os planetas - 2.MP3',
     lang: 'pt-BR',
     rate: 1.0,
+    pitch: 1.15,
+  },
+  // --- Geociências: Terra em Transformação ---
+  {
+    id: 'journey-geociencias',
+    chapterId: 'chapters-selection',
+    title: 'Geociências',
+    text: 'Agora vamos mergulhar fundo... literalmente! O nosso planeta é uma caixinha de surpresas. Vamos entender o que tem dentro da Terra, como as rochas se formam e como vulcões e terremotos acontecem. É terra firme, mas ela se transforma o tempo todo!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-estrutura-interna',
+    chapterId: 'estrutura-interna',
+    title: 'Estrutura Interna',
+    text: 'Se a gente pudesse cavar um buraco até o outro lado do mundo, o que a gente encontraria? Primeiro a crosta, depois o manto e finalmente o núcleo super quente! É como uma cebola de fogo!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-rochas-minerais',
+    chapterId: 'rochas-minerais',
+    title: 'Rochas e Minerais',
+    text: 'Rochas não são apenas pedras sem graça. Algumas vêm do magma, outras de restos de plantas e animais de milhões de anos atrás! Cada uma conta uma história diferente.',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-formacao-solo',
+    chapterId: 'formacao-solo',
+    title: 'Formação do Solo',
+    text: 'O chão que a gente pisa levou milhares de anos para ficar desse jeitinho. É a pedra se quebrando e se misturando com a vida para as plantas poderem crescer!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-erosao-relevo',
+    chapterId: 'erosao-relevo',
+    title: 'Erosão e Relevo',
+    text: 'A água da chuva e o vento são como artistas. Eles vão esculpindo as montanhas e criando vales incríveis ao longo de muito, muito tempo.',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-vulcoes-terremotos',
+    chapterId: 'vulcoes-terremotos',
+    title: 'Vulcões e Terremotos',
+    text: 'A Terra às vezes dá uns pulos! Quando as placas tectônicas se batem, o chão treme. E quando o magma resolve sair pra passear, temos os vulcões explodindo fogo!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-fenomenos-naturais',
+    chapterId: 'fenomenos-naturais',
+    title: 'Fenômenos Naturais',
+    text: 'Já viu o poder de um furacão ou de um raio cortando o céu? A natureza tem muita energia guardada e às vezes ela resolve mostrar toda a sua força!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-acao-humana',
+    chapterId: 'acao-humana',
+    title: 'Ação Humana',
+    text: 'Nós mudamos muito o planeta! Construímos cidades, túneis e barragens. É importante entender como as nossas construções mudam a cara da Terra.',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
+    pitch: 1.15,
+  },
+  {
+    id: 'narration-sustentabilidade',
+    chapterId: 'sustentabilidade',
+    title: 'Sustentabilidade',
+    text: 'Agora que você conhece a Terra, sabe que ela é o nosso único lar. Cuidar do solo, da água e do ar é a missão mais importante de todas para o futuro!',
+    audioPath: null,
+    lang: 'pt-BR',
+    rate: 0.9,
     pitch: 1.15,
   },
 ]

@@ -3,7 +3,7 @@
   flex: 1;
   flex-direction: column;
   gap: 16px;
-  padding: 16px 16px 140px; 
+  padding: 16px 16px 80px; 
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
@@ -11,7 +11,7 @@
 
 @media (min-width: 640px) {
   .container {
-    padding: 24px 24px 160px;
+    padding: 24px 24px 100px;
     gap: 24px;
   }
 }
@@ -28,7 +28,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
-  padding: 12px 10px 0; /* Padding bottom zerado */
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -40,7 +40,7 @@
 
 @media (min-width: 640px) {
   .contentArea {
-    padding: 16px 20px 0;
+    padding: 0;
     min-height: 500px;
   }
 }

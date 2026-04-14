@@ -133,8 +133,8 @@ export default function SolarSystemOverview() {
   }
 
   const { orbit: focusedOrbit, fov: focusedFov } = getCameraView()
-  const defaultOrbit = "0deg 75deg 20%"
-  const defaultFov = "30deg"
+  const defaultOrbit = "0deg 75deg 14%"
+  const defaultFov = "25deg"
 
   // Efeito para monitorar o carregamento dos modelos
   useEffect(() => {
@@ -180,15 +180,7 @@ export default function SolarSystemOverview() {
           <span className={styles.loaderText}>Iniciando Missão...</span>
         </div>
 
-        {/* HUD de Qualidade Adaptativa */}
-        <div className={styles.intelligentBadge}>
-          {useAdaptiveLoading && !isLargeLoaded && !selectedPlanet && (
-            <div className={styles.loadingInfo}>Otimizando Texturas HD...</div>
-          )}
-          {isLargeLoaded && !selectedPlanet && currentModel === 'large' && (
-            <div className={styles.hdActive}>VISTA HD ATIVA</div>
-          )}
-        </div>
+
 
         {/* Camada 1: Versão Leve / Planet Focus */}
         <div className={styles.viewerWrapper} style={{ zIndex: (currentModel === 'Small' || selectedPlanet) ? 2 : 1 }}>
@@ -206,6 +198,7 @@ export default function SolarSystemOverview() {
             camera-orbit={selectedPlanet ? focusedOrbit : defaultOrbit}
             field-of-view={selectedPlanet ? focusedFov : defaultFov}
             className={styles.viewer}
+            style={{ width: '100%', height: '100%', display: 'block' }}
             onClick={handleViewerClick}
           />
         </div>
@@ -230,6 +223,9 @@ export default function SolarSystemOverview() {
               onLoad={handleLargeLoad}
               onClick={handleViewerClick}
               style={{ 
+                width: '100%',
+                height: '100%',
+                display: 'block',
                 opacity: isLargeLoaded ? 1 : 0,
                 transition: 'opacity 1s ease'
               } as any}

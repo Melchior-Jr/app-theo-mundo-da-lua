@@ -273,6 +273,18 @@ export const AdminService = {
     });
   },
 
+  /** Busca lista apenas de professores */
+  async getTeachersList() {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('is_teacher', true)
+      .order('full_name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
   /** Busca dossiê completo de um único usuário com inteligência de dados (Bypass RLS via RPCs se necessário) */
   async getUserDetails(playerId: string) {
     // Para o dossiê detalhado, buscamos dados globais via RPC e filtramos localmente
@@ -353,6 +365,14 @@ export const AdminService = {
     if (error) throw error;
   },
 
+  async toggleTeacherAccess(playerId: string, isTeacher: boolean) {
+    const { error } = await supabase
+      .from('players')
+      .update({ is_teacher: isTeacher })
+      .eq('id', playerId);
+    if (error) throw error;
+  },
+
   async awardManualTrophy(playerId: string, trophyId: string) {
     const { error } = await supabase
       .from('user_trophies')
@@ -393,6 +413,86 @@ export const AdminService = {
     if (error) throw error;
   },
 
+  async saveFullJourney(draft: any) {
+    const { subject, chapters } = draft;
+
+    // 1. Salvar Matéria
+    const { data: savedSubject, error: sErr } = await supabase
+      .from('app_subjects')
+      .upsert(subject)
+      .select()
+      .single();
+    
+    if (sErr) throw sErr;
+    const subjectId = savedSubject.id;
+
+    // 2. Buscar capítulos atuais para identificar deleções
+    const { data: currentChapters } = await supabase
+      .from('app_chapters')
+      .select('id')
+      .eq('subject_id', subjectId);
+    
+    const currentChapterIds = currentChapters?.map(c => c.id) || [];
+    const draftChapterIds = chapters.map((c: any) => c.id).filter((id: string) => !id.startsWith('new-'));
+    const chaptersToDelete = currentChapterIds.filter(id => !draftChapterIds.includes(id));
+
+    // 3. Salvar Capítulos e Missões
+    for (const ch of chapters) {
+      const isNew = ch.id.startsWith('new-');
+      const { missions, ...chapterData } = ch;
+      
+      // Limpa ID temporário se for novo para o Supabase gerar um (ou se for texto, mantém mas limpa o prefixo se desejar)
+      // No schema, id é text. Vamos gerar um slug ou manter o id se for editado.
+      if (isNew) {
+        // Se for novo, vamos usar o slug como base do ID se não houver um real
+        chapterData.id = ch.slug || `ch-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      }
+      
+      chapterData.subject_id = subjectId;
+
+      const { error: chErr } = await supabase
+        .from('app_chapters')
+        .upsert(chapterData);
+      
+      if (chErr) throw chErr;
+
+      // Missões do Capítulo
+      const { data: currentMissions } = await supabase
+        .from('app_missions')
+        .select('id')
+        .eq('chapter_id', chapterData.id);
+      
+      const currentMissionIds = currentMissions?.map(m => m.id) || [];
+      const draftMissionIds = missions.map((m: any) => m.id).filter((id: string) => !id.startsWith('new-'));
+      const missionsToDelete = currentMissionIds.filter(id => !draftMissionIds.includes(id));
+
+      if (missionsToDelete.length > 0) {
+        await supabase.from('app_missions').delete().in('id', missionsToDelete);
+      }
+
+      for (const m of missions) {
+        const isNewMission = m.id.startsWith('new-');
+        const missionData = { ...m };
+        if (isNewMission) {
+          missionData.id = `mi-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+        }
+        missionData.chapter_id = chapterData.id;
+
+        const { error: mErr } = await supabase
+          .from('app_missions')
+          .upsert(missionData);
+        
+        if (mErr) throw mErr;
+      }
+    }
+
+    // 4. Deletar capítulos órfãos (e suas missões)
+    if (chaptersToDelete.length > 0) {
+      await supabase.from('app_missions').delete().in('chapter_id', chaptersToDelete);
+      await supabase.from('app_chapters').delete().in('id', chaptersToDelete);
+    }
+  },
+
   async updateEducatorNotes(playerId: string, notes: string) {
     const { error } = await supabase
       .from('players')
@@ -401,13 +501,21 @@ export const AdminService = {
     if (error) throw error;
   },
 
-  async sendPlayerNotification(playerId: string, title: string, content: string) {
-    const { error } = await supabase.rpc('admin_send_notification', {
-      p_user_id: playerId,
-      p_title: title,
-      p_message: content,
-      p_type: 'system'
-    });
+  async sendPlayerNotification(playerId: string, title: string, content: string, senderName?: string, senderRole?: string, category: string = 'global') {
+    // Usando inserção direta para evitar erros de assinatura de RPC que mudam com frequência
+    const { error } = await supabase
+      .from('notifications')
+      .insert([{
+        user_id: playerId,
+        title: title,
+        message: content,
+        type: 'system',
+        category, // Adicionado suporte a categoria
+        sender_name: senderName,
+        sender_role: senderRole,
+        is_read: false
+      }]);
+    
     if (error) throw error;
   },
 

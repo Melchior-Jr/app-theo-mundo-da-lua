@@ -19,9 +19,51 @@ export default function ChallengeModal({ onClose, onChallenge, isTraining = fals
   const { playSFX } = useSound()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const [activePlayers, setActivePlayers] = useState<any[]>([])
   const [targetPlayer, setTargetPlayer] = useState<any>(null)
   const [betAmount, setBetAmount] = useState(10)
   const [loading, setLoading] = useState(false)
+
+  // Busca inicial dos top 10 ativos
+  useEffect(() => {
+    async function fetchTopPlayers() {
+      try {
+        const { data: topStats, error: sError } = await supabase
+          .from('player_global_stats')
+          .select('player_id, galactic_xp')
+          .neq('player_id', user?.id)
+          .order('galactic_xp', { ascending: false })
+          .limit(10)
+
+        if (sError) throw sError
+        if (!topStats) return
+
+        const ids = topStats.map(s => s.player_id)
+        const { data: players, error: pError } = await supabase
+          .from('players')
+          .select('id, full_name, username, avatar_url')
+          .in('id', ids)
+
+        if (pError) throw pError
+
+        const combined = topStats.map(s => {
+          const p = players?.find(player => player.id === s.player_id)
+          return {
+            ...p,
+            stats: { galactic_xp: s.galactic_xp }
+          }
+        }).filter(p => p.id)
+
+        setActivePlayers(combined)
+      } catch (err) {
+        console.error('Erro ao carregar oponentes ativos:', err)
+      }
+    }
+    
+    if (user?.id) {
+      fetchTopPlayers()
+    }
+  }, [user?.id])
 
   // Busca de usuários em tempo real
   useEffect(() => {
@@ -121,7 +163,35 @@ export default function ChallengeModal({ onClose, onChallenge, isTraining = fals
 
               <div className={styles.resultsList}>
                 {loading && <div className={styles.searchLoading}>Escaneando radar espacial...</div>}
-                {searchResults.map(p => (
+                
+                {/* Lista de Sugeridos (Ativos) - Aparece se não houver busca */}
+                {searchTerm.length === 0 && !loading && activePlayers.length > 0 && (
+                  <>
+                    <div className={styles.suggestedTitle}>
+                      <FaRocket style={{ color: '#ff3d71', marginRight: '8px' }} />
+                      Sugestões p/ Você
+                    </div>
+                    {activePlayers.map(p => (
+                      <button key={p.id} className={styles.resultItem} onClick={() => { playSFX('click'); setTargetPlayer(p); }}>
+                        <div className={styles.avatarMini}>
+                          {p.avatar_url ? (
+                            <img src={p.avatar_url} alt={p.username} className={styles.miniAvatarImg} />
+                          ) : (
+                            '👨‍🚀'
+                          )}
+                        </div>
+                        <div className={styles.resultInfo} style={{ color: '#fff' }}>
+                          <span className={styles.resultName} style={{ color: '#fff' }}>{p.full_name || p.username}</span>
+                          <span className={styles.resultUser} style={{ opacity: 0.7, color: '#fff' }}>@{p.username} • {p.stats?.galactic_xp || 0} XP</span>
+                        </div>
+                        <FaChevronRight className={styles.resultArrow} />
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* Resultados da Busca */}
+                {searchTerm.length > 0 && searchResults.map(p => (
                   <button key={p.id} className={styles.resultItem} onClick={() => { playSFX('click'); setTargetPlayer(p); }}>
                     <div className={styles.avatarMini}>
                       {p.avatar_url ? (

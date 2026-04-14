@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Bell, Settings } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -9,20 +9,30 @@ import { NotificationService } from '@/services/notificationService';
 import { supabase } from '@/lib/supabase';
 import { calcLevel } from '@/utils/playerUtils';
 import { SettingsModal } from '@/components/SettingsModal';
+import { useTeacher } from '@/hooks/useTeacher';
+import { TeacherAuthModal } from '@/components/TeacherAuthModal/TeacherAuthModal';
 import styles from './Navbar.module.css';
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon?: React.ReactNode;
+}
 
 interface NavbarProps {
   onCategoryChange?: (category: string) => void;
   activeCategory?: string;
   hideLinks?: boolean;
   children?: React.ReactNode;
+  customLinks?: NavItem[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   onCategoryChange, 
   activeCategory, 
   hideLinks = false,
-  children 
+  children,
+  customLinks
 }) => {
   const { session, user } = useAuth();
   const { playerData: player, playerStats: globalStats } = usePlayer();
@@ -35,6 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTeacherAuth, setShowTeacherAuth] = useState(false);
+  const { isTeacher } = useTeacher();
   const isCapitulosPage = location.pathname === '/capitulos';
 
   useEffect(() => {
@@ -55,37 +67,85 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   }, [isMenuOpen]);
 
+  const lastLocalAction = useRef(0);
+
+  // Sistema de atualização com proteção contra dados obsoletos (echo)
+  const updateCount = useCallback((newCount: number, source: 'local' | 'external') => {
+    const now = Date.now();
+    setUnreadCount(prev => {
+      // Se houve ação local recente (<3s) e o banco traz um número maior, é dado velho
+      if (source === 'external' && now - lastLocalAction.current < 3000 && newCount > prev) {
+        console.log(`🛡️ [Navbar] Proteção de Eco: Ignorando count ${newCount} (mantendo ${prev})`);
+        return prev;
+      }
+      return newCount;
+    });
+  }, []);
+
+  const fetchCount = useCallback(async (force = false) => {
+    if (!user?.id) return;
+    
+    // Bloqueio de fetch de rotina se houve ação local recente
+    const now = Date.now();
+    if (!force && (now - lastLocalAction.current < 2000)) return;
+
+    try {
+      const count = await NotificationService.countUnread(user.id);
+      updateCount(count, force ? 'local' : 'external');
+    } catch (err) {
+      console.error('Erro no fetchCount:', err);
+    }
+  }, [user?.id, updateCount]);
+
   useEffect(() => {
     if (!user?.id) return;
 
-    const fetchCount = () => NotificationService.countUnread(user.id).then(setUnreadCount);
-    
-    fetchCount();
+    fetchCount(true);
 
-    // RADAR GALÁCTICO: Escuta notificações em tempo real
+    const handleUpdate = (e: any) => {
+      const newCount = e.detail?.count ?? 0;
+      console.log('🔔 [Navbar] Ação Local (Evento):', newCount);
+      lastLocalAction.current = Date.now();
+      updateCount(newCount, 'local');
+    };
+
+    window.addEventListener('notification-updated', handleUpdate);
+    
     const channel = supabase
       .channel(`notif_radar_${user.id}`)
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        fetchCount
-      )
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'quiz_challenges', filter: `challenged_id=eq.${user.id}` },
-        fetchCount
-      )
-      .on(
-        'postgres_changes' as any,
-        { event: '*', scheme: 'public', table: 'quiz_challenges', filter: `challenger_id=eq.${user.id}` },
-        fetchCount
-      )
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notifications', 
+        filter: `user_id=eq.${user.id}` 
+      }, (payload) => {
+        // Se for uma NOVA notificação (INSERT), ignoramos a trava e mostramos
+        if (payload.eventType === 'INSERT') {
+          console.log('🔥 [Navbar] Nova notificação via Realtime');
+          fetchCount(true);
+        } else {
+          // Para UPDATE/DELETE, respeitamos a lógica de eco
+          fetchCount(false);
+        }
+      })
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'quiz_challenges' 
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          fetchCount(true);
+        } else {
+          fetchCount(false);
+        }
+      })
       .subscribe();
 
     return () => {
+      window.removeEventListener('notification-updated', handleUpdate);
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id, fetchCount, updateCount]);
 
   const toggleMenu = () => {
     playSFX('click');
@@ -142,7 +202,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 userId={user?.id || ''}
                 isOpen={showNotifications}
                 onClose={() => setShowNotifications(false)}
-                onUnreadChange={setUnreadCount}
+                onUnreadChange={(count) => {
+                  lastLocalAction.current = Date.now();
+                  updateCount(count, 'local');
+                }}
               />
             </div>
           )}
@@ -152,34 +215,59 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className={`${styles.navLinks} ${isMenuOpen ? styles.menuOpen : ''}`}>
-          {!hideLinks && !isCapitulosPage && (
+          {customLinks ? (
             <>
-              {location.pathname === '/jogos' && onCategoryChange ? (
-                <>
-                  <button 
-                    className={`${styles.navLink} ${activeCategory === 'Aulas' ? styles.navLinkActive : ''}`} 
-                    onClick={() => { onCategoryChange('Aulas'); closeMenu(); }}
-                  >
-                    AULAS
-                  </button>
-                  <button 
-                    className={`${styles.navLink} ${activeCategory === 'Jogos' ? styles.navLinkActive : ''}`} 
-                    onClick={() => { onCategoryChange('Jogos'); closeMenu(); }}
-                  >
-                    JOGOS
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/jogos" className={`${styles.navLink} ${isActive('/capitulos') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/jogos')}>AULAS</Link>
-                  <Link to="/jogos" className={`${styles.navLink} ${isActive('/jogos') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/jogos')}>JOGOS</Link>
-                </>
-              )}
-              
-              <Link to="/ranking" className={`${styles.navLink} ${isActive('/ranking') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/ranking')}>RANKING</Link>
-              <Link to="/trofeus" className={`${styles.navLink} ${isActive('/trofeus') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/trofeus')}>TROFÉUS</Link>
-              <Link to="/perfil" className={`${styles.navLink} ${isActive('/perfil') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/perfil')}>PERFIL</Link>
+              {customLinks.map((item) => (
+                <Link 
+                  key={item.to} 
+                  to={item.to} 
+                  className={`${styles.navLink} ${location.pathname === item.to ? styles.navLinkActive : ''}`}
+                  onClick={() => { playSFX('click'); closeMenu(); }}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </>
+          ) : (
+            !hideLinks && !isCapitulosPage && (
+              <>
+                {location.pathname === '/jogos' && onCategoryChange ? (
+                  <>
+                    <button 
+                      className={`${styles.navLink} ${activeCategory === 'Aulas' ? styles.navLinkActive : ''}`} 
+                      onClick={() => { onCategoryChange('Aulas'); closeMenu(); }}
+                    >
+                      AULAS
+                    </button>
+                    <button 
+                      className={`${styles.navLink} ${activeCategory === 'Jogos' ? styles.navLinkActive : ''}`} 
+                      onClick={() => { onCategoryChange('Jogos'); closeMenu(); }}
+                    >
+                      JOGOS
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/capitulos" className={`${styles.navLink} ${isActive('/capitulos') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/capitulos')}>AULAS</Link>
+                    <Link to="/jogos" className={`${styles.navLink} ${isActive('/jogos') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/jogos')}>JOGOS</Link>
+                  </>
+                )}
+                
+                <Link to="/ranking" className={`${styles.navLink} ${isActive('/ranking') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/ranking')}>RANKING</Link>
+                <Link to="/trofeus" className={`${styles.navLink} ${isActive('/trofeus') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/trofeus')}>TROFÉUS</Link>
+                
+                {isTeacher && (
+                  <button 
+                    className={`${styles.navLink} ${isActive('/prof') ? styles.navLinkActive : ''}`} 
+                    onClick={() => { playSFX('click'); setShowTeacherAuth(true); closeMenu(); }}
+                  >
+                    PAINEL PROF
+                  </button>
+                )}
+
+                <Link to="/perfil" className={`${styles.navLink} ${isActive('/perfil') ? styles.navLinkActive : ''}`} onClick={() => handleNavClick('/perfil')}>PERFIL</Link>
+              </>
+            )
           )}
 
           {session && (
@@ -198,7 +286,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   userId={user?.id || ''}
                   isOpen={showNotifications}
                   onClose={() => setShowNotifications(false)}
-                  onUnreadChange={setUnreadCount}
+                  onUnreadChange={(count) => {
+                    lastLocalAction.current = Date.now();
+                    updateCount(count, 'local');
+                  }}
                 />
               </div>
               
@@ -237,6 +328,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
+      />
+
+      <TeacherAuthModal 
+        isOpen={showTeacherAuth}
+        onClose={() => setShowTeacherAuth(false)}
+        onConfirm={() => {
+          setShowTeacherAuth(false);
+          navigate('/prof');
+        }}
       />
     </nav>
   );

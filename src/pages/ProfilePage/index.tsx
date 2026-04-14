@@ -368,6 +368,14 @@ export default function ProfilePage() {
                 <Edit2 size={14} />
                 Editar Informações
               </button>
+
+              <button 
+                className={styles.logoutBtn} 
+                onClick={() => { playSFX('click'); signOut(); }}
+              >
+                <LogOut size={16} />
+                Encerrar Missão (Sair)
+              </button>
             </div>
 
             {/* Widgets Rápidos */}

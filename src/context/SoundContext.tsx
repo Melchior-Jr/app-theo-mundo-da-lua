@@ -10,7 +10,7 @@ interface SoundContextType {
   setSfxVolume: (vol: number) => void
   narrationVolume: number
   setNarrationVolume: (vol: number) => void
-  playSFX: (sfx: 'correct' | 'wrong' | 'click'| 'success' | 'fail' | 'bonus') => void
+  playSFX: (sfx: 'correct' | 'wrong' | 'click'| 'success' | 'fail' | 'bonus' | 'flipCard') => void
   playBGMusic: () => void
   stopBGMusic: () => void
   playTrack: (src: string, volume?: number) => HTMLAudioElement | null
@@ -174,6 +174,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
       success: '/audio/sfx/success.mp3',
       fail: '/audio/sfx/fail.mp3',
       bonus: '/audio/sfx/bonus.mp3',
+      flipCard: '/audio/sfx/flipCard.mp3',
     }
 
     const src = audioMap[sfx]

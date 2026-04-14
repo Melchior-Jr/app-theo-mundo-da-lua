@@ -1,0 +1,789 @@
+:root {
+  --geo-brown: #8b5e34;
+  --geo-brown-dark: #603813;
+  --geo-green: #2d6a4f;
+  --geo-green-light: #52b788;
+  --geo-gold: #ffb703;
+  --geo-tan: #ffe0b2;
+  --geo-magma: #d00000;
+  --geo-pressure: #0288d1;
+}
+
+.courseWrapper {
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  color: white;
+  padding: 2rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+
+/* 2. CONTAINER CENTRAL */
+.mainCard {
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  animation: slideUp 0.8s ease-out;
+}
+
+.cardSplit {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  min-height: 600px;
+}
+
+/* 🟦 ÁREA ESQUERDA */
+.visualArea {
+  padding: 3rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(139, 94, 52, 0.05) 0%, transparent 70%);
+}
+
+.viewerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  width: 100%;
+}
+
+.viewerOverlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(var(--geo-gold-rgb, 255, 183, 3), 0.1);
+  border-right: 3px solid var(--geo-gold);
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--geo-gold);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.depthSliderContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  margin-top: 2rem;
+}
+
+.horizontalSlider {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.1);
+  height: 8px;
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.horizontalSlider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  background: var(--layer-color, var(--geo-gold));
+  border-radius: 50%;
+  cursor: pointer;
+  border: 4px solid #fff;
+  box-shadow: 0 0 20px var(--layer-color, var(--geo-gold));
+  transition: all 0.2s ease;
+}
+
+.sliderWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.sliderMarkers {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  transform: translateY(-50%);
+  height: 8px;
+  pointer-events: none;
+  display: flex;
+}
+
+.marker {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.markerActive {
+  background: var(--layer-color);
+  box-shadow: 0 0 10px var(--layer-color);
+  transform: translateX(-50%) scale(2);
+}
+
+.sliderTag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #666;
+}
+
+/* Earth SVG */
+.earthCorteWrapper {
+  width: 100%;
+  min-width: 300px;
+  max-width: 450px;
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.earthSvg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(0,0,0,0.8));
+}
+
+.svgLayer {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 1;
+  transform-origin: center;
+}
+
+.svgLayer:hover {
+  filter: brightness(1.2);
+  stroke: rgba(255,255,255,0.4);
+}
+
+.svgLayer.crostaActive {
+  transform: scale(1.02);
+  stroke: #fff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 15px rgba(255, 236, 179, 0.4));
+}
+
+.svgLayer.mantoActive {
+  transform: scale(1.03);
+  stroke: #fff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 25px rgba(255, 152, 0, 0.5));
+}
+
+.svgLayer.externoActive {
+  transform: scale(1.04);
+  stroke: #fff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 35px rgba(211, 47, 47, 0.6));
+}
+
+.svgLayer.internoActive {
+  transform: scale(1.05);
+  stroke: #fff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 45px rgba(255, 235, 59, 0.8));
+}
+
+.depthIndicator {
+  box-shadow: 0 0 10px white;
+}
+
+/* Mode Overlays */
+.modeOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.temperature { background: radial-gradient(circle, var(--geo-magma) 0%, transparent 70%); }
+.pressure { background: radial-gradient(circle, var(--geo-pressure) 0%, transparent 70%); }
+
+.visualToggles {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.toggleBtn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.toggleBtn:hover { background: rgba(255,255,255,0.1); }
+
+.toggleBtn.active {
+  background: var(--geo-gold);
+  color: black;
+  border-color: var(--geo-gold);
+}
+
+/* 🟪 ÁREA DIREITA */
+.infoArea {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.infoCard {
+  animation: fadeIn 0.5s ease;
+}
+
+.layerMainHeader {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,183,3,0.1);
+}
+
+.layerTitle {
+  margin: 0;
+  font-size: 2.6rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #fff, #aaa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.layerStatusBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: var(--geo-green);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statBox {
+  background: rgba(255,255,255,0.03);
+  padding: 1.2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.statBox:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--geo-gold);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.statBox label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #888;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+
+.statBox span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--geo-tan);
+}
+
+.tempVal { color: var(--geo-magma) !important; }
+
+.explanationBox {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #ccc;
+  margin-bottom: 2rem;
+}
+
+.theoTipMini {
+  background: linear-gradient(135deg, rgba(82, 183, 136, 0.1), transparent);
+  border: 1px solid rgba(82, 183, 136, 0.2);
+  padding: 1.2rem;
+  border-radius: 20px;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.theoAvatar { font-size: 2rem; }
+
+.theoContent strong { color: var(--geo-green-light); display: block; margin-bottom: 0.2rem; }
+.theoContent p { margin: 0; font-size: 0.9rem; color: #eee; font-style: italic; }
+
+
+/* Animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+/* Modais */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.infoModal {
+  background: #1a1a1a;
+  width: 90%;
+  max-width: 500px;
+  padding: 3rem;
+  border-radius: 30px;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+  text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modalGlow {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, var(--geo-gold) 0%, transparent 70%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.modalTitle {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #fff 0%, var(--geo-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modalBody {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #ccc;
+  margin-bottom: 2rem;
+}
+
+.closeModal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.closeModal:hover { color: white; }
+
+.confirmBtn {
+  background: var(--geo-gold);
+  color: black;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirmBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 183, 3, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 1050px) {
+  .layerMainHeader {
+    margin-bottom: 0;
+    padding-bottom: 1rem;
+  }
+
+  .layerTitle {
+    font-size: 1.8rem;
+  }
+
+  .cardSplit { 
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .visualArea {
+    padding: 0 1.5rem;
+    min-height: auto;
+  }
+
+  .viewerContainer {
+    flex-direction: column; 
+    gap: 1.5rem;
+    height: auto;
+    align-items: center;
+    padding: 1rem 0;
+  }
+
+  /* Slider vira Horizontal no Mobile */
+  .depthSliderContainer {
+    flex-direction: row;
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    justify-content: space-between;
+    order: 3;
+    padding: 0;
+  }
+
+  .earthCorteWrapper {
+    max-width: 280px;
+    margin: 0;
+    order: 1;
+  }
+
+  .visualToggles {
+    position: static; /* Remove absoluto para não sobrepor */
+    transform: none;  /* Remove o transform de centralização absoluta */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    width: 100%;
+    order: 2;
+  }
+
+  .infoArea {
+    padding: 0;
+  }
+
+  .explanationBox, .theoTipMini {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .courseWrapper {
+    padding: 1rem;
+  }
+
+  .mainCard {
+    padding: 1.2rem;
+    border-radius: 20px;
+  }
+
+  .layerMainHeader {
+    border-bottom: 1px solid rgba(255,183,3,0.05);
+  }
+
+  .layerTitle {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .statBox {
+    padding: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .statBox label {
+    font-size: 0.6rem;
+  }
+
+  .statBox span {
+    font-size: 0.85rem;
+  }
+
+  .visualToggles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .toggleBtn {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+    justify-content: center;
+  }
+
+  .explanationBox p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .theoTipMini {
+    padding: 1rem;
+    border-radius: 15px;
+  }
+
+  .navBtn, .navBtnPrimary {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .infoModal {
+    width: 95%;
+    padding: 2rem 1.5rem;
+    border-radius: 25px;
+  }
+
+  .modalTitle {
+    font-size: 1.3rem;
+  }
+
+  .modalBody {
+    font-size: 0.9rem;
+  }
+}
+
+/* 10. ROCK VIEWER (CAP 02) */
+.rockStage {
+  width: 100%;
+  height: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+  border-radius: 30px;
+  perspective: 1000px;
+  overflow: visible;
+}
+
+.spotlight {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--glow-color, rgba(255,255,255,0.1)) 0%, transparent 60%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.rockWrapper {
+  width: 250px;
+  height: 250px;
+  position: relative;
+  z-index: 2;
+  cursor: grab;
+}
+
+.rockWrapper:active {
+  cursor: grabbing;
+}
+
+.rockImage {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+}
+
+.zoomOverlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 183, 3, 0.1);
+  border-left: 3px solid var(--geo-gold);
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--geo-gold);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* 11. ROCK SELECTOR */
+.rockSelector {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.rockSelector::-webkit-scrollbar {
+  display: none;
+}
+
+.rockIconBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.8rem;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  min-width: 90px;
+}
+
+.rockIconBtn span {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 600;
+}
+
+.rockIconBtn.active {
+  background: rgba(255,255,255,0.08);
+}
+
+.rockIconBtn.active span {
+  color: var(--geo-gold);
+}
+
+.rockThumb {
+  width: 50px;
+  height: 50px;
+  background-repeat: no-repeat;
+  background-size: 400% 100%;
+  filter: grayscale(0.5);
+  transition: all 0.3s ease;
+}
+
+.rockIconBtn.active .rockThumb {
+  filter: grayscale(0) drop-shadow(0 0 10px var(--geo-gold));
+  transform: scale(1.1);
+}
+
+/* Responsive Cap 02 */
+@media (max-width: 1050px) {
+  .rockStage {
+    height: 300px;
+  }
+  .rockWrapper {
+    width: 180px;
+    height: 180px;
+  }
+  .rockSelector {
+    justify-content: center;
+  }
+}
+
+/* 12. HOTSPOTS 3D */
+.hotspot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background-color: #ff4444;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.hotspotActive {
+  background-color: #ff0000;
+  transform: scale(1.3);
+  box-shadow: 0 0 20px #ff0000, 0 0 40px rgba(255, 0, 0, 0.3);
+  border-color: var(--geo-gold);
+}
+
+.hotspotAnnotation {
+  background-color: #fff;
+  position: absolute;
+  transform: translate(10px, 10px);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: Orbitron, sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  color: #000;
+  border: 1px solid #ddd;
+}
+
+.hotspotActive .hotspotAnnotation {
+  background-color: var(--geo-gold);
+  border-color: #fff;
+}
+
+/* ?? RESPONSIVO MOBILE */
+@media (max-width: 768px) {
+  .cardSplit {
+    grid-template-columns: 1fr;
+  }
+
+  .visualArea {
+    padding: 1.5rem 1rem;
+  }
+
+  .earthCorteWrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: unset !important;
+  }
+
+  .viewerContainer {
+    width: 100%;
+    padding: 0;
+  }
+}

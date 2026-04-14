@@ -45,7 +45,8 @@ export interface AnswerItem extends GameObject {
 }
 
 export type QuestionLevel = 'Fácil' | 'Médio' | 'Difícil';
-export type QuestionCategory = 'Sistema Solar' | 'Terra' | 'Lua' | 'Constelações' | 'Sol' | 'Exploração Espacial';
+export type QuestionCategory = 'Sistema Solar' | 'Estrelas' | 'Lua' | 'Planetas' | 'Galáxias' | 'Exploração Espacial';
+
 
 export interface Question {
   id: string;

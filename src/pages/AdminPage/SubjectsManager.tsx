@@ -13,7 +13,7 @@ import { AdminService } from '@/services/adminService';
 import { Subject } from '@/services/subjectService';
 import styles from './AdminPage.module.css';
 
-import { SubjectModal } from './SubjectModal';
+import { JourneyComposer } from './JourneyComposer';
 
 const SubjectsManager: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -37,12 +37,12 @@ const SubjectsManager: React.FC = () => {
     }
   }
 
-  async function handleSave(data: Partial<Subject>) {
+  async function handleSave(draft: any) {
     try {
-      await AdminService.upsertSubject(data);
-      await loadSubjects(); // Recarrega a lista
+      await AdminService.saveFullJourney(draft);
+      await loadSubjects(); 
     } catch (err) {
-      console.error('Erro ao salvar:', err);
+      console.error('Erro ao salvar jornada completa:', err);
       throw err;
     }
   }
@@ -192,7 +192,7 @@ const SubjectsManager: React.FC = () => {
         )}
       </section>
 
-      <SubjectModal 
+      <JourneyComposer 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}

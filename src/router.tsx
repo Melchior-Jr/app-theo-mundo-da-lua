@@ -28,9 +28,11 @@ const UsersManager = lazy(() => import('@/pages/AdminPage/UsersManager'))
 const ActivitiesManager = lazy(() => import('@/pages/AdminPage/ActivitiesManager'))
 const SubjectsManager = lazy(() => import('@/pages/AdminPage/SubjectsManager'))
 const PedagogicalAnalysis = lazy(() => import('@/pages/AdminPage/PedagogicalAnalysis'))
+const AccessControl = lazy(() => import('@/pages/AdminPage/AccessControl'))
 
 // Rotas Professor
 const TeacherLayout = lazy(() => import('@/pages/TeacherPage/TeacherLayout'))
+const TeacherCommunication = lazy(() => import('@/pages/TeacherPage/Communication'))
 
 import PageLoader from '@/components/PageLoader'
 
@@ -114,6 +116,7 @@ export const router = createBrowserRouter([
           { path: 'notifications', element: <NotificationsManager /> },
           { path: 'users', element: <UsersManager /> },
           { path: 'pedagogical', element: <PedagogicalAnalysis /> },
+          { path: 'access', element: <AccessControl /> },
         ]
       },
       {
@@ -127,6 +130,7 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminOverview /> },
           { path: 'alunos', element: <UsersManager /> },
           { path: 'analise', element: <PedagogicalAnalysis /> },
+          { path: 'comunicacao', element: <TeacherCommunication /> },
         ]
       },
       {

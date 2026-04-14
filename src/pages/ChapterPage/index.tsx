@@ -12,6 +12,7 @@ import SolarSystemChapter from './SolarSystemChapter'
 import EarthMotionsChapter from './EarthMotionsChapter'
 import ConstellationsChapter from './ConstellationsChapter'
 import MoonPhasesChapter from './MoonPhasesChapter'
+import GeosciencesChapter from './GeosciencesChapter'
 import { MissionsModal } from '@/components/MissionsModal'
 import { CHAPTER_MISSIONS } from '@/data/missions'
 import { useState } from 'react'
@@ -143,7 +144,15 @@ export default function ChapterPage() {
     <div className={styles.page} style={{ '--chapter-color': chapter.color, '--chapter-color-bg': chapter.colorBg } as React.CSSProperties}>
       <StarField />
       <div className={styles.themeGlow} />
-      <ChapterHeader chapter={chapter} currentStep={chapter.order} totalSteps={4} />
+      <ChapterHeader 
+        chapter={chapter} 
+        currentStep={chapter.order} 
+        totalSteps={[
+          'estrutura-interna', 'rochas-minerais', 'formacao-solo', 
+          'erosao-relevo', 'vulcoes-terremotos', 'fenomenos-naturais', 
+          'acao-humana', 'sustentabilidade'
+        ].includes(chapter.id) ? 8 : 4} 
+      />
       <ChapterContainer
         chapter={chapter}
         onPrevious={handlePrevious}
@@ -168,6 +177,16 @@ export default function ChapterPage() {
          chapter.id === 'movimentos-da-terra' ? <EarthMotionsChapter /> :
          chapter.id === 'constelaçoes' ? <ConstellationsChapter /> :
          chapter.id === 'fases-da-lua' ? <MoonPhasesChapter /> :
+         [
+           'estrutura-interna', 
+           'rochas-minerais', 
+           'formacao-solo', 
+           'erosao-relevo', 
+           'vulcoes-terremotos', 
+           'fenomenos-naturais', 
+           'acao-humana', 
+           'sustentabilidade'
+         ].includes(chapter.id) ? <GeosciencesChapter /> :
          <div className={styles.placeholder}>Carregando conteúdo...</div>}
       </ChapterContainer>
 

@@ -166,11 +166,18 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
   }, [playerStats?.galactic_xp])
 
   useEffect(() => {
-    fetchQuizProgress()
-    
-    const duelInterval = setInterval(fetchQuizProgress, 10000)
-    return () => clearInterval(duelInterval)
-  }, [user, fetchQuizProgress])
+    fetchQuizProgress();
+
+    // Sincronização global: forçar refresh local quando houver mudanças no sistema de notificações
+    const handleNotifUpdate = () => fetchQuizProgress();
+    window.addEventListener('notification-updated', handleNotifUpdate);
+
+    const duelInterval = setInterval(fetchQuizProgress, 10000);
+    return () => {
+      clearInterval(duelInterval);
+      window.removeEventListener('notification-updated', handleNotifUpdate);
+    };
+  }, [user, fetchQuizProgress]);
 
   const handleLevelClick = (id: number) => {
     playSFX('click')

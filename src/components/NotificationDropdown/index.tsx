@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell, X, Check, Trophy, Info, AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { NotificationService, Notification, NotificationSource } from '@/services/notificationService'
 import styles from './NotificationDropdown.module.css'
 
@@ -20,12 +21,13 @@ export const NotificationDropdown: React.FC<Props> = ({
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch initial
+  // Fetch when opened or identity changes
   useEffect(() => {
-    if (userId) load()
-  }, [userId, source])
+    if (userId && isOpen) load()
+  }, [userId, source, isOpen])
 
   // Click outside listener
   useEffect(() => {
@@ -51,23 +53,41 @@ export const NotificationDropdown: React.FC<Props> = ({
     }
   }
 
-  const markRead = async (id: string) => {
+  const markRead = async (id: string, url?: string) => {
+    console.log('🌌 [Radar] Marcando como lida (otimista):', id);
+    
+    // Atualiza interface local instantaneamente (otimista)
+    setNotifications(prev => {
+      const next = prev.map(n => n.id === id ? { ...n, read: true } : n)
+      const count = next.filter(n => !n.read).length
+      onUnreadChange?.(count)
+      return next
+    })
+
     try {
-      await NotificationService.markAsRead(id)
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-      onUnreadChange?.(notifications.filter(n => !n.read && n.id !== id).length)
+      // Garante que o Navbar receba o sinal de atualização forçada
+      await NotificationService.markAsRead(id, userId)
+      
+      if (url) navigate(url)
     } catch (e) {
-      console.error(e)
+      console.error('❌ [Radar] Erro ao marcar como lida no banco:', e)
+      // Recarrega em caso de erro para sincronizar se necessário
+      load()
     }
   }
 
   const markAllRead = async () => {
+    console.log('🌌 [Radar] Limpando todas (otimista)...');
+    
+    // UI Local instantânea
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    onUnreadChange?.(0)
+    
     try {
       await NotificationService.markAllAsRead(userId, source)
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-      onUnreadChange?.(0)
     } catch (e) {
-      console.error(e)
+      console.error('❌ [Radar] Erro ao limpar todas no banco:', e)
+      load() // Recarrega se falhar
     }
   }
 
@@ -103,7 +123,10 @@ export const NotificationDropdown: React.FC<Props> = ({
             <div 
               key={n.id} 
               className={`${styles.item} ${!n.read ? styles.unread : ''}`}
-              onClick={() => !n.read && markRead(n.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!n.read) markRead(n.id);
+              }}
             >
               <div className={`${styles.itemIcon} ${styles[n.type]}`}>
                 {n.type === 'trophy' && <Trophy size={16} />}
@@ -121,7 +144,11 @@ export const NotificationDropdown: React.FC<Props> = ({
                 </div>
                 <p className={styles.itemText}>{n.content}</p>
                 <div className={styles.itemFooter}>
-                  <span className={styles.itemSource}>Fonte: {n.source || 'Sistema'}</span>
+                  {(n.sender_role || n.sender_name || n.source) && (
+                    <span className={styles.itemSource}>
+                      {n.sender_role ? `${n.sender_role}${n.sender_name ? `: ${n.sender_name}` : ''}` : (n.sender_name || (n.source && n.source.charAt(0).toUpperCase() + n.source.slice(1)))}
+                    </span>
+                  )}
                   {!n.read && <div className={styles.dot} />}
                 </div>
               </div>

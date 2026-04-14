@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 /**
  * Hook para gerenciar o acesso administrativo.
- * Verifica se o usuário logado possui e-mail autorizado na tabela admin_config.
+ * Regra: Apenas o Administrador Master (jamelchior72@gmail.com) tem acesso ao painel de /admin.
  */
 export function useAdmin() {
   const { user, loading: authLoading } = useAuth();
@@ -12,7 +11,7 @@ export function useAdmin() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkAdminStatus() {
+    function checkAdminStatus() {
       if (authLoading) return;
       
       if (!user?.email) {
@@ -21,23 +20,12 @@ export function useAdmin() {
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('admin_config')
-          .select('value')
-          .eq('key', 'authorized_emails')
-          .single();
-
-        if (error) throw error;
-
-        const authorizedEmails: string[] = (data.value as string[]).map(e => e.toLowerCase());
-        setIsAdmin(authorizedEmails.includes(user.email.toLowerCase()));
-      } catch (err) {
-        console.error('Erro ao verificar status de admin:', err);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
+      // Regra de Negócio: Administrador Master Único
+      const MASTER_ADMIN_EMAIL = 'jamelchior72@gmail.com';
+      const isMaster = user.email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase();
+      
+      setIsAdmin(isMaster);
+      setLoading(false);
     }
 
     checkAdminStatus();

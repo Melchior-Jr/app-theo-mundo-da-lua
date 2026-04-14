@@ -304,7 +304,11 @@ export default function UsersManager() {
               return (
                 <tr key={p.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div 
+                      onClick={() => handleViewDetails(p.id)}
+                      className={styles.userClickableInfo}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+                    >
                       <img src={p.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid ' + status.color }} />
                       <div>
                         <div style={{ fontWeight: 600 }}>{p.full_name}</div>

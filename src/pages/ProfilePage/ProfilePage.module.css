@@ -1109,3 +1109,49 @@
   color: #8bf9ff;
   border-color: rgba(139, 249, 255, 0.3);
 }
+
+.logoutBtn {
+  width: 100%;
+  margin-top: 1.5rem;
+  background: rgba(255, 75, 92, 0.05);
+  border: 1px solid rgba(255, 75, 92, 0.2);
+  color: #ff4b5c;
+  padding: 1rem;
+  border-radius: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logoutBtn:hover {
+  background: #ff4b5c;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(255, 75, 92, 0.3);
+  transform: translateY(-2px);
+}
+
+.logoutFooterBtn {
+  grid-column: span 2;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.logoutFooterBtn:hover {
+  background: rgba(255, 75, 92, 0.1);
+  color: #ff4b5c;
+  border-color: rgba(255, 75, 92, 0.3);
+}

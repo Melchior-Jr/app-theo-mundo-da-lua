@@ -45,7 +45,6 @@ export default function QuizSystem({
   const { user } = useAuth()
   const { playSFX, playBGMusic, stopBGMusic, playTrack } = useSound()
   const { refreshData } = usePlayer()
-  const [isSaving, setIsSaving] = useState(false)
 
   // Gerenciar música de fundo específica do Quiz
   useEffect(() => {
@@ -195,7 +194,7 @@ export default function QuizSystem({
 
   // 4. Handler para concluir missão e voltar ao início
   const handleFinishMission = () => {
-    if (isSaving) return
+    // Permitimos sair mesmo se estiver salvando (background)
     playSFX('click')
     setTotalXp(prev => prev + engine.xp)
     setIsStarted(false)
@@ -208,281 +207,186 @@ export default function QuizSystem({
       console.warn('[QuizSystem] Nenhum usuário logado. Abortando gravação.');
       return;
     }
+
     if (hasSaved) {
       console.log('[QuizSystem] Resultados já foram gravados nesta sessão.');
       return;
     }
     
-    console.log('[DEBUG] Iniciando saveResults. isDuel:', isDuel, 'status:', engine.status)
+    console.log('[DEBUG] Iniciando saveResults em Background. isDuel:', isDuel, 'status:', engine.status)
     setHasSaved(true)
-    setIsSaving(true)
 
-    // Lógica especial para Duelo
-    if (isDuel && duelConfig) {
-      const challengeId = (duelConfig as any).challengeId; // Tentando pegar de qualquer forma
-      const isResponse = !!challengeId;
-      
-      console.log(`%c [DEBUG] saveResults DUELO - ID: ${challengeId} | IsResponse: ${isResponse} `, 'background: #ff3d71; color: #fff; padding: 5px;')
-      
+    // SNAPSHOT: Capturamos os dados do engine agora para garantir consistência em background
+    const engineSnapshot = {
+      xp: engine.xp,
+      correctCount: engine.correctCount,
+      maxCombo: engine.maxCombo,
+      questionsLog: [...engine.questionsLog],
+      hasMistakes: engine.hasMistakes,
+      status: engine.status,
+      totalQuestions: engine.totalQuestions
+    };
+
+    const performBackgroundSave = async () => {
       try {
-        if (isResponse) {
-          // Oponente ACEITOU o desafio e agora terminou de jogar
-          const challengerScore = (duelConfig as any).challengerScore || 0
-          const challengerTime = (duelConfig as any).challengerTime || 999999
-          const challengedScore = engine.correctCount
-          const challengedTime = engine.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0)
-          const mode = duelConfig.mode
-          const stake = duelConfig.stake || 0
+        if (isDuel && duelConfig) {
+          const challengeId = (duelConfig as any).challengeId;
+          const isResponse = !!challengeId;
+          const stake = duelConfig.stake || 0;
+          const totalTimeSpent = engineSnapshot.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0);
 
-          let winStatus = 'draw';
-          let winnerId = null;
-          let loserId = null;
+          if (isResponse) {
+            const challengerScore = (duelConfig as any).challengerScore || 0;
+            const challengerTime = (duelConfig as any).challengerTime || 999999;
+            const mode = duelConfig.mode;
 
-          if (mode === 'classic') {
-            if (challengedScore > challengerScore) winStatus = 'win';
-            else if (challengerScore > challengedScore) winStatus = 'loss';
-          } else {
-            // SpeedRun: Score primeiro, depois tempo
-            if (challengedScore > challengerScore) winStatus = 'win';
-            else if (challengerScore > challengedScore) winStatus = 'loss';
-            else {
-              if (challengedTime < challengerTime) winStatus = 'win';
-              else if (challengerTime < challengedTime) winStatus = 'loss';
+            let winStatus = 'draw';
+            if (mode === 'classic' || mode === 'training') {
+              winStatus = engineSnapshot.correctCount > challengerScore ? 'win' : engineSnapshot.correctCount < challengerScore ? 'loss' : 'draw';
+            } else {
+              if (engineSnapshot.correctCount > challengerScore) winStatus = 'win';
+              else if (challengerScore > engineSnapshot.correctCount) winStatus = 'loss';
+              else {
+                winStatus = totalTimeSpent < challengerTime ? 'win' : challengerTime < totalTimeSpent ? 'loss' : 'draw';
+              }
             }
-          }
 
-          if (winStatus === 'win') {
-            winnerId = user.id; 
-            loserId = duelConfig.targetUserId;
-          } else if (winStatus === 'loss') {
-            winnerId = duelConfig.targetUserId;
-            loserId = user.id;
-          }
+            const winnerId = winStatus === 'win' ? user.id : winStatus === 'loss' ? duelConfig.targetUserId : null;
+            const loserId = winStatus === 'win' ? duelConfig.targetUserId : winStatus === 'loss' ? user.id : null;
 
-          // 1. Atualizar o registro do desafio
-          const { error: updateErr } = await supabase
-            .from('quiz_challenges')
-            .update({
-              challenged_score: challengedScore,
-              challenged_time: challengedTime,
-              status: 'completed'
-            })
-            .eq('id', challengeId)
-          
-          if (updateErr) throw updateErr
+            const duelPromises: any[] = [
+              supabase.from('quiz_challenges').update({
+                challenged_score: engineSnapshot.correctCount,
+                challenged_time: totalTimeSpent,
+                status: 'completed'
+              }).eq('id', challengeId)
+            ];
 
-          // 2. Transferir XP (Se houver vencedor claro)
-          if (winnerId && loserId && winStatus !== 'draw') {
-             console.log(`[DEBUG] Transferindo ${stake} XP de ${loserId} para ${winnerId}`)
-             
-             // A. Tirar do Perdedor
-             const { error: err1 } = await supabase.rpc('increment_player_xp', { p_id: loserId, p_amount: -stake });
-             if (err1) {
-                console.error('[ERROR] Falha ao tirar XP do perdedor:', err1.message)
-                // Tentativa B: Update direto caso o RPC falhe
-                const { data: pStats } = await supabase.from('player_global_stats').select('galactic_xp').eq('player_id', loserId).single()
-                if (pStats) {
-                  await supabase.from('player_global_stats').update({ galactic_xp: (pStats.galactic_xp || 0) - stake }).eq('player_id', loserId)
-                }
-             }
-
-             // B. Dar ao Vencedor
-             const { error: err2 } = await supabase.rpc('increment_player_xp', { p_id: winnerId, p_amount: stake });
-             if (err2) {
-                console.error('[ERROR] Falha ao dar XP ao vencedor:', err2.message)
-                // Tentativa B: Update direto caso o RPC falhe
-                const { data: wStats } = await supabase.from('player_global_stats').select('galactic_xp').eq('player_id', winnerId).single()
-                if (wStats) {
-                  await supabase.from('player_global_stats').update({ galactic_xp: (wStats.galactic_xp || 0) + stake }).eq('player_id', winnerId)
-                }
-             }
-
-             console.log(`[QuizSystem] Fim da transação. Status: ${winStatus}`)
-          }
-          
-          return;
-        } else {
-          // Início de um NOVO desafio
-          const totalTimeSpent = engine.questionsLog.reduce((acc, entry) => acc + entry.timeSpent, 0)
-          
-          const { error: insertErr } = await supabase.from('quiz_challenges').insert({
-            challenger_id: user.id,
-            challenged_id: duelConfig.targetUserId,
-            level_id: duelConfig.levelId,
-            stake: duelConfig.mode === 'training' ? 0 : duelConfig.stake,
-            mode: duelConfig.mode,
-            challenger_score: engine.correctCount,
-            challenger_time: totalTimeSpent,
-            question_ids: questions.map(q => q.id), // Salva a ordem das perguntas!
-            status: 'pending'
-          })
-          
-          if (insertErr) {
-            console.error('[DEBUG] ERRO AO INSERIR NOVO DUELO:', insertErr)
-            throw insertErr
-          }
-          console.log('[QuizSystem] Novo duelo lançado com sucesso!')
-        }
-        return
-      } catch (err) {
-        console.error('[QuizSystem] Erro fatal no salvamento do duelo:', err)
-        return
-      }
-    }
-
-    let finalXp = engine.xp
-    // Bonus de Revisão
-    if (currentChallenge === 4 && engine.status === 'finished') {
-       finalXp += 150
-    }
-    const score = finalXp * 10
-    const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253'
-
-    console.log(`[QuizSystem] Iniciando gravação: Missão ${currentLevel}, Desafio ${currentChallenge}, XP: ${finalXp}, Status: ${engine.status}`);
-
-    try {
-      // 1. Save Session
-      const { error: sessionErr } = await supabase.from('game_sessions').insert({
-        player_id: user.id,
-        game_id: QUIZ_GAME_ID,
-        score: score,
-        completed: engine.status === 'finished',
-        metadata: {
-           level: currentLevel,
-           challenge: currentChallenge,
-           xp_earned: finalXp,
-           correct_count: engine.correctCount,
-           total_questions: engine.totalQuestions,
-           questions_log: engine.questionsLog
-        }
-      })
-      if (sessionErr) throw sessionErr;
-
-      // 2. Fetch current stats to calculate progress
-      const { data: currentGlobal } = await supabase
-        .from('player_global_stats')
-        .select('*')
-        .eq('player_id', user.id)
-        .maybeSingle()
-      
-      const { data: currentPerGame } = await supabase
-        .from('player_game_stats')
-        .select('*')
-        .match({ player_id: user.id, game_id: QUIZ_GAME_ID })
-        .maybeSingle()
-
-      // 3. Update Global Stats (Incremental XP)
-      const challengeKey = `L${currentLevel}C${currentChallenge}`
-      const prevChallengeData = currentPerGame?.metadata?.challenge_data?.[challengeKey] || { best_xp: 0 }
-      const prevBestXp = Number(prevChallengeData.best_xp) || 0
-      
-      // Só somamos o que for NOVO (diferença entre o atual e o melhor anterior)
-      const xpGain = Math.max(0, finalXp - prevBestXp)
-      const scoreGain = xpGain * 10
-
-      console.log(`[QuizSystem] Diferença de XP (${challengeKey}): Atual ${finalXp} vs Melhor Antigo ${prevBestXp}. Ganho Real: ${xpGain}`);
-
-      const updatedTotalScore = (Number(currentGlobal?.total_score) || 0) + scoreGain
-      const updatedGalacticXp = (Number(currentGlobal?.galactic_xp) || 0) + xpGain
-      const updatedSessions = (currentGlobal?.total_sessions || 0) + 1
-
-      const { error: globalErr } = await supabase.from('player_global_stats').upsert({
-        player_id: user.id,
-        total_score: updatedTotalScore,
-        galactic_xp: updatedGalacticXp,
-        total_sessions: updatedSessions,
-        updated_at: new Date().toISOString()
-      })
-      if (globalErr) throw globalErr;
-
-      // 4. Update Game Stats & Unlock Levels/Challenges
-      const currentUnlockedLevel = currentPerGame?.metadata?.unlocked_level || 1
-      const currentUnlockedChallenge = currentPerGame?.metadata?.unlocked_challenge || 1
-      
-      const isChallengeFinished = engine.status === 'finished'
-      const isPerfect = isChallengeFinished && !engine.hasMistakes
-      const challengeStatus = isChallengeFinished ? (isPerfect ? 'success' : 'partial') : 'failed'
-      
-      let nextUnlockedLevel = currentUnlockedLevel
-      let nextUnlockedChallenge = currentUnlockedChallenge
-
-      // Só liberamos a próxima missão se NÃO for um desafio de revisão
-      if (isChallengeFinished && currentChallenge < 4) {
-        if (currentLevel === currentUnlockedLevel && currentChallenge === currentUnlockedChallenge) {
-          if (currentChallenge < 3) {
-            nextUnlockedChallenge = currentChallenge + 1
+            if (winnerId && loserId && winStatus !== 'draw') {
+              // Paraleliza transferência de XP
+              duelPromises.push(supabase.rpc('increment_player_xp', { p_id: loserId, p_amount: -stake }));
+              duelPromises.push(supabase.rpc('increment_player_xp', { p_id: winnerId, p_amount: stake }));
+            }
+            await Promise.all(duelPromises);
+            console.log(`[QuizSystem] Duelo processado em background. Status: ${winStatus}`);
           } else {
-            nextUnlockedLevel = currentLevel + 1
-            nextUnlockedChallenge = 1
+            // Novo desafio
+            await supabase.from('quiz_challenges').insert({
+              challenger_id: user.id,
+              challenged_id: duelConfig.targetUserId,
+              level_id: duelConfig.levelId,
+              stake: duelConfig.mode === 'training' ? 0 : duelConfig.stake,
+              mode: duelConfig.mode,
+              challenger_score: engineSnapshot.correctCount,
+              challenger_time: totalTimeSpent,
+              question_ids: questions.map(q => q.id),
+              status: 'pending'
+            });
+          }
+          return;
+        }
+
+        // Fluxo de Progressão Normal
+        let finalXp = engineSnapshot.xp;
+        if (currentChallenge === 4 && engineSnapshot.status === 'finished') finalXp += 150;
+        const score = finalXp * 10;
+        const QUIZ_GAME_ID = '316b90f3-c395-42b7-b857-be80d6628253';
+
+        // 1. Snapshot de Stats (Paralelizado)
+        const statsPromises = [
+          supabase.from('player_global_stats').select('*').eq('player_id', user.id).maybeSingle(),
+          supabase.from('player_game_stats').select('*').match({ player_id: user.id, game_id: QUIZ_GAME_ID }).maybeSingle()
+        ];
+        const [{ data: currentGlobal }, { data: currentPerGame }] = await Promise.all(statsPromises);
+
+        const challengeKey = `L${currentLevel}C${currentChallenge}`;
+        const prevChallengeData = currentPerGame?.metadata?.challenge_data?.[challengeKey] || { best_xp: 0 };
+        const prevBestXp = Number(prevChallengeData.best_xp) || 0;
+        const xpGain = Math.max(0, finalXp - prevBestXp);
+        const scoreGain = xpGain * 10;
+
+        const isChallengeFinished = engineSnapshot.status === 'finished';
+        const isPerfect = isChallengeFinished && !engineSnapshot.hasMistakes;
+        const challengeStatus = isChallengeFinished ? (isPerfect ? 'success' : 'partial') : 'failed';
+
+        let nextUnlockedLevel = currentPerGame?.metadata?.unlocked_level || 1;
+        let nextUnlockedChallenge = currentPerGame?.metadata?.unlocked_challenge || 1;
+
+        if (isChallengeFinished && currentChallenge < 4) {
+          if (currentLevel === nextUnlockedLevel && currentChallenge === nextUnlockedChallenge) {
+            if (currentChallenge < 3) nextUnlockedChallenge = currentChallenge + 1;
+            else { nextUnlockedLevel = currentLevel + 1; nextUnlockedChallenge = 1; }
           }
         }
+
+        const updatedChallengeData = {
+          ...(currentPerGame?.metadata?.challenge_data || {}),
+          [challengeKey]: {
+            best_xp: Math.max(prevBestXp, finalXp),
+            last_played: new Date().toISOString(),
+            status: challengeStatus,
+            correct_count: engineSnapshot.correctCount,
+            completed: isChallengeFinished
+          }
+        };
+
+        // 2. Persistência Final (TUDO PARALELO)
+        const finalUpdatePromises: any[] = [
+          supabase.from('game_sessions').insert({
+            player_id: user.id,
+            game_id: QUIZ_GAME_ID,
+            score: score,
+            completed: isChallengeFinished,
+            metadata: {
+              level: currentLevel,
+              challenge: currentChallenge,
+              xp_earned: finalXp,
+              correct_count: engineSnapshot.correctCount,
+              total_questions: engineSnapshot.totalQuestions,
+              questions_log: engineSnapshot.questionsLog
+            }
+          }),
+          supabase.from('player_global_stats').upsert({
+            player_id: user.id,
+            total_score: (Number(currentGlobal?.total_score) || 0) + scoreGain,
+            galactic_xp: (Number(currentGlobal?.galactic_xp) || 0) + xpGain,
+            total_sessions: (currentGlobal?.total_sessions || 0) + 1,
+            updated_at: new Date().toISOString()
+          }),
+          supabase.from('player_game_stats').upsert({
+            player_id: user.id,
+            game_id: QUIZ_GAME_ID,
+            total_score: (Number(currentPerGame?.total_score) || 0) + scoreGain,
+            best_score: Math.max(Number(currentPerGame?.best_score) || 0, score),
+            sessions_count: (currentPerGame?.sessions_count || 0) + 1,
+            last_played_at: new Date().toISOString(),
+            metadata: { 
+              ...(currentPerGame?.metadata || {}), 
+              unlocked_level: nextUnlockedLevel,
+              unlocked_challenge: nextUnlockedChallenge,
+              challenge_data: updatedChallengeData
+            }
+          })
+        ];
+
+        // Troféus (Paralelo)
+        if (engineSnapshot.correctCount > 0) finalUpdatePromises.push(TrophyService.updateProgress(user.id, 'quiz_first_correct', 1, false));
+        if (engineSnapshot.maxCombo >= 5) finalUpdatePromises.push(TrophyService.updateProgress(user.id, 'quiz_streak_5', 1, true));
+        if (engineSnapshot.correctCount > 0) finalUpdatePromises.push(TrophyService.updateProgress(user.id, 'quiz_total_20', engineSnapshot.correctCount, false));
+        if (isPerfect) finalUpdatePromises.push(TrophyService.updateProgress(user.id, 'quiz_perfect_score', 1, true));
+        if (currentLevel >= 5) finalUpdatePromises.push(TrophyService.updateProgress(user.id, 'prog_level_5', 1, true));
+        finalUpdatePromises.push(ProgressionService.updateDailyStreak(user.id));
+
+        await Promise.all(finalUpdatePromises);
+        await refreshData();
+        console.log('[QuizSystem] Salvo com sucesso em background! 🚀');
+      } catch (err) {
+        console.error('[QuizSystem] Erro no salvamento assíncrono:', err);
+      } finally {
       }
+    };
 
-      // Update challenge data in metadata
-      const updatedChallengeData = {
-        ...(currentPerGame?.metadata?.challenge_data || {}),
-        [challengeKey]: {
-          best_xp: Math.max(prevBestXp, finalXp),
-          last_played: new Date().toISOString(),
-          status: challengeStatus,
-          correct_count: engine.correctCount,
-          completed: isChallengeFinished
-        }
-      }
-
-      const { error: gameErr } = await supabase.from('player_game_stats').upsert({
-        player_id: user.id,
-        game_id: QUIZ_GAME_ID,
-        total_score: (Number(currentPerGame?.total_score) || 0) + scoreGain,
-        best_score: Math.max(Number(currentPerGame?.best_score) || 0, score),
-        sessions_count: (currentPerGame?.sessions_count || 0) + 1,
-        last_played_at: new Date().toISOString(),
-        metadata: { 
-          ...(currentPerGame?.metadata || {}), 
-          unlocked_level: nextUnlockedLevel,
-          unlocked_challenge: nextUnlockedChallenge,
-          challenge_data: updatedChallengeData
-        }
-      })
-      if (gameErr) throw gameErr;
-
-      // 5. Trophy Progress & Unlocks
-      // Update: First Correct (if correctCount > 0)
-      if (engine.correctCount > 0) {
-        await TrophyService.updateProgress(user.id, 'quiz_first_correct', 1, false)
-      }
-
-      // Update: Streak (if combo >= 5)
-      if (engine.maxCombo >= 5) {
-        await TrophyService.updateProgress(user.id, 'quiz_streak_5', 1, true)
-      }
-
-      // Update: Total Correct (Incremental)
-      if (engine.correctCount > 0) {
-        await TrophyService.updateProgress(user.id, 'quiz_total_20', engine.correctCount, false)
-      }
-
-      // Update: Perfect Score (meta: 1)
-      if (isPerfect) {
-        await TrophyService.updateProgress(user.id, 'quiz_perfect_score', 1, true)
-      }
-
-      // Check Progression: Level 5 Reached (Astrônomo Júnior)
-      if (currentLevel >= 5) {
-        await TrophyService.updateProgress(user.id, 'prog_level_5', 1, true)
-      }
-      await ProgressionService.updateDailyStreak(user.id);
-
-      console.log('[QuizSystem] Tudo gravado com sucesso! 🚀');
-      
-      // Notifica o app inteiro que os dados mudaram (XP, Nível, etc)
-      await refreshData();
-    } catch (err) {
-      console.error('[QuizSystem] Erro fatal ao salvar progresso:', err)
-      setHasSaved(false) // Permite tentar novamente se falhou
-    } finally {
-      setIsSaving(false)
-    }
+    performBackgroundSave();
   }
 
   useEffect(() => {
@@ -604,16 +508,14 @@ export default function QuizSystem({
 
           <button 
             className={styles.startDuelBtn} 
-            disabled={isSaving}
             onClick={() => {
-              if (isSaving) return
               setShowConfetti(false)
               setAnimatedXp(0)
               handleFinishMission()
             }}
-            style={{ backgroundColor: accentColor, transform: 'scale(1.05)', opacity: isSaving ? 0.7 : 1 }}
+            style={{ backgroundColor: accentColor, transform: 'scale(1.05)' }}
           >
-            {isSaving ? 'SALVANDO...' : 'VOLTAR PARA A BASE ➔'}
+            VOLTAR PARA A BASE ➔
           </button>
         </div>
       </div>
@@ -646,10 +548,9 @@ export default function QuizSystem({
           <button 
             className={styles.nextLevelBtn} 
             onClick={handleFinishMission}
-            disabled={isSaving}
-            style={{ opacity: isSaving ? 0.7 : 1 }}
+            style={{ opacity: 1 }}
           >
-            {isSaving ? 'SALVANDO...' : 'PROSSEGUIR JORNADA ➔'}
+            CONTINUAR ➔
           </button>
         </div>
       </div>

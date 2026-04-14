@@ -139,8 +139,11 @@ const MemoriaAstral: React.FC = () => {
 
 
   const handleStartGame = () => {
+    const categories: GameCategory[] = ['PLANETS', 'CURIOSITIES', 'MOON', 'CONCEPTS', 'CONSTELLATIONS'];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    setCategory(randomCategory);
     setGameStarted(true);
-    initGame(pairsCount, mode, category);
+    initGame(pairsCount, mode, randomCategory);
   };
 
   const handleBackToLobby = () => {
@@ -176,41 +179,7 @@ const MemoriaAstral: React.FC = () => {
               </p>
             </div>
 
-              <div className={styles.selectionSection}>
-                <h3>O que quer aprender?</h3>
-                <div className={styles.categoryGrid}>
-                  <button 
-                    className={`${styles.categoryBtn} ${category === 'PLANETS' ? styles.active : ''}`}
-                    onClick={() => setCategory('PLANETS')}
-                  >
-                    🪐 Planetas
-                  </button>
-                  <button 
-                    className={`${styles.categoryBtn} ${category === 'CURIOSITIES' ? styles.active : ''}`}
-                    onClick={() => setCategory('CURIOSITIES')}
-                  >
-                    🌌 Curiosidades
-                  </button>
-                  <button 
-                    className={`${styles.categoryBtn} ${category === 'MOON' ? styles.active : ''}`}
-                    onClick={() => setCategory('MOON')}
-                  >
-                    🌕 Fases da Lua
-                  </button>
-                  <button 
-                    className={`${styles.categoryBtn} ${category === 'CONCEPTS' ? styles.active : ''}`}
-                    onClick={() => setCategory('CONCEPTS')}
-                  >
-                    ☀️ Conceitos
-                  </button>
-                  <button 
-                    className={`${styles.categoryBtn} ${category === 'CONSTELLATIONS' ? styles.active : ''}`}
-                    onClick={() => setCategory('CONSTELLATIONS')}
-                  >
-                    ⭐ Constelações
-                  </button>
-                </div>
-              </div>
+
 
               <div className={styles.selectionSectionSplit}>
                 <div className={styles.selectionSection}>
@@ -328,14 +297,7 @@ const MemoriaAstral: React.FC = () => {
             </div>
           </div>
 
-          <div className={styles.learningSummary}>
-            <h4>Exploração Concluída</h4>
-            <ul>
-              <li>Você identificou todos os {pairsCount} astros deste sistema.</li>
-              <li>Sua precisão de {accuracy}% mostra grande foco!</li>
-              <li>A galáxia está {matchesCount * 10} anos-luz mais conhecida.</li>
-            </ul>
-          </div>
+
 
           <div className={styles.actionButtons}>
             <button className={styles.primaryBtn} onClick={handleStartGame} aria-label="Jogar novamente">
