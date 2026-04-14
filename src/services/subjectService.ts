@@ -15,12 +15,19 @@ export interface Subject {
 export const SubjectService = {
   /**
    * Lista todas as matérias publicadas ou em breve
+   * Se includeDrafts for falso, filtra apenas publicadas e em breve
    */
-  async listAll(): Promise<Subject[]> {
-    const { data, error } = await supabase
+  async listAll(includeDrafts = false): Promise<Subject[]> {
+    let query = supabase
       .from('app_subjects')
       .select('*')
       .order('order_index', { ascending: true });
+
+    if (!includeDrafts) {
+      query = query.neq('status', 'draft');
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data || [];

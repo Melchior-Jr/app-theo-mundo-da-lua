@@ -88,16 +88,47 @@ const LAYERS = [
 
 export default function EarthLayers() {
   const [selectedLayerId, setSelectedLayerId] = useState('crosta')
-  const [depthValue, setDepthValue] = useState(0)
+  const [depthValue, setDepthValue] = useState(2)
+  const [cameraOrbit, setCameraOrbit] = useState("-60deg 75deg 70m")
+  const [cameraTarget, setCameraTarget] = useState("1.5m 10.0m 15.0m")
   const [infoModal, setInfoModal] = useState<{ title: string, content: string } | null>(null)
 
   const activeLayer = LAYERS.find(l => l.id === selectedLayerId) || LAYERS[0]
 
+  const handleLayerChange = (layerId: string) => {
+    const layer = LAYERS.find(l => l.id === layerId);
+    if (!layer) return;
+    
+    setSelectedLayerId(layerId);
+    setDepthValue(layer.range[0] + (layer.range[1] - layer.range[0]) / 2);
+  };
 
   useEffect(() => {
     const layer = LAYERS.find(l => depthValue >= l.range[0] && depthValue <= l.range[1])
-    if (layer && layer.id !== selectedLayerId) {
-      setSelectedLayerId(layer.id)
+    if (layer) {
+      if (layer.id !== selectedLayerId) {
+        setSelectedLayerId(layer.id)
+      }
+      
+      // Atualiza a câmera conforme a camada detectada (via clique ou slider)
+      switch(layer.id) {
+        case 'crosta':
+          setCameraOrbit("-110deg 75deg 35m");
+          setCameraTarget("1.5m 10.0m -15.0m");
+          break;
+        case 'manto':
+          setCameraOrbit("-100deg 75deg 40m");
+          setCameraTarget("1.5m 10.0m 18.0m");
+          break;
+        case 'nucleo-externo':
+          setCameraOrbit("-80deg 70deg 35m");
+          setCameraTarget("1.5m 10.0m 30.0m");
+          break;
+        case 'nucleo-interno':
+          setCameraOrbit("-45deg 75deg 25m");
+          setCameraTarget("1.5m 5.0m 45.0m");
+          break;
+      }
     }
   }, [depthValue, selectedLayerId])
 
@@ -113,11 +144,13 @@ export default function EarthLayers() {
             <div className={styles.viewerContainer}>
               <div className={styles.earthCorteWrapper}>
                 <model-viewer
-                  src="/3D%20Model/earths_interior.glb"
+                  src="/3D%20Model/earth_core.glb"
                   alt="Interior da Terra em 3D"
                   {...({ autoplay: true } as any)}
                   camera-controls
-                  camera-orbit="90deg 75deg auto"
+                  camera-orbit={cameraOrbit}
+                  camera-target={cameraTarget}
+                  interpolation-decay="200"
                   shadow-intensity="1"
                   environment-image="neutral"
                   exposure="1.2"
@@ -130,49 +163,57 @@ export default function EarthLayers() {
                   <button 
                     className={`${styles.hotspot} ${activeLayer.id === 'crosta' ? styles.hotspotActive : ''}`}
                     slot="hotspot-1" 
-                    data-position="0.4m 0.55m 0.35m" 
-                    data-normal="1m 0m 0m"
-                    onClick={() => setDepthValue(2)}
+                    data-position="1.5m 40.0m -15.0m" 
+                    data-normal="0m 0m 1m"
+                    onClick={() => handleLayerChange('crosta')}
                   >
                     <div className={styles.hotspotAnnotation}>1</div>
+                    <div className={styles.hotspotTooltip}>
+                      <p>A camada externa da Terra, onde vivemos. É composta por rochas sólidas.</p>
+                    </div>
                   </button>
 
                   <button 
                     className={`${styles.hotspot} ${activeLayer.id === 'manto' ? styles.hotspotActive : ''}`}
                     slot="hotspot-2" 
-                    data-position="0.4m 0.45m -0.15m" 
-                    data-normal="1m 0m 0m"
-                    onClick={() => setDepthValue(25)}
+                    data-position="1.5m 40.0m 18.0m" 
+                    data-normal="0m 0m 1m"
+                    onClick={() => handleLayerChange('manto')}
                   >
                     <div className={styles.hotspotAnnotation}>2</div>
+                    <div className={styles.hotspotTooltip}>
+                      <p>A maior camada da Terra, feita de rocha pastosa chamada magma.</p>
+                    </div>
                   </button>
 
                   <button 
                     className={`${styles.hotspot} ${activeLayer.id === 'nucleo-externo' ? styles.hotspotActive : ''}`}
                     slot="hotspot-3" 
-                    data-position="0.4m 0.28m -0.85m" 
-                    data-normal="1m 0m 0m"
-                    onClick={() => setDepthValue(70)}
+                    data-position="1.5m 20.0m 30.0m" 
+                    data-normal="0m 0m 1m"
+                    onClick={() => handleLayerChange('nucleo-externo')}
                   >
                     <div className={styles.hotspotAnnotation}>3</div>
+                    <div className={styles.hotspotTooltip}>
+                      <p>Uma camada de ferro e níquel líquidos a temperaturas altíssimas.</p>
+                    </div>
                   </button>
 
                   <button 
                     className={`${styles.hotspot} ${activeLayer.id === 'nucleo-interno' ? styles.hotspotActive : ''}`}
                     slot="hotspot-4" 
-                    data-position="0.4m 0.18m -1.45m" 
-                    data-normal="1m 0m 0m"
-                    onClick={() => setDepthValue(95)}
+                    data-position="1.5m 10.0m 45.0m" 
+                    data-normal="0m 0m 1m"
+                    onClick={() => handleLayerChange('nucleo-interno')}
                   >
                     <div className={styles.hotspotAnnotation}>4</div>
+                    <div className={styles.hotspotTooltip}>
+                      <p>A parte mais profunda, uma bola sólida de metal super quente.</p>
+                    </div>
                   </button>
 
-                  <div className={styles.viewerOverlay}>
-                    {activeLayer.name}
-                  </div>
                 </model-viewer>
               </div>
-
 
               <div className={styles.depthSliderArea}>
                 <div className={styles.depthSliderContainer}>
@@ -191,6 +232,7 @@ export default function EarthLayers() {
                           key={layer.id} 
                           className={`${styles.marker} ${activeLayer.id === layer.id ? styles.markerActive : ''}`}
                           style={{ left: `${(layer.range[0] + layer.range[1]) / 2}%` }}
+                          onClick={() => handleLayerChange(layer.id)}
                         />
                       ))}
                     </div>
@@ -258,9 +300,6 @@ export default function EarthLayers() {
             <div className={styles.modalGlow} />
             <h3 className={styles.modalTitle}>{infoModal.title}</h3>
             <p className={styles.modalBody}>{infoModal.content}</p>
-            <div className={styles.modalAction}>
-              <button className={styles.confirmBtn} onClick={() => setInfoModal(null)}>Entendi, Théo!</button>
-            </div>
           </div>
         </div>
       )}

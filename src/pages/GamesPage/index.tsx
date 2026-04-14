@@ -193,14 +193,14 @@ export default function GamesPage() {
   useEffect(() => {
     async function loadSubjects() {
       try {
-        const data = await SubjectService.listAll()
+        const data = await SubjectService.listAll(playerData?.is_tester)
         setSubjects(data)
       } catch (err) {
         console.error('Erro ao carregar jornadas:', err)
       }
     }
     loadSubjects()
-  }, [])
+  }, [playerData?.is_tester])
 
 
   useEffect(() => {

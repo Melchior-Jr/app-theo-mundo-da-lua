@@ -22,7 +22,8 @@ const ChaptersManager: React.FC = () => {
 
   async function loadChapters() {
     try {
-      const data = await ChapterService.getAll();
+      // Admin vê todos os capítulos, incluindo rascunhos (drafts)
+      const data = await ChapterService.getBySubject(undefined, true);
       setChapters(data);
     } catch (err) {
       console.error('Erro ao carregar capítulos:', err);

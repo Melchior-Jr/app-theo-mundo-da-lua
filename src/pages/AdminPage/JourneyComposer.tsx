@@ -81,7 +81,8 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
   async function loadFullJourney(s: Subject) {
     setLoading(true);
     try {
-      const chapters = await ChapterService.getBySubject(s.id);
+      // Admin v\u00ea todos os cap\u00edtulos, incluindo rascunhos (drafts)
+      const chapters = await ChapterService.getBySubject(s.id, true);
       const chaptersWithMissions = await Promise.all(
         chapters.map(async (ch) => {
           const missions = await ChapterService.getMissions(ch.id);

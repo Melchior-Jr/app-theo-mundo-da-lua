@@ -28,7 +28,7 @@ export interface DBMission {
 
 export const ChapterService = {
   /** Busca capítulos filtrados por matéria (opcional) */
-  async getBySubject(subjectId?: string) {
+  async getBySubject(subjectId?: string, includeDrafts = false) {
     let query = supabase
       .from('app_chapters')
       .select('*')
@@ -36,6 +36,10 @@ export const ChapterService = {
     
     if (subjectId) {
       query = query.eq('subject_id', subjectId);
+    }
+
+    if (!includeDrafts) {
+      query = query.neq('status', 'draft');
     }
     
     const { data, error } = await query;

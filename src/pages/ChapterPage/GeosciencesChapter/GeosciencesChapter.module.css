@@ -50,20 +50,6 @@
   width: 100%;
 }
 
-.viewerOverlay {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(var(--geo-gold-rgb, 255, 183, 3), 0.1);
-  border-right: 3px solid var(--geo-gold);
-  padding: 0.5rem 1rem;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--geo-gold);
-  border-radius: 4px;
-  pointer-events: none;
-}
 
 .depthSliderContainer {
   display: flex;
@@ -332,6 +318,11 @@
   line-height: 1.6;
   color: #ccc;
   margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s ease;
 }
 
 .theoTipMini {
@@ -479,13 +470,19 @@
   }
 
   /* Slider vira Horizontal no Mobile */
+  .depthSliderArea {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
   .depthSliderContainer {
     flex-direction: row;
     width: 100%;
     max-width: 400px;
     height: auto;
     justify-content: space-between;
-    order: 3;
     padding: 0;
   }
 
@@ -509,7 +506,11 @@
     padding: 0;
   }
 
-  .explanationBox, .theoTipMini {
+  .explanationBox {
+    display: none; /* Esconde no mobile pois agora está no hotspot */
+  }
+
+  .theoTipMini {
     display: none;
   }
 }
@@ -765,6 +766,54 @@
   background-color: var(--geo-gold);
   border-color: #fff;
 }
+
+/* Tooltip do Hotspot */
+.hotspotTooltip {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 183, 3, 0.3);
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  width: 180px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+
+.hotspotActive .hotspotTooltip {
+  opacity: 1;
+  visibility: visible;
+  bottom: 30px;
+}
+
+.hotspotTooltip p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #fff;
+  font-style: normal;
+}
+
+/* Triângulo da Tooltip (Inferior) */
+.hotspotTooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(15, 15, 15, 0.65);
+}
+
 
 /* ?? RESPONSIVO MOBILE */
 @media (max-width: 768px) {

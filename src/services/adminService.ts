@@ -373,6 +373,14 @@ export const AdminService = {
     if (error) throw error;
   },
 
+  async toggleTesterStatus(playerId: string, isTester: boolean) {
+    const { error } = await supabase
+      .from('players')
+      .update({ is_tester: isTester })
+      .eq('id', playerId);
+    if (error) throw error;
+  },
+
   async awardManualTrophy(playerId: string, trophyId: string) {
     const { error } = await supabase
       .from('user_trophies')

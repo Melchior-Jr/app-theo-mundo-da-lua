@@ -17,6 +17,7 @@ export default function ChaptersPage() {
   const { user } = useAuth()
   const { subjectSlug } = useParams<{ subjectSlug?: string }>()
   const { 
+    playerData,
     progress,
     explorationLogs 
   } = usePlayer()
@@ -41,7 +42,7 @@ export default function ChaptersPage() {
         setSubject(currentSubject)
 
         if (currentSubject) {
-          const chaptersData = await ChapterService.getBySubject(currentSubject.id)
+          const chaptersData = await ChapterService.getBySubject(currentSubject.id, playerData?.is_tester)
 
           // Narração dinâmica baseada no slug ou campo da matéria
           const subjectNarration = getNarrationById(`journey-${slug}`) || getNarrationById('chapters-selection')
@@ -66,7 +67,7 @@ export default function ChaptersPage() {
       }
     }
     loadData()
-  }, [subjectSlug])
+  }, [subjectSlug, playerData?.is_tester])
 
   useEffect(() => {
     if (isGlobalLoading || loading) return

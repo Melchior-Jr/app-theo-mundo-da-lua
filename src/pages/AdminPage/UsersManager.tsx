@@ -17,7 +17,8 @@ import {
   AlertCircle,
   ArrowUpDown,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  FlaskConical
 } from 'lucide-react';
 import { AdminService } from '@/services/adminService';
 import { calcLevel, getLevelTitle } from '@/utils/playerUtils';
@@ -131,6 +132,25 @@ export default function UsersManager() {
       loadPlayers();
     } catch (err) {
       alert('Erro ao alterar status de acesso.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleToggleTester(id: string, currentStatus: boolean) {
+    setActionLoading(true);
+    try {
+      await AdminService.toggleTesterStatus(id, !currentStatus);
+      alert(`Status de testador ${!currentStatus ? 'ativado' : 'desativado'} com sucesso.`);
+      if (selectedPlayer) {
+        setSelectedPlayer({
+          ...selectedPlayer,
+          profile: { ...selectedPlayer.profile, is_tester: !currentStatus }
+        });
+      }
+      loadPlayers();
+    } catch (err) {
+      alert('Erro ao alterar status de testador.');
     } finally {
       setActionLoading(false);
     }
@@ -865,6 +885,25 @@ export default function UsersManager() {
                           <p>Conceda troféus exclusivos para incentivar o engajamento.</p>
                           <button onClick={() => handleAwardTrophy(selectedPlayer.profile.id)} disabled={actionLoading} className={styles.warningActionBtn}>
                             Dar Troféu Especial
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.managementCard}>
+                        <div className={styles.mgmtIcon} style={{ 
+                          background: selectedPlayer.profile.is_tester ? 'rgba(0, 229, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)', 
+                          color: selectedPlayer.profile.is_tester ? '#00e5ff' : 'rgba(255, 255, 255, 0.4)' 
+                        }}><FlaskConical size={24} /></div>
+                        <div className={styles.mgmtInfo}>
+                          <h4>Acesso Beta (Testador)</h4>
+                          <p>{selectedPlayer.profile.is_tester ? 'Este aluno pode visualizar conteúdos em rascunho (Beta).' : 'Este aluno visualiza apenas conteúdos publicados.'}</p>
+                          <button 
+                            onClick={() => handleToggleTester(selectedPlayer.profile.id, selectedPlayer.profile.is_tester)} 
+                            disabled={actionLoading} 
+                            className={selectedPlayer.profile.is_tester ? styles.successActionBtn : styles.secondaryBtn}
+                            style={{ width: '100%', marginTop: 'auto' }}
+                          >
+                            {selectedPlayer.profile.is_tester ? 'Remover Acesso Beta' : 'Tornar Testador'}
                           </button>
                         </div>
                       </div>
