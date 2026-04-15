@@ -2,9 +2,6 @@ import { useState, useCallback } from 'react'
 import styles from './SoilSimulator.module.css'
 import geoStyles from './GeosciencesChapter.module.css'
 import { 
-  AlertCircle,
-  FlaskConical,
-  Droplets,
   CloudDrizzle,
   CloudRain,
   CloudLightning,

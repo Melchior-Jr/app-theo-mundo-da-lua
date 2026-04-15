@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, 
-  RotateCcw, 
   LucideLayers, 
   Activity, 
   Flame, 
-  Info,
   X
 } from 'lucide-react';
 import styles from './GeosciencesChapter.module.css';
-
-// Imagem servida da pasta public
-const ASSET_URL = '/geociencias_amostras_minerais_1776143071673.png';
 
 interface RockSample {
   id: string;
@@ -198,22 +192,6 @@ const MineralExplorer: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const currentRock = ROCKS_DATA[currentIndex];
 
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
-  
-  const springX = useSpring(rotateX, { stiffness: 60, damping: 20 });
-  const springY = useSpring(rotateY, { stiffness: 60, damping: 20 });
-
-  const handleDrag = (_: any, info: any) => {
-    rotateY.set(rotateY.get() + info.delta.x * 0.5);
-    rotateX.set(rotateX.get() - info.delta.y * 0.5);
-  };
-
-  const resetRotation = () => {
-    rotateX.set(0);
-    rotateY.set(0);
-  };
-
   return (
     <div className={styles.courseWrapper}>
       <main className={styles.mainCard}>
@@ -318,7 +296,6 @@ const MineralExplorer: React.FC = () => {
               onClick={() => {
                   setCurrentIndex(idx);
                   setIsZoomed(false);
-                  resetRotation();
               }}
             >
               <div 
