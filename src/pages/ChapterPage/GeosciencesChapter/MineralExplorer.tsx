@@ -26,65 +26,169 @@ interface RockSample {
   tip: string;
   color: string;
   glow: string;
-  imgX: number; 
+  imgX?: number; 
+  modelPath: string;
 }
 
 const ROCKS_DATA: RockSample[] = [
-  {
-    id: 'granito',
-    name: 'Granito',
-    type: 'Ígnea',
-    origin: 'Intrusiva',
-    texture: 'Cristalina',
-    formation: 'Resfriamento lento',
-    explanation: 'O Granito se forma a partir do resfriamento lento do magma no interior da crosta terrestre.',
-    description: 'Possui minerais como Quartzo, Feldspato e Mica. É uma das rochas mais resistentes da natureza, sendo usada em monumentos há milênios.',
-    tip: 'Observe os pontinhos brilhantes! Cada cor é um mineral diferente que se cristalizou devagar. 🔥',
-    color: '#ffc1cc',
-    glow: 'rgba(255, 193, 204, 0.4)',
-    imgX: 0
-  },
+  // ÍGNEAS
   {
     id: 'basalto',
     name: 'Basalto',
     type: 'Ígnea',
-    origin: 'Extrusiva',
-    texture: 'Fina',
-    formation: 'Resfriamento rápido',
-    explanation: 'O Basalto é fruto da lava que esfria rapidamente ao atingir a superfície fria da Terra.',
-    description: 'É a rocha mais comum no fundo dos oceanos. Sua cor escura vem da abundância de ferro e magnésio. Muitas vezes possui pequenos furos causados por bolhas de gás.',
-    tip: 'Essa aqui veio direto de uma erupção vulcânica! É a base da maioria das ilhas do Pacífico. 🌋',
-    color: '#444',
-    glow: 'rgba(100, 100, 100, 0.5)',
-    imgX: 1
+    origin: 'Extrusiva (Vulcânica)',
+    texture: 'Fina / Afanítica',
+    formation: 'Resfriamento Rápido',
+    explanation: 'O Basalto nasce da lava que esfria rapidamente ao tocar a superfície fria ou a água do mar.',
+    description: 'É a rocha mais comum na crosta oceânica. Sua cor escura vem da abundância de ferro e magnésio. É extremamente resistente e forma colunas geométricas raras em alguns lugares do mundo.',
+    tip: 'Vindo direto de erupções vulcânicas, o basalto é a prova viva da "reciclagem" da Terra! 🌋',
+    color: '#333333',
+    glow: 'rgba(100, 100, 100, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/basalto_1.glb'
   },
+  {
+    id: 'granito',
+    name: 'Granito',
+    type: 'Ígnea',
+    origin: 'Intrusiva (Plutônica)',
+    texture: 'Cristalina / Grosseira',
+    formation: 'Resfriamento Lento',
+    explanation: 'O Granito se forma a partir do resfriamento muito lento do magma no interior da crosta terrestre.',
+    description: 'Composto por quartzo, feldspato e mica. Como esfria devagar, os minerais têm tempo para se organizar em cristais visíveis a olho nu. É uma das rochas mais duras do planeta.',
+    tip: 'Olhe os brilhos! Cada ponto é um mineral diferente que levou milhares de anos para "crescer". 🔥',
+    color: '#deb887',
+    glow: 'rgba(222, 184, 135, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/granito.glb'
+  },
+  {
+    id: 'pedra-pomes',
+    name: 'Pedra Pomes',
+    type: 'Ígnea',
+    origin: 'Extrusiva (Vulcânica)',
+    texture: 'Vitreosa / Vesicular',
+    formation: 'Resfriamento Hiper-rápido',
+    explanation: 'Formada quando o magma carregado de gás é expelido violentamente e esfria quase instantaneamente.',
+    description: 'Ela é tão cheia de bolhas de ar que é a única rocha que consegue flutuar na água! Na antiguidade, era usada para polir ferramentas e em cuidados de beleza.',
+    tip: 'Pesa quase nada e flutua! É basicamente um "espumante" de rocha vulcânica. 🧼',
+    color: '#c0c0c0',
+    glow: 'rgba(192, 192, 192, 0.3)',
+    modelPath: '/3D%20Model/rochas-e-minerais/pedra-pomes.glb'
+  },
+
+  // SEDIMENTARES
   {
     id: 'arenito',
     name: 'Arenito',
     type: 'Sedimentar',
-    origin: 'Deposição',
-    texture: 'Granular',
-    formation: 'Compactação de areia',
-    explanation: 'Formado pela acumulação e cimentação de grãos de areia ao longo de milhões de anos.',
-    description: 'Você consegue ver as camadas de deposição? Cada linha conta a história de rios, ventos ou mares que passaram por ali há eras.',
-    tip: 'Passe a mão (visualmente) nela: parece areia colada, não é? No Grand Canyon, ela é a grande estrela! 🏜️',
+    origin: 'Clástica (Deposição)',
+    texture: 'Granular / Arenosa',
+    formation: 'Compactação de Areia',
+    explanation: 'Formado pelo acúmulo de grãos de areia (geralmente quartzo) que foram cimentados por minerais.',
+    description: 'É a rocha que forma paisagens icônicas como o Grand Canyon. Suas camadas coloridas indicam diferentes momentos da história da Terra, revelando onde já existiram rios ou desertos.',
+    tip: 'É como areia de praia que alguém resolveu colar com cimento natural após milhões de anos! 🏜️',
     color: '#d4a373',
     glow: 'rgba(212, 163, 115, 0.4)',
-    imgX: 2
+    modelPath: '/3D%20Model/rochas-e-minerais/arenito.glb'
   },
   {
-    id: 'marmore',
-    name: 'Mármore',
+    id: 'argilito',
+    name: 'Argilito',
+    type: 'Sedimentar',
+    origin: 'Clástica',
+    texture: 'Muito Fina / Lisa',
+    formation: 'Compactação de Argila',
+    explanation: 'Originada da sedimentação de lamas e argilas em águas calmas, como lagos ou fundos oceânicos.',
+    description: 'Por ser formada por partículas tão minúsculas, ela é muito boa para preservar fósseis de plantas e animais pequenos. É a origem do xisto, uma rocha muito usada na indústria.',
+    tip: 'Essa rocha é a "biblioteca" da Terra: ela guardou os segredos de lagos antigos por milhões de anos. 📜',
+    color: '#8d6e63',
+    glow: 'rgba(141, 110, 99, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/argilito.glb'
+  },
+  {
+    id: 'travertino',
+    name: 'Travertino Romano',
+    type: 'Sedimentar',
+    origin: 'Química (Precipitação)',
+    texture: 'Vesicular / Porosa',
+    formation: 'Deposição em Fontes',
+    explanation: 'Nasce da precipitação de carbonato de cálcio em fontes termais e cavernas de calcário.',
+    description: 'Muito famoso por ter sido usado na construção do Coliseu em Roma. Possui buraquinhos naturais que dão um charme rústico e sofisticado. É uma rocha que "nasce" da água.',
+    tip: 'Imagine se a água de uma cachoeira virasse pedra... o Travertino é quase isso! 🏛️',
+    color: '#e3d5ca',
+    glow: 'rgba(227, 213, 202, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/travertino_romano.glb'
+  },
+  {
+    id: 'calcario',
+    name: 'Calcário',
+    type: 'Sedimentar',
+    origin: 'Bioquímica / Química',
+    texture: 'Variável',
+    formation: 'Acúmulo de Conchas',
+    explanation: 'Formado principalmente pelo acúmulo de esqueletos de corais e conchas no fundo do mar.',
+    description: 'É a matéria-prima do cimento e do cal. É muito sensível a ácidos, o que cria as magníficas cavernas com estalactites e estalagmites que visitamos.',
+    tip: 'Essa pedra já foi viva! Quase todo o calcário do mundo foi feito por bicho marinho. 🐚',
+    color: '#cfd8dc',
+    glow: 'rgba(207, 216, 220, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/calcario.glb'
+  },
+
+  // METAMÓRFICAS
+  {
+    id: 'gnaisse',
+    name: 'Gnaisse',
     type: 'Metamórfica',
-    origin: 'Alta Pressão',
-    texture: 'Lisa/Veteada',
-    formation: 'Transformação física',
-    explanation: 'O Mármore nasce de uma rocha calcária que sofreu calor e pressão intensos no interior da Terra.',
-    description: 'Esse processo de "metamorfose" faz com que os minerais se recristalizem, criando os belos padrões de veios coloridos que amamos.',
-    tip: 'Era uma rocha comum que virou algo nobre sob pressão. Uma verdadeira lição de resiliência geológica! ✨',
-    color: '#fff',
+    origin: 'Alta Pressão e Calor',
+    texture: 'Foliada (Em Listras)',
+    formation: 'Recristalização',
+    explanation: 'Resultante da metamorfose de rochas como o granito, sob condições extremas de pressão.',
+    description: 'O famoso Pão de Açúcar no Rio de Janeiro é feito de gnaisse! Suas listras claras e escuras mostram como os minerais foram espremidos e organizados em camadas pelo peso da Terra.',
+    tip: 'É um Granito que foi tão esmagado que seus minerais entraram na fila e fizeram listras! 🦓',
+    color: '#b0bec5',
+    glow: 'rgba(176, 190, 197, 0.4)',
+    modelPath: '/3D%20Model/rochas-e-minerais/gnaisse.glb'
+  },
+  {
+    id: 'quartzito',
+    name: 'Quartzito',
+    type: 'Metamórfica',
+    origin: 'Metamorfismo',
+    texture: 'Cristalina / Dura',
+    formation: 'Fusão de Grãos',
+    explanation: 'Nasce quando o arenito é submetido a calor e pressão, fundindo os grãos de areia em uma massa sólida.',
+    description: 'É uma das rochas mais resistentes ao intemperismo (chuva e vento). Por ser feita quase só de quartzo, ela brilha muito sob o sol e é usada em fachadas de casas modernas.',
+    tip: 'O Arenito subiu de nível! Agora ele é super duro e brilha como cristal. ✨',
+    color: '#edf2f4',
+    glow: 'rgba(237, 242, 244, 0.5)',
+    modelPath: '/3D%20Model/rochas-e-minerais/quartzito.glb'
+  },
+  {
+    id: 'marmore-calc',
+    name: 'Mármore Calcítico',
+    type: 'Metamórfica',
+    origin: 'Metamorfismo Regional',
+    texture: 'Macia / Granular',
+    formation: 'Recristalização',
+    explanation: 'Resulta da transformação do calcário sob altas temperaturas e pressões.',
+    description: 'Desde a Grécia Antiga, é a rocha preferida de escultores como Michelangelo. Seus veios são minerais que "vazaram" enquanto a rocha ainda estava mole e quente no subsolo.',
+    tip: 'É o Calcário que passou por um "spa" geológico de calor e virou uma obra de arte! 🎨',
+    color: '#ffffff',
     glow: 'rgba(255, 255, 255, 0.6)',
-    imgX: 3
+    modelPath: '/3D%20Model/rochas-e-minerais/marmore_calcitico.glb'
+  },
+  {
+    id: 'lapis-lazuli',
+    name: 'Lápis-lazúli',
+    type: 'Metamórfica',
+    origin: 'Metamorfismo de Contato',
+    texture: 'Cristalina / Azul',
+    formation: 'Fusão Química',
+    explanation: 'Uma rocha rara formada pelo contato do magma com calcários complexos.',
+    description: 'Sua cor azul celestial vem do mineral lazurita. Foi usada nas joias dos faraós do Egito e moída para criar a tinta "azul ultramar" usada pelos pintores do Renascimento.',
+    tip: 'A rocha dos reis! Sua cor azul é única na natureza e já valeu mais que ouro. 🟦',
+    color: '#0d47a1',
+    glow: 'rgba(13, 71, 161, 0.6)',
+    modelPath: '/3D%20Model/rochas-e-minerais/lapis-lazuli.glb'
   }
 ];
 
@@ -120,38 +224,28 @@ const MineralExplorer: React.FC = () => {
         <div className={styles.cardSplit}>
           <section className={styles.visualArea}>
             <div className={styles.viewerContainer}>
+
+
               <div className={styles.rockStage}>
                 <div className={styles.spotlight} style={{ '--glow-color': currentRock.glow } as any} />
                 
-                <motion.div
-                  className={styles.rockWrapper}
-                  drag
-                  dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                  onDrag={handleDrag}
-                  style={{
-                    rotateX: springX,
-                    rotateY: springY,
-                    scale: isZoomed ? 1.8 : 1,
-                    perspective: 1000
-                  }}
-                >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentRock.id}
-                      initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                      exit={{ opacity: 0, scale: 0.5, rotate: 15 }}
-                      transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                      className={styles.rockImage}
-                      style={{
-                        backgroundImage: `url(${ASSET_URL})`,
-                        backgroundPosition: `${currentRock.imgX * 33.33}% center`,
-                        backgroundSize: '400% 100%',
-                        borderRadius: '20px'
-                      }}
-                    />
-                  </AnimatePresence>
-                </motion.div>
+                <div className={styles.rockWrapper}>
+                  <model-viewer
+                    key={currentRock.id}
+                    src={currentRock.modelPath}
+                    alt={currentRock.name}
+                    {...({ autoplay: true } as any)}
+                    camera-controls
+                    auto-rotate
+                    interaction-prompt="auto"
+                    camera-orbit="0deg 75deg 5m"
+                    shadow-intensity="0.5"
+                    environment-image="neutral"
+                    exposure="1.0"
+                    draco-decoder-url="https://www.gstatic.com/draco/v1/decoders/"
+                    style={{ width: '100%', height: '100%', minHeight: '350px', outline: 'none' }}
+                  />
+                </div>
 
                 {isZoomed && (
                   <motion.div 
@@ -164,41 +258,6 @@ const MineralExplorer: React.FC = () => {
                 )}
               </div>
 
-              <div className={styles.visualToggles}>
-                <button 
-                  className={`${styles.toggleBtn} ${isZoomed ? styles.active : ''}`}
-                  onClick={() => setIsZoomed(!isZoomed)}
-                >
-                  <Search size={18} /> {isZoomed ? 'Afastar' : '🔍 Ver Detalhes'}
-                </button>
-                <button className={styles.toggleBtn} onClick={resetRotation}>
-                  <RotateCcw size={18} /> Resetar Posição
-                </button>
-              </div>
-
-              <div className={styles.rockSelector}>
-                {ROCKS_DATA.map((rock, idx) => (
-                  <button
-                    key={rock.id}
-                    className={`${styles.rockIconBtn} ${currentIndex === idx ? styles.active : ''}`}
-                    onClick={() => {
-                        setCurrentIndex(idx);
-                        setIsZoomed(false);
-                        resetRotation();
-                    }}
-                  >
-                    <div 
-                      className={styles.rockThumb} 
-                      style={{ 
-                        backgroundImage: `url(${ASSET_URL})`,
-                        backgroundPosition: `${rock.imgX * 33.33}% center`,
-                        backgroundSize: '400% 100%'
-                    }}
-                    />
-                    <span>{rock.name}</span>
-                  </button>
-                ))}
-              </div>
             </div>
           </section>
 
@@ -210,7 +269,6 @@ const MineralExplorer: React.FC = () => {
                   <label>TIPO/ORIGEM</label>
                 </div>
                 <span>{currentRock.origin}</span>
-                <Info size={14} className={styles.infoIcon} />
               </div>
 
               <div className={styles.statBox} onClick={() => setActiveModal('textura')}>
@@ -219,7 +277,6 @@ const MineralExplorer: React.FC = () => {
                   <label>TEXTURA</label>
                 </div>
                 <span>{currentRock.texture}</span>
-                <Info size={14} className={styles.infoIcon} />
               </div>
 
               <div className={styles.statBox} onClick={() => setActiveModal('formacao')}>
@@ -228,16 +285,13 @@ const MineralExplorer: React.FC = () => {
                   <label>FORMAÇÃO</label>
                 </div>
                 <span>{currentRock.formation}</span>
-                <Info size={14} className={styles.infoIcon} />
               </div>
 
               <div className={styles.statBox} onClick={() => setActiveModal('classificacao')}>
                 <div className={styles.statHeader}>
-                  <Info size={16} />
                   <label>CLASSE</label>
                 </div>
                 <span>{currentRock.type}</span>
-                <Info size={14} className={styles.infoIcon} />
               </div>
             </div>
 
@@ -254,6 +308,30 @@ const MineralExplorer: React.FC = () => {
               </div>
             </div>
           </aside>
+        </div>
+
+        <div className={styles.rockSelector}>
+          {ROCKS_DATA.map((rock, idx) => (
+            <button
+              key={rock.id}
+              className={`${styles.rockIconBtn} ${currentIndex === idx ? styles.active : ''}`}
+              onClick={() => {
+                  setCurrentIndex(idx);
+                  setIsZoomed(false);
+                  resetRotation();
+              }}
+            >
+              <div 
+                className={styles.rockThumb} 
+                style={{ 
+                  background: rock.color,
+                  borderRadius: '10px',
+                  boxShadow: `0 0 10px ${rock.glow}`
+                }}
+              />
+              <span>{rock.name}</span>
+            </button>
+          ))}
         </div>
       </main>
 

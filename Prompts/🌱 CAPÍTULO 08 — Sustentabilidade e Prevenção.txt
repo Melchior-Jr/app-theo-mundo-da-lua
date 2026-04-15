@@ -1,0 +1,184 @@
+🌱 CAPÍTULO 08 — Sustentabilidade e Prevenção (FECHAMENTO DO MÓDULO)
+
+🎯 OBJETIVO DO CAPÍTULO
+
+O usuário deve:
+
+entender como prevenir problemas ambientais
+aplicar conhecimento aprendido
+corrigir cenários problemáticos
+perceber que pequenas decisões mudam tudo
+sair com senso de responsabilidade
+
+1. HEADER
+← CAPÍTULOS
+CAPÍTULO 08
+“Sustentabilidade e Prevenção”
+progresso (8/8)
+
+
+🌍 ÁREA ESQUERDA — SIMULAÇÃO
+🎯 Criar componente:
+
+SustainabilitySimulator
+
+📌 CONCEITO VISUAL
+
+👉 Reutilizar cenário do Capítulo 07 (cidade)
+
+Mas agora:
+
+👉 iniciar com cenário problemático
+
+🧱 ESTADO INICIAL
+
+Cidade com:
+
+pouca vegetação
+construções em área de risco
+solo degradado
+risco alto de desastre
+🎮 INTERAÇÃO PRINCIPAL
+🛠️ MODO CORREÇÃO (CORE)
+
+Adicionar ferramentas:
+
+🌳 1. Plantar vegetação
+reduz erosão
+melhora solo
+🏗️ 2. Reorganizar construções
+mover casas de áreas de risco
+reorganizar ocupação
+💧 3. Sistema de drenagem
+melhora escoamento de água
+reduz enchentes
+🚫 4. Limitar ocupação
+impedir construção em áreas críticas
+💡 INTERAÇÃO
+
+Usuário pode:
+
+clicar e corrigir áreas
+aplicar melhorias
+reconfigurar cidade
+🔄 BOTÃO “SIMULAR FUTURO”
+
+👉 Após ajustes:
+
+roda simulação (chuva, tempo, eventos)
+💥 RESULTADOS VISUAIS
+
+ANTES:
+
+desastre
+solo degradado
+
+DEPOIS:
+
+estabilidade
+vegetação
+cidade segura
+
+👉 fazer transição visual clara entre estados
+
+🧠 ESTADOS DO SIMULADOR
+degraded
+improving
+balanced
+sustainable
+🧾 ÁREA DIREITA — PAINEL
+🎯 Criar:
+
+SustainabilityPanel
+
+📌 COMPORTAMENTO
+
+Atualiza conforme:
+
+ações do usuário
+melhorias aplicadas
+resultado da simulação
+🧱 ESTRUTURA
+1. STATUS GERAL
+
+Ex:
+
+Situação crítica
+Em recuperação
+Estável
+Sustentável
+2. CARDS (GRID 2x2)
+Risco ambiental
+Cobertura vegetal
+Segurança urbana
+Qualidade do solo
+3. INTERPRETAÇÃO
+
+Texto curto:
+
+o que mudou
+por que melhorou
+4. DICA DO THÉO
+
+Exemplo:
+
+“Cuidar do ambiente hoje evita problema amanhã 🌱”
+
+
+🏆 SISTEMA DE FECHAMENTO (IMPORTANTE)
+
+Adicionar:
+
+🎖️ “Missão Concluída”
+feedback visual positivo
+badge desbloqueado
+mensagem do Théo
+
+Ex:
+
+“Agora você entende como cuidar do planeta de verdade 🚀🌍”
+
+🔄 TRANSIÇÕES
+comparação antes/depois
+melhorias surgindo gradualmente
+cores mais vivas conforme melhora
+📱 RESPONSIVIDADE
+ferramentas viram menu inferior
+simulação no topo
+painel abaixo
+🎨 CONSISTÊNCIA VISUAL
+
+Manter:
+
+padrão escuro
+glow leve
+tipografia
+estilo dos cards
+🚫 NÃO FAZER
+não simplificar demais
+não tirar impacto visual
+não deixar sem comparação antes/depois
+🎯 RESULTADO ESPERADO
+
+O usuário deve:
+
+entender como prevenir problemas
+aplicar conhecimento
+ver impacto positivo
+sentir evolução
+🔥 DIFERENCIAL ABSURDO
+
+👉 Esse capítulo transforma o app em:
+
+educação + consciência + ação
+
+🧠 FECHAMENTO DO MÓDULO 09
+
+Agora o usuário:
+
+entendeu o planeta
+viu problemas
+causou impacto
+resolveu
+
+👉 isso é aprendizado completo

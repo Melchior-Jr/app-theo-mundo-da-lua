@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import StarField from '@/components/StarField'
 import ChapterHeader from '@/components/ChapterHeader'
@@ -15,21 +15,26 @@ import MoonPhasesChapter from './MoonPhasesChapter'
 import GeosciencesChapter from './GeosciencesChapter'
 import { MissionsModal } from '@/components/MissionsModal'
 import { CHAPTER_MISSIONS } from '@/data/missions'
-import { useState } from 'react'
 import { usePlayer } from '@/context/PlayerContext'
+import { ChapterService, DBChapter } from '@/services/chapterService'
 import styles from './ChapterPage.module.css'
 
 export default function ChapterPage() {
-  const { chapterId, subStep: urlSubStep } = useParams<{ chapterId: string; subStep?: string }>()
+  const { chapterId: rawChapterId, subStep: urlSubStep } = useParams<{ chapterId: string; subStep?: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
+
+  // FIX: Se o chapterId for o slug da matéria (ex: 'geociencias'), o ID real do capítulo está no subStep.
+  // Isso acontece em algumas rotas legadas ou URLs mal formadas.
+  const isSubjectSlug = rawChapterId === 'geociencias' || rawChapterId === 'astronomia'
+  const chapterId = isSubjectSlug && urlSubStep ? urlSubStep : rawChapterId
+  const subStep = isSubjectSlug ? 'overview' : (urlSubStep as 'overview' | 'explorer' || 'overview')
 
   const chapter = getChapterById(chapterId ?? '')
   const { previous, next } = chapter
     ? getAdjacentChapters(chapter.id)
     : { previous: null, next: null }
 
-  const subStep = (urlSubStep as 'overview' | 'explorer') || 'overview'
 
   const { 
     viewedPlanets, 
@@ -41,7 +46,30 @@ export default function ChapterPage() {
   } = useNarrationSequence()
   
   const [showMissions, setShowMissions] = useState(false)
+  const [dbChapter, setDbChapter] = useState<DBChapter | null>(null)
+  const [loadingDbConfig, setLoadingDbConfig] = useState(true)
   const { explorationLogs, progress: allProgress } = usePlayer()
+
+  // Busca as configurações do capítulo no banco por ID direto (narração e missões)
+  useEffect(() => {
+    if (!chapterId) {
+      setLoadingDbConfig(false)
+      return
+    }
+    setLoadingDbConfig(true)
+    ChapterService.getById(chapterId)
+      .then(found => {
+        setDbChapter(found)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingDbConfig(false))
+  }, [chapterId])
+
+
+  // Flags de comportamento — false enquanto carrega para evitar narração prematura.
+  const isAstronomy = ['sistema-solar', 'movimentos-da-terra', 'constelaçoes', 'fases-da-lua'].includes(chapterId || '')
+  const narrationEnabled = loadingDbConfig ? false : (dbChapter ? dbChapter.narration_enabled !== false : isAstronomy)
+  const missionsEnabled = loadingDbConfig ? true : (dbChapter ? dbChapter.missions_enabled !== false : true)
 
   const { progress, saveProgress, loading: loadingProgress } = useProgress()
 
@@ -159,19 +187,21 @@ export default function ChapterPage() {
         onNext={handleNext}
         hasPrevious={(chapter.id === 'sistema-solar' && subStep !== 'overview') || !!previous}
         hasNext={true}
-        disableNarration={subStep !== 'overview'}
+        disableNarration={!narrationEnabled || subStep !== 'overview'}
         hideFunFact={subStep !== 'overview' || chapter.id === 'movimentos-da-terra'}
       >
         {/* Adiciona botão de missões fixo no HUD lateral ou flutuante via portal se necessário, 
             mas por enquanto vamos injetar no Container se ele permitir ou ser renderizado aqui como overlay */}
-        <button 
-          className={styles.missionsToggle}
-          onClick={() => setShowMissions(true)}
-          title="Ver Missões"
-        >
-          <span className={styles.missionsIcon}>🎯</span>
-          <span className={styles.missionsText}>Missões</span>
-        </button>
+        {missionsEnabled && (
+          <button 
+            className={styles.missionsToggle}
+            onClick={() => setShowMissions(true)}
+            title="Ver Missões"
+          >
+            <span className={styles.missionsIcon}>🎯</span>
+            <span className={styles.missionsText}>Missões</span>
+          </button>
+        )}
 
         {chapter.id === 'sistema-solar' ? <SolarSystemChapter step={subStep} /> :
          chapter.id === 'movimentos-da-terra' ? <EarthMotionsChapter /> :
@@ -190,7 +220,7 @@ export default function ChapterPage() {
          <div className={styles.placeholder}>Carregando conteúdo...</div>}
       </ChapterContainer>
 
-      {showMissions && (
+      {showMissions && missionsEnabled && (
         <MissionsModal
           isOpen={showMissions}
           onClose={() => setShowMissions(false)}

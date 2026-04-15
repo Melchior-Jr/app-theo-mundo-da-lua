@@ -1,0 +1,162 @@
+🏙️ CAPÍTULO 07 — Ação Humana no Relevo (Urbanismo + Impacto)
+
+🎯 OBJETIVO DO CAPÍTULO
+
+O usuário deve:
+
+entender como a ação humana altera o relevo
+perceber impactos de construções mal planejadas
+visualizar consequências (enchentes, deslizamentos)
+testar decisões urbanas
+aprender planejamento básico
+
+1. HEADER
+← CAPÍTULOS
+CAPÍTULO 07
+“Ação Humana no Relevo”
+progresso (7/8)
+
+
+🏗️ ÁREA ESQUERDA — SIMULAÇÃO
+🎯 Criar componente:
+
+UrbanImpactSimulator
+
+📌 CONCEITO VISUAL
+
+👉 Um terreno que pode ser urbanizado
+
+Com:
+
+relevo (plano + inclinado)
+área de rio
+áreas naturais
+espaço para construção
+🧱 ELEMENTOS VISUAIS
+terreno base
+água
+vegetação
+construções simples (casas, ruas)
+🎮 INTERAÇÃO PRINCIPAL
+🏗️ 1. MODO CONSTRUÇÃO
+
+Adicionar ferramentas:
+
+🏠 Casa
+🛣️ Rua
+🌳 Vegetação
+🚧 Remover vegetação
+💡 FUNCIONAMENTO
+
+Usuário pode:
+
+posicionar construções
+remover árvores
+construir perto do rio
+ocupar encostas
+⚠️ SISTEMA DE IMPACTO (CORE DO CAPÍTULO)
+
+Cada ação gera:
+
+impacto imediato
+impacto acumulado
+EXEMPLOS
+
+Construir em encosta:
+→ risco de deslizamento aumenta
+
+Remover vegetação:
+→ erosão aumenta
+
+Construir perto do rio:
+→ risco de enchente aumenta
+
+🔄 BOTÃO “SIMULAR”
+
+👉 Após construir:
+
+rodar simulação (chuva ou tempo)
+ver consequências
+💥 RESULTADOS VISUAIS
+alagamento
+deslizamento
+solo cedendo
+ou cenário estável
+🧠 ESTADOS DO SIMULADOR
+planning
+building
+simulationRunning
+stableCity
+riskScenario
+disasterScenario
+🧾 ÁREA DIREITA — PAINEL
+🎯 Criar:
+
+UrbanImpactPanel
+
+📌 COMPORTAMENTO
+
+Atualiza conforme:
+
+ações do usuário
+tipo de ocupação
+resultado da simulação
+🧱 ESTRUTURA
+1. STATUS DA CIDADE
+
+Ex:
+
+Planejamento adequado
+Risco moderado
+Alto risco
+Área crítica
+2. CARDS (GRID 2x2)
+Risco de enchente
+Risco de deslizamento
+Cobertura vegetal
+Qualidade do solo
+3. EXPLICAÇÃO
+
+Texto curto:
+
+o que está acontecendo
+por que
+4. DICA DO THÉO
+
+Exemplo:
+
+“Construir no lugar errado pode dar problema quando a chuva chega 😬”
+
+🔄 TRANSIÇÕES
+construção com animação leve
+simulação com transição fluida
+impacto gradual
+📱 RESPONSIVIDADE
+ferramentas viram menu inferior
+simulação ocupa topo
+painel abaixo
+🎨 CONSISTÊNCIA VISUAL
+
+Manter:
+
+padrão escuro
+glow leve
+estilo dos cards
+tipografia
+🚫 NÃO FAZER
+não deixar construir sem consequência
+não simplificar demais
+não remover feedback visual
+🎯 RESULTADO ESPERADO
+
+O usuário deve:
+
+perceber impacto das escolhas
+entender planejamento urbano básico
+visualizar consequência real
+aprender fazendo
+🔥 DIFERENCIAL ABSURDO
+
+👉 Esse capítulo vira um:
+
+Simulador básico de urbanismo

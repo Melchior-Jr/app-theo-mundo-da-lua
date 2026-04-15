@@ -89,7 +89,7 @@ const LAYERS = [
 export default function EarthLayers() {
   const [selectedLayerId, setSelectedLayerId] = useState('crosta')
   const [depthValue, setDepthValue] = useState(2)
-  const [cameraOrbit, setCameraOrbit] = useState("-60deg 75deg 70m")
+  const [cameraOrbit, setCameraOrbit] = useState("-60deg 75deg 85m")
   const [cameraTarget, setCameraTarget] = useState("1.5m 10.0m 15.0m")
   const [infoModal, setInfoModal] = useState<{ title: string, content: string } | null>(null)
 
@@ -113,19 +113,19 @@ export default function EarthLayers() {
       // Atualiza a câmera conforme a camada detectada (via clique ou slider)
       switch(layer.id) {
         case 'crosta':
-          setCameraOrbit("-110deg 75deg 35m");
+          setCameraOrbit("-110deg 75deg 50m");
           setCameraTarget("1.5m 10.0m -15.0m");
           break;
         case 'manto':
-          setCameraOrbit("-100deg 75deg 40m");
+          setCameraOrbit("-100deg 75deg 55m");
           setCameraTarget("1.5m 10.0m 18.0m");
           break;
         case 'nucleo-externo':
-          setCameraOrbit("-80deg 70deg 35m");
+          setCameraOrbit("-80deg 70deg 50m");
           setCameraTarget("1.5m 10.0m 30.0m");
           break;
         case 'nucleo-interno':
-          setCameraOrbit("-45deg 75deg 25m");
+          setCameraOrbit("-45deg 75deg 40m");
           setCameraTarget("1.5m 5.0m 45.0m");
           break;
       }
@@ -151,7 +151,7 @@ export default function EarthLayers() {
                   camera-orbit={cameraOrbit}
                   camera-target={cameraTarget}
                   interpolation-decay="200"
-                  shadow-intensity="1"
+                  shadow-intensity="0"
                   environment-image="neutral"
                   exposure="1.2"
                   interaction-prompt="auto"
@@ -216,8 +216,19 @@ export default function EarthLayers() {
               </div>
 
               <div className={styles.depthSliderArea}>
+                <div className={styles.timelineHeader}>
+                  <div className={styles.sliderTag}>
+                    <span>🏔️</span> SUPERFÍCIE
+                  </div>
+                  <h3 className={styles.deckLabel}>
+                    {Math.round((depthValue / 100) * 6371).toLocaleString('pt-BR')} KM
+                  </h3>
+                  <div className={styles.sliderTag}>
+                    <span>🌋</span> 6.371 KM
+                  </div>
+                </div>
+
                 <div className={styles.depthSliderContainer}>
-                  <span className={styles.sliderTag}>SUPERFÍCIE</span>
                   <div className={styles.sliderWrapper} style={{ '--layer-color': activeLayer.color } as any}>
                     <input 
                       type="range" 
@@ -237,7 +248,6 @@ export default function EarthLayers() {
                       ))}
                     </div>
                   </div>
-                  <span className={styles.sliderTag}>6.371 KM</span>
                 </div>
               </div>
             </div>

@@ -124,19 +124,20 @@ export default function ChaptersPage() {
             return (
               <ChapterCard 
                 key={chapter.id} 
-                chapter={chapter as any} // Cast temporário enquanto unificamos tipos
+                chapter={chapter as any}
                 featured={i === 0}
                 animationDelay={150 + i * 100} 
                 isCompleted={isCompleted} 
-                xpEarned={totalEarned}
-                xpTotal={totalMaxXP}
+                isLocked={chapter.is_coming_soon}
+                xpEarned={chapter.missions_enabled ? totalEarned : 0}
+                xpTotal={chapter.missions_enabled ? totalMaxXP : 0}
                 onClick={(e) => {
                   if (!user) {
                     e.preventDefault()
                     setShowAuth(true)
                   }
                 }}
-                onXPClick={() => {
+                onXPClick={chapter.missions_enabled ? () => {
                   const missions = chapterMissionsMap[chapter.id]
                   if (missions) {
                     setSelectedMissionsChapter({
@@ -145,7 +146,7 @@ export default function ChaptersPage() {
                       color: chapter.color
                     })
                   }
-                }}
+                } : undefined}
               />
             )
           })}

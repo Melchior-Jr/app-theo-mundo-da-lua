@@ -9,6 +9,7 @@ export interface Subject {
   description: string;
   order_index: number;
   status: 'draft' | 'published' | 'coming_soon';
+  tester_ids?: string[];
   created_at: string;
 }
 
@@ -17,14 +18,20 @@ export const SubjectService = {
    * Lista todas as matérias publicadas ou em breve
    * Se includeDrafts for falso, filtra apenas publicadas e em breve
    */
-  async listAll(includeDrafts = false): Promise<Subject[]> {
+  async listAll(includeAllDrafts = false, userId?: string): Promise<Subject[]> {
     let query = supabase
       .from('app_subjects')
       .select('*')
       .order('order_index', { ascending: true });
 
-    if (!includeDrafts) {
-      query = query.neq('status', 'draft');
+    if (!includeAllDrafts) {
+      if (userId) {
+        // Mostra publicados/em_breve OU rascunhos onde o usuário está no array tester_ids
+        query = query.or(`status.neq.draft,tester_ids.cs.{"${userId}"}`);
+      } else {
+        // Usuário não logado: esconde todos os rascunhos
+        query = query.neq('status', 'draft');
+      }
     }
 
     const { data, error } = await query;

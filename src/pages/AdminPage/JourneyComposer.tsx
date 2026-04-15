@@ -16,11 +16,21 @@ import {
   FileText,
   Trash2,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Mic,
+  MicOff,
+  Target as TargetIcon,
+  ToggleLeft,
+  ToggleRight,
+  Eye,
+  EyeOff,
+  Clock,
+  Users
 } from 'lucide-react';
 import styles from './JourneyComposer.module.css';
 import { Subject } from '@/services/subjectService';
 import { DBChapter, DBMission, ChapterService } from '@/services/chapterService';
+import { AdminService } from '@/services/adminService';
 
 interface JourneyComposerProps {
   isOpen: boolean;
@@ -53,6 +63,14 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<JourneyDraft | null>(null);
   const [selection, setSelection] = useState<SelectionType>({ type: 'subject' });
+  const [testers, setTesters] = useState<any[]>([]);
+
+  // Carregar testadores
+  useEffect(() => {
+    if (isOpen) {
+      AdminService.getTestersList().then(setTesters);
+    }
+  }, [isOpen]);
 
   // Carregar dados completos ao abrir para edição
   useEffect(() => {
@@ -134,6 +152,8 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
       xp_award: 100,
       status: 'draft',
       is_coming_soon: false,
+      narration_enabled: true,
+      missions_enabled: true,
       missions: []
     };
     setDraft({ ...draft, chapters: [...draft.chapters, newChapter] });
@@ -227,6 +247,77 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
             </select>
           </div>
         </div>
+
+        {/* ─── CONTROLE DE TESTADORES (Apenas se Rascunho) ─── */}
+        {draft.subject.status === 'draft' && (
+          <div style={{ marginTop: '32px', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <h3 className={styles.formGroupLabel} style={{ marginBottom: '20px', color: '#00e5ff', fontSize: '0.9rem' }}>
+              <Users size={16} /> Alunos Testadores (Acesso em Rascunho)
+            </h3>
+            
+            {testers.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', fontSize: '0.85rem', opacity: 0.5 }}>
+                Nenhum usuário marcado como "Testador" encontrado no sistema.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {testers.map(tester => {
+                  const isSelected = (draft.subject.tester_ids || []).includes(tester.id);
+                  return (
+                    <button
+                      key={tester.id}
+                      onClick={() => {
+                        const currentIds = draft.subject.tester_ids || [];
+                        const newIds = isSelected 
+                          ? currentIds.filter(id => id !== tester.id)
+                          : [...currentIds, tester.id];
+                        setDraft({ ...draft, subject: { ...draft.subject, tester_ids: newIds } });
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px 16px',
+                        background: isSelected ? 'rgba(0, 229, 255, 0.08)' : 'rgba(0,0,0,0.2)',
+                        border: '1px solid',
+                        borderColor: isSelected ? 'rgba(0, 229, 255, 0.3)' : 'rgba(255,255,255,0.06)',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '20px', 
+                        height: '20px', 
+                        borderRadius: '4px', 
+                        border: '2px solid',
+                        borderColor: isSelected ? '#00e5ff' : 'rgba(255,255,255,0.2)',
+                        background: isSelected ? '#00e5ff' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {isSelected && <Save size={12} color="#000" />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.9rem', color: isSelected ? '#fff' : 'rgba(255,255,255,0.7)', fontWeight: isSelected ? 600 : 400 }}>
+                          {tester.full_name || tester.username}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.4 }}>
+                          {tester.username}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <p style={{ marginTop: '16px', fontSize: '0.75rem', opacity: 0.5, fontStyle: 'italic' }}>
+              Selecionando os testadores, apenas eles (e administradores) poderão visualizar esta jornada enquanto o status for "Rascunho".
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -294,6 +385,89 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
                 value={ch.xp_award}
                 onChange={e => updateCh({ xp_award: parseInt(e.target.value) })}
               />
+            </div>
+          </div>
+
+          {/* ─── CONFIGURAÇÕES DE COMPORTAMENTO ─── */}
+          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className={styles.formGroupLabel} style={{ marginBottom: '16px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.5 }}>Comportamento da Aula</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              
+              {/* Toggle Narração */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ padding: '8px', borderRadius: '8px', background: ch.narration_enabled ? 'rgba(0,229,255,0.12)' : 'rgba(255,255,255,0.05)', color: ch.narration_enabled ? '#00e5ff' : 'rgba(255,255,255,0.3)', transition: 'all 0.2s' }}>
+                    {ch.narration_enabled ? <Mic size={18} /> : <MicOff size={18} />}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Narração do Théo</div>
+                    <div style={{ fontSize: '0.78rem', opacity: 0.5 }}>{ch.narration_enabled ? 'O Théo irá narrar a introdução desta aula.' : 'Modo silencioso — sem narração.'}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => updateCh({ narration_enabled: !ch.narration_enabled })}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: ch.narration_enabled ? '#00e5ff' : 'rgba(255,255,255,0.25)', transition: 'color 0.2s' }}
+                  title={ch.narration_enabled ? 'Desativar narração' : 'Ativar narração'}
+                >
+                  {ch.narration_enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+
+              {/* Grid para Missões e Visibilidade */}
+              <div className={styles.formGrid}>
+                {/* Card Missões */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ padding: '8px', borderRadius: '8px', background: ch.missions_enabled ? 'rgba(255,209,102,0.12)' : 'rgba(255,255,255,0.05)', color: ch.missions_enabled ? '#ffd166' : 'rgba(255,255,255,0.3)', transition: 'all 0.2s' }}>
+                      <TargetIcon size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Missões</div>
+                      <div style={{ fontSize: '0.78rem', opacity: 0.5 }}>{ch.missions_enabled ? 'Ativas' : 'Inativas'}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => updateCh({ missions_enabled: !ch.missions_enabled })}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: ch.missions_enabled ? '#ffd166' : 'rgba(255,255,255,0.25)', transition: 'color 0.2s' }}
+                    title={ch.missions_enabled ? 'Desativar missões' : 'Ativar missões'}
+                  >
+                    {ch.missions_enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                  </button>
+                </div>
+
+                {/* Card Visibilidade */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      padding: '8px', 
+                      borderRadius: '8px', 
+                      background: ch.status === 'published' ? (ch.is_coming_soon ? 'rgba(255,150,0,0.12)' : 'rgba(0,255,100,0.12)') : 'rgba(255,255,255,0.05)', 
+                      color: ch.status === 'published' ? (ch.is_coming_soon ? '#ff9600' : '#00ff64') : 'rgba(255,255,255,0.3)',
+                      transition: 'all 0.2s' 
+                    }}>
+                      {ch.status === 'published' ? (ch.is_coming_soon ? <Clock size={16} /> : <Eye size={16} />) : <EyeOff size={16} />}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Visibilidade</div>
+                      <select 
+                        value={ch.status === 'draft' || ch.status === 'hidden' ? 'hidden' : (ch.is_coming_soon ? 'soon' : 'visible')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'visible') updateCh({ status: 'published', is_coming_soon: false });
+                          if (val === 'soon') updateCh({ status: 'published', is_coming_soon: true });
+                          if (val === 'hidden') updateCh({ status: 'draft', is_coming_soon: false });
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', fontSize: '0.78rem', opacity: 0.6, outline: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        <option value="visible" style={{ background: '#1a1a1a', color: '#fff' }}>Visível</option>
+                        <option value="soon" style={{ background: '#1a1a1a', color: '#fff' }}>Em Breve</option>
+                        <option value="hidden" style={{ background: '#1a1a1a', color: '#fff' }}>Oculto</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

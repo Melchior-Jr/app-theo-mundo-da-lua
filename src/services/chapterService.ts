@@ -16,6 +16,8 @@ export interface DBChapter {
   xp_award: number;
   status: 'draft' | 'published' | 'hidden';
   is_coming_soon: boolean;
+  narration_enabled: boolean;
+  missions_enabled: boolean;
 }
 
 export interface DBMission {
@@ -33,7 +35,7 @@ export const ChapterService = {
       .from('app_chapters')
       .select('*')
       .order('order', { ascending: true });
-    
+
     if (subjectId) {
       query = query.eq('subject_id', subjectId);
     }
@@ -41,15 +43,26 @@ export const ChapterService = {
     if (!includeDrafts) {
       query = query.neq('status', 'draft');
     }
-    
+
     const { data, error } = await query;
     if (error) throw error;
     return data as DBChapter[];
   },
 
-  /** Alias para manter compatibilidade mas incentivando o uso do filtro */
+  /** Alias para manter compatibilidade */
   async getAll() {
     return this.getBySubject();
+  },
+
+  /** Busca um capítulo específico pelo ID (incluindo drafts) */
+  async getById(id: string): Promise<DBChapter | null> {
+    const { data, error } = await supabase
+      .from('app_chapters')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    return data as DBChapter | null;
   },
 
   /** Atualiza um capítulo */
@@ -60,7 +73,7 @@ export const ChapterService = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data as DBChapter;
   },
@@ -71,7 +84,7 @@ export const ChapterService = {
       .from('app_missions')
       .select('*')
       .eq('chapter_id', chapterId);
-    
+
     if (error) throw error;
     return data as DBMission[];
   },
@@ -79,5 +92,5 @@ export const ChapterService = {
   /** Atualiza status de um capítulo rapidamente */
   async setStatus(id: string, status: DBChapter['status']) {
     return this.update(id, { status });
-  }
+  },
 };

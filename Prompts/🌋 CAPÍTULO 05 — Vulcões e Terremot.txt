@@ -1,0 +1,191 @@
+🌋 CAPÍTULO 05 — Vulcões e Terremotos (NÍVEL CINEMÁTICO + SIMULAÇÃO)
+
+
+🎯 OBJETIVO DO CAPÍTULO
+
+O usuário deve:
+
+entender o que causa vulcões e terremotos
+visualizar o movimento das placas tectônicas
+perceber como pressão gera erupções
+simular fenômenos naturais
+entender consequências
+
+🧱 ESTRUTURA DA TELA
+1. HEADER
+← CAPÍTULOS
+CAPÍTULO 05
+“Vulcões e Terremotos”
+progresso (5/8)
+2. CARD CENTRAL
+🟦 ESQUERDA (60%)
+
+👉 Simulação tectônica + vulcânica (CORE)
+
+🟪 DIREITA (40%)
+
+👉 Painel informativo dinâmico
+
+🌋 ÁREA ESQUERDA — SIMULAÇÃO
+🎯 Criar componente:
+
+GeologySimulator
+
+📌 CONCEITO VISUAL
+
+👉 Corte lateral da Terra mostrando:
+
+superfície (com montanha/vulcão)
+crosta
+manto (com magma)
+placas tectônicas
+🧱 ELEMENTOS VISUAIS
+vulcão no topo
+magma em movimento (abaixo)
+placas tectônicas visíveis
+linhas de falha
+🎮 INTERAÇÕES PRINCIPAIS
+🧩 1. MOVIMENTO DAS PLACAS (CORE)
+
+Criar controle:
+
+👉 Slider “Movimento das placas”
+
+Estados:
+
+afastando
+colidindo
+deslizando
+💥 COMPORTAMENTO
+Quando placas colidem:
+compressão do solo
+formação de relevo
+possível terremoto
+Quando placas se afastam:
+abertura no solo
+magma sobe
+Quando deslizam:
+tensão acumulada
+tremor repentino
+🌋 2. PRESSÃO DO MAGMA
+
+Criar controle:
+
+👉 Slider “Pressão interna”
+
+Baixo → Alto
+
+💥 COMPORTAMENTO
+magma se move mais rápido
+brilho aumenta
+tremores começam
+🔥 LIMITE CRÍTICO
+
+Se pressão alta + placas ativas:
+
+👉 ERUPÇÃO
+
+🌋 3. BOTÃO “ATIVAR ERUPÇÃO”
+
+(ou automática ao atingir limite)
+
+💥 EFEITOS VISUAIS
+lava saindo do vulcão
+partículas (fumaça, cinzas)
+iluminação dinâmica
+leve tremor de câmera
+
+👉 SEM EXAGERO, mas impactante
+
+🌎 4. TERREMOTO
+
+Gerado por:
+
+movimento de placas
+acúmulo de tensão
+💥 EFEITOS
+tremor do terreno
+rachaduras
+vibração leve da interface
+🧠 ESTADOS DO SIMULADOR
+idle
+plateMovement
+pressureBuildUp
+earthquake
+eruption
+postEvent
+🧾 ÁREA DIREITA — PAINEL
+🎯 Criar:
+
+GeologyInfoPanel
+
+📌 COMPORTAMENTO
+
+Atualiza conforme:
+
+movimento das placas
+pressão
+eventos ativos
+🧱 ESTRUTURA
+1. STATUS ATUAL
+
+Ex:
+
+Estável
+Tensão acumulando
+Terremoto ativo
+Erupção em curso
+2. CARDS (GRID 2x2)
+Intensidade sísmica
+Pressão do magma
+Tipo de movimento
+Risco de erupção
+3. EXPLICAÇÃO
+
+Texto curto:
+
+o que está acontecendo
+por que está acontecendo
+4. DICA DO THÉO
+
+Exemplo:
+
+“As placas estão sempre se mexendo… mesmo quando a gente não sente 👀”
+
+
+
+🔄 TRANSIÇÕES
+magma animado continuamente
+placas com movimento suave
+tremor com easing leve
+erupção com partículas
+📱 RESPONSIVIDADE
+simulação no topo
+controles abaixo
+painel informativo depois
+🎨 CONSISTÊNCIA VISUAL
+
+Manter:
+
+padrão escuro
+glow leve
+cores coerentes (vermelho/lava, laranja/magma)
+tipografia
+🚫 NÃO FAZER
+não exagerar na violência visual
+não transformar em “jogo de destruição”
+não usar física irreal
+não deixar sem controle do usuário
+🎯 RESULTADO ESPERADO
+
+O usuário deve:
+
+visualizar processos internos da Terra
+entender causa → efeito
+experimentar cenários
+sentir impacto dos fenômenos
+🔥 DIFERENCIAL ABSURDO
+
+👉 Esse capítulo vira um:
+
+Simulador de forças internas da Terra

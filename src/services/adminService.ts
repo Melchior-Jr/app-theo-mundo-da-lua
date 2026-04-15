@@ -285,6 +285,18 @@ export const AdminService = {
     return data || [];
   },
 
+  /** Busca lista apenas de testadores */
+  async getTestersList() {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('is_tester', true)
+      .order('full_name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
   /** Busca dossiê completo de um único usuário com inteligência de dados (Bypass RLS via RPCs se necessário) */
   async getUserDetails(playerId: string) {
     // Para o dossiê detalhado, buscamos dados globais via RPC e filtramos localmente
@@ -447,29 +459,34 @@ export const AdminService = {
     // 3. Salvar Capítulos e Missões
     for (const ch of chapters) {
       const isNew = ch.id.startsWith('new-');
-      const { missions, ...chapterData } = ch;
-      
-      // Limpa ID temporário se for novo para o Supabase gerar um (ou se for texto, mantém mas limpa o prefixo se desejar)
-      // No schema, id é text. Vamos gerar um slug ou manter o id se for editado.
+      // Remove missions e timestamps — evita rejeição por RLS em campos de sistema
+      const { missions, created_at, updated_at, ...chapterData } = ch as any;
+
       if (isNew) {
-        // Se for novo, vamos usar o slug como base do ID se não houver um real
-        chapterData.id = ch.slug || `ch-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+        chapterData.id = `ch-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
       }
-      
+
       chapterData.subject_id = subjectId;
 
-      const { error: chErr } = await supabase
-        .from('app_chapters')
-        .upsert(chapterData);
-      
-      if (chErr) throw chErr;
+      if (isNew) {
+        // INSERT para capítulos novos
+        const { error: chErr } = await supabase.from('app_chapters').insert(chapterData);
+        if (chErr) throw chErr;
+      } else {
+        // UPDATE explícito para capítulos existentes — garante persistência de todos os campos
+        const { error: chErr } = await supabase
+          .from('app_chapters')
+          .update(chapterData)
+          .eq('id', chapterData.id);
+        if (chErr) throw chErr;
+      }
 
       // Missões do Capítulo
       const { data: currentMissions } = await supabase
         .from('app_missions')
         .select('id')
         .eq('chapter_id', chapterData.id);
-      
+
       const currentMissionIds = currentMissions?.map(m => m.id) || [];
       const draftMissionIds = missions.map((m: any) => m.id).filter((id: string) => !id.startsWith('new-'));
       const missionsToDelete = currentMissionIds.filter(id => !draftMissionIds.includes(id));
@@ -480,17 +497,19 @@ export const AdminService = {
 
       for (const m of missions) {
         const isNewMission = m.id.startsWith('new-');
-        const missionData = { ...m };
+        const { created_at: _mca, updated_at: _mua, ...missionData } = m as any;
         if (isNewMission) {
           missionData.id = `mi-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         }
         missionData.chapter_id = chapterData.id;
 
-        const { error: mErr } = await supabase
-          .from('app_missions')
-          .upsert(missionData);
-        
-        if (mErr) throw mErr;
+        if (isNewMission) {
+          const { error: mErr } = await supabase.from('app_missions').insert(missionData);
+          if (mErr) throw mErr;
+        } else {
+          const { error: mErr } = await supabase.from('app_missions').update(missionData).eq('id', missionData.id);
+          if (mErr) throw mErr;
+        }
       }
     }
 

@@ -1,0 +1,181 @@
+🌧️ CAPÍTULO 04 — Erosão e Transformação do Relevo
+
+🎯 OBJETIVO DO CAPÍTULO
+
+O usuário deve:
+entender o que é erosão
+perceber como o relevo muda ao longo do tempo
+identificar agentes da erosão (água, vento)
+visualizar causa e efeito em tempo real
+compreender impactos ambientais
+
+🧱 ESTRUTURA DA TELA
+1. HEADER
+← CAPÍTULOS
+CAPÍTULO 04
+“Erosão e Transformação do Relevo”
+progresso (4/8)
+2. CARD CENTRAL
+🟦 ESQUERDA (60%)
+
+👉 Simulação de terreno (CORE)
+
+🟪 DIREITA (40%)
+
+👉 Painel dinâmico de análise
+
+🌄 ÁREA ESQUERDA — SIMULAÇÃO
+🎯 Criar componente:
+
+ErosionSimulator
+
+📌 CONCEITO VISUAL
+
+👉 Um terreno realista em corte lateral, contendo:
+
+montanha/elevação
+solo (camadas visíveis)
+vegetação opcional
+céu (contexto leve)
+🧱 ELEMENTOS VISUAIS
+relevo com altura variável
+rio (opcional dependendo da interação)
+partículas de solo
+céu com nuvens leves
+🎮 INTERAÇÃO PRINCIPAL (CORE)
+🎛️ CONTROLES DE EROSÃO (OBRIGATÓRIO)
+
+Criar painel de controle com:
+
+🌧️ 1. Intensidade da chuva (slider)
+
+Valores:
+
+baixo
+médio
+alto
+💡 Comportamento:
+chuva aparece visualmente
+água escorre pela superfície
+quanto maior → mais erosão
+🌬️ 2. Intensidade do vento (slider)
+
+Valores:
+
+baixo
+médio
+alto
+💡 Comportamento:
+partículas sendo levadas
+deformação do terreno
+efeito de poeira
+
+🌱 3. Vegetação (toggle)
+ON / OFF
+💡 Comportamento:
+
+ON:
+
+raízes seguram o solo
+erosão reduzida
+
+OFF:
+
+solo exposto
+erosão acelerada
+💥 RESULTADO VISUAL (MUITO IMPORTANTE)
+
+O terreno deve:
+
+deformar gradualmente
+perder material
+criar sulcos
+formar vales
+
+👉 tudo em tempo real
+
+⏳ SISTEMA DE TEMPO
+
+Adicionar botão:
+
+👉 “Acelerar tempo”
+
+simula anos em segundos
+acelera erosão
+🧠 ESTADOS DO SIMULADOR
+idle
+raining
+windy
+combinedForces
+highErosion
+stabilized (com vegetação)
+🧾 ÁREA DIREITA — PAINEL
+🎯 Criar:
+
+ErosionInfoPanel
+
+📌 COMPORTAMENTO
+
+Atualiza conforme:
+
+intensidade dos controles
+estado do terreno
+presença de vegetação
+🧱 ESTRUTURA
+1. STATUS DO TERRENO
+
+Ex:
+
+Estável
+Erosão leve
+Erosão intensa
+2. CARDS (GRID 2x2)
+Perda de solo
+Velocidade da erosão
+Presença de água
+Proteção vegetal
+3. INTERPRETAÇÃO
+
+Texto curto explicando:
+
+o que está acontecendo
+por que está acontecendo
+4. DICA DO THÉO
+
+Exemplo:
+
+“Sem planta, o solo fica desprotegido e vai embora rapidinho 😬”
+
+
+🔄 TRANSIÇÕES
+terreno se deforma suavemente
+partículas animadas
+água fluindo naturalmente
+transições contínuas (sem cortes)
+📱 RESPONSIVIDADE
+controles viram empilhados
+simulação ocupa topo
+painel desce
+🎨 CONSISTÊNCIA VISUAL
+
+Manter:
+
+cores base do app
+glow leve
+tipografia
+estilo dos cards
+🚫 NÃO FAZER
+não usar animação abrupta
+não deixar terreno estático
+não simplificar demais (precisa parecer real)
+🎯 RESULTADO ESPERADO
+
+O usuário deve:
+
+perceber que o relevo muda com o tempo
+entender o impacto de chuva, vento e vegetação
+visualizar causa e efeito
+interagir com o ambiente
+🔥 DIFERENCIAL FORTE
+
+👉 Esse capítulo vira um mini: Simulador de desastre natural controlado

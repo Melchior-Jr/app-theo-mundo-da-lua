@@ -193,14 +193,15 @@ export default function GamesPage() {
   useEffect(() => {
     async function loadSubjects() {
       try {
-        const data = await SubjectService.listAll(playerData?.is_tester)
+        // Filtra drafts: se não for admin, mostra apenas se o usuário for um testador selecionado
+        const data = await SubjectService.listAll(false, session?.user?.id)
         setSubjects(data)
       } catch (err) {
         console.error('Erro ao carregar jornadas:', err)
       }
     }
     loadSubjects()
-  }, [playerData?.is_tester])
+  }, [playerData?.is_tester, session?.user?.id])
 
 
   useEffect(() => {

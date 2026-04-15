@@ -1,21 +1,10 @@
-/* ─── SoilSimulator.module.css ─────────────────────────────────────────────
-   Capítulo 03 — Formação do Solo
-   Paleta: tons de terra + gold do app
-──────────────────────────────────────────────────────────────────────────── */
-
 :root {
-  --soil-brown: #8B4513;
-  --soil-dark: #3E2005;
-  --soil-tan: #D2B48C;
-  --soil-green: #2E7D32;
-  --soil-green-light: #66BB6A;
-  --soil-gold: #FFB703;
-  --soil-red: #BF360C;
-  --soil-blue: #1565C0;
-  --soil-rain: rgba(100, 160, 255, 0.6);
+  --soil-gold: #ffb703;
+  --soil-green: #2e7d32;
+  --soil-green-light: #4caf50;
+  --soil-tan: #e1b382;
 }
 
-/* ─── WRAPPER ───────────────────────────────────────────────────────────── */
 .wrapper {
   background: radial-gradient(circle at center, #1a1208 0%, #0a0705 100%);
   color: white;
@@ -24,182 +13,142 @@
   min-height: 100%;
 }
 
-/* ─── HEADER ────────────────────────────────────────────────────────────── */
-.header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  animation: slideUp 0.6s ease-out;
-}
-
-.headerBadge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--soil-gold);
-  opacity: 0.6;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-
-.headerTitle {
-  font-size: 2.2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #fff 0%, var(--soil-tan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0 0 0.5rem;
-}
-
-.headerSub {
-  font-size: 0.95rem;
-  color: #888;
-}
-
-/* ─── LAYOUT ────────────────────────────────────────────────────────────── */
 .cardSplit {
   display: grid;
   grid-template-columns: 60% 40%;
   gap: 2rem;
   min-height: 600px;
+  align-items: start;
 }
 
-/* ─── LEFT VISUAL ───────────────────────────────────────────────────────── */
+/* ─── VISUAL AREA ────────────────────────────────────────────────────────── */
+
 .visualArea {
   padding: 1.5rem;
   display: flex;
   align-items: flex-start;
   background: radial-gradient(circle at center, rgba(139, 69, 19, 0.06) 0%, transparent 70%);
+  width: 100%;
+  justify-content: center;
 }
 
 .viewerContainer {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
+  gap: 2rem;
 }
 
-/* ─── SOIL VIEWER ───────────────────────────────────────────────────────── */
 .soilViewer {
   position: relative;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  background: rgba(0, 0, 0, 0.3);
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
-  border: 1px solid rgba(255, 183, 3, 0.1);
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  aspect-ratio: 16/12;
+  display: flex;
+  align-items: flex-end;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .soilSvg {
   width: 100%;
-  height: auto;
-  display: block;
+  height: 100%;
 }
 
 .stageLabel {
   position: absolute;
-  top: 12px;
-  right: 14px;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
   font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 2px;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--soil-gold);
-  opacity: 0.8;
-  pointer-events: none;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 183, 3, 0.2);
 }
 
-/* ─── SVG ANIMATIONS ────────────────────────────────────────────────────── */
-.layerAnimate {
-  transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-              y 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-              fill 0.8s ease;
-}
+/* ─── TIMELINE ───────────────────────────────────────────────────────────── */
 
-.rootAnimate {
-  animation: rootGrow 1s ease-out forwards;
-}
-
-.rainDrop {
-  animation: rainFall linear infinite;
-}
-
-@keyframes rootGrow {
-  from { stroke-dasharray: 100; stroke-dashoffset: 100; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes rainFall {
-  0% { transform: translateY(-10px); opacity: 1; }
-  100% { transform: translateY(60px); opacity: 0; }
-}
-
-/* ─── TIMELINE ──────────────────────────────────────────────────────────── */
-.timelineSection {
+.simulationDeck {
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  backdrop-filter: blur(10px);
+  padding: 1.2rem 1.8rem 0 1.8rem;
+  width: 100%;
+}
+
+.timelineSection {
+  width: 100%;
 }
 
 .timelineHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.2rem;
 }
 
 .timelineTag {
-  font-size: 0.65rem;
-  font-weight: 800;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #666;
 }
 
 .timelineYear {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: var(--soil-gold);
+  text-shadow: 0 0 10px rgba(255, 183, 3, 0.2);
 }
 
 .timelineTrack {
   position: relative;
-  padding: 4px 0;
+  padding: 0.5rem 0;
 }
 
 .timelineSlider {
-  width: 100%;
-  appearance: none;
   -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
   background: rgba(255, 255, 255, 0.08);
-  height: 8px;
-  border-radius: 10px;
+  border-radius: 3px;
   outline: none;
   cursor: pointer;
 }
 
 .timelineSlider::-webkit-slider-thumb {
-  appearance: none;
   -webkit-appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: var(--soil-gold);
+  border: 3px solid #1a1208;
   border-radius: 50%;
-  border: 4px solid #fff;
-  box-shadow: 0 0 20px var(--soil-gold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 183, 3, 0.4);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.timelineSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
 }
 
 .timelineMarkers {
   position: absolute;
-  top: 50%;
+  top: 6px;
   left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  height: 8px;
+  width: 100%;
+  height: 6px;
   pointer-events: none;
+  display: flex;
 }
 
 .timelineMarker {
@@ -211,8 +160,8 @@
   transform: translateX(-50%);
   border: none;
   cursor: pointer;
-  pointer-events: all;
-  transition: all 0.2s ease;
+  pointer-events: auto;
+  transition: all 0.3s;
 }
 
 .markerActive {
@@ -221,166 +170,121 @@
   transform: translateX(-50%) scale(1.8);
 }
 
-.timelineSteps {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.3rem;
-}
-
-.timelineStep {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #555;
-  text-align: center;
+.deckSection {
   flex: 1;
-  transition: color 0.3s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stepActive {
-  color: var(--soil-tan);
-  font-weight: 800;
-}
-
-/* ─── CONTROLS ──────────────────────────────────────────────────────────── */
-.controlsRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.controlCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 18px;
-  padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-}
-
-.controlLabel {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #888;
+  gap: 0.75rem;
+}
+
+.deckLabel {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.3);
   text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* Rain buttons */
-.rainButtons {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.rainBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #888;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
   text-align: center;
 }
 
-.rainBtn:hover {
-  background: rgba(100, 160, 255, 0.1);
-  border-color: rgba(100, 160, 255, 0.3);
-  color: #90CAF9;
+.deckDivider {
+  width: 1px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.rainBtnActive {
-  background: rgba(100, 160, 255, 0.15);
-  border-color: #64B5F6;
-  color: #90CAF9;
-  box-shadow: 0 0 12px rgba(100, 160, 255, 0.3);
-}
-
-/* Vegetation toggle */
-.vegToggle {
-  position: relative;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 30px;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.controlsStrip {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   width: 100%;
 }
 
-.vegOn {
-  background: rgba(46, 125, 50, 0.2);
-  border-color: var(--soil-green);
-  box-shadow: 0 0 15px rgba(46, 125, 50, 0.3);
+.stripDivider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0.5rem;
 }
 
-.toggleKnob {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #555;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+.intensityBtn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.vegOn .toggleKnob {
-  background: var(--soil-green-light);
-  box-shadow: 0 0 10px var(--soil-green);
+.intensityBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateY(-2px);
 }
 
-.toggleLabel {
-  font-size: 0.8rem;
+.intensityActive {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-color: #00f2fe;
+  color: white;
+  box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+}
+
+.bioticActive {
+  background: linear-gradient(135deg, #43a047 0%, #1b5e20 100%);
+  border-color: #4caf50;
+  color: white;
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3);
+}
+
+.btnHint {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #888;
-  transition: color 0.3s;
+  color: white;
+  background: #333;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
-.vegOn .toggleLabel {
-  color: var(--soil-green-light);
+.intensityBtn:hover .btnHint {
+  opacity: 1;
+  top: -42px;
 }
 
-/* ─── RIGHT PANEL ───────────────────────────────────────────────────────── */
+/* ─── INFO PANEL ─────────────────────────────────────────────────────────── */
+
 .infoArea {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 2rem 2rem 0;
 }
 
 .infoCard {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.5rem;
   animation: fadeIn 0.4s ease;
 }
 
-.stageBadge {
-  display: inline-block;
-  background: rgba(255, 183, 3, 0.1);
-  border: 1px solid rgba(255, 183, 3, 0.3);
-  color: var(--soil-gold);
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 0.4rem 1rem;
-  border-radius: 50px;
-  align-self: flex-start;
-}
-
-/* ─── STATS ─────────────────────────────────────────────────────────────── */
 .statsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -409,12 +313,11 @@
   text-transform: uppercase;
   color: #777;
   font-weight: 800;
-  margin-bottom: 0.3rem;
-  cursor: pointer;
+  margin-bottom: 0.5rem;
 }
 
 .statBox span {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--soil-tan);
 }
@@ -423,158 +326,59 @@
   color: var(--soil-green-light) !important;
 }
 
-/* ─── EXPLANATION ───────────────────────────────────────────────────────── */
 .explanationBox {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 1.2rem;
+  border-radius: 1.2rem;
+  padding: 1.2rem 1.5rem;
 }
 
 .explanationBox p {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-/* ─── THEO TIP ──────────────────────────────────────────────────────────── */
 .theoTipMini {
-  background: linear-gradient(135deg, rgba(46, 125, 50, 0.08), transparent);
-  border: 1px solid rgba(46, 125, 50, 0.2);
-  padding: 1rem 1.2rem;
-  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), transparent);
+  border: 1px solid rgba(46, 125, 50, 0.15);
+  padding: 1.2rem;
+  border-radius: 1.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
   align-items: center;
 }
 
 .theoAvatar {
-  font-size: 2rem;
-  flex-shrink: 0;
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
 }
 
 .theoContent strong {
   color: var(--soil-green-light);
   display: block;
-  margin-bottom: 0.2rem;
-  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .theoContent p {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #eee;
   font-style: italic;
-  line-height: 1.4;
-}
-
-/* ─── QUIZ ──────────────────────────────────────────────────────────────── */
-.quizBox {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.quizQuestion {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #ddd;
-  line-height: 1.4;
-}
-
-.quizOptions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
-.quizOption {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #aaa;
-  padding: 0.7rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.quizOption:hover:not(:disabled) {
-  background: rgba(255, 183, 3, 0.08);
-  border-color: rgba(255, 183, 3, 0.3);
-  color: var(--soil-gold);
-}
-
-.quizOption:disabled {
-  cursor: default;
-}
-
-.optionCorrect {
-  background: rgba(46, 125, 50, 0.2) !important;
-  border-color: var(--soil-green) !important;
-  color: var(--soil-green-light) !important;
-  box-shadow: 0 0 15px rgba(46, 125, 50, 0.3);
-}
-
-.optionWrong {
-  background: rgba(191, 54, 12, 0.15) !important;
-  border-color: var(--soil-red) !important;
-  color: #EF9A9A !important;
-}
-
-.quizFeedback {
-  font-size: 0.85rem;
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
   line-height: 1.5;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  animation: slideUp 0.3s ease;
-}
-
-.feedbackCorrect {
-  background: rgba(46, 125, 50, 0.1);
-  border: 1px solid rgba(46, 125, 50, 0.2);
-  color: var(--soil-green-light);
-}
-
-.feedbackWrong {
-  background: rgba(191, 54, 12, 0.1);
-  border: 1px solid rgba(191, 54, 12, 0.2);
-  color: #EF9A9A;
-}
-
-.retryBtn {
-  background: none;
-  border: 1px solid rgba(46, 125, 50, 0.4);
-  color: var(--soil-green-light);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  align-self: flex-start;
-  transition: all 0.2s ease;
-}
-
-.retryBtn:hover {
-  background: rgba(46, 125, 50, 0.15);
 }
 
 /* ─── MODAL ─────────────────────────────────────────────────────────────── */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -585,50 +389,35 @@
 .infoModal {
   background: #1a1208;
   width: 90%;
-  max-width: 460px;
-  padding: 3rem;
-  border-radius: 28px;
+  max-width: 480px;
+  padding: 3.5rem;
+  border-radius: 32px;
   position: relative;
   border: 1px solid rgba(255, 183, 3, 0.1);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
   text-align: center;
-  animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.modalGlow {
-  position: absolute;
-  top: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, var(--soil-gold) 0%, transparent 70%);
-  opacity: 0.15;
-  pointer-events: none;
 }
 
 .modalTitle {
-  font-size: 1.6rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, #fff 0%, var(--soil-gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: var(--soil-gold);
 }
 
 .modalBody {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #ccc;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .closeModal {
   position: absolute;
-  top: 16px;
-  right: 20px;
+  top: 24px;
+  right: 24px;
   background: none;
   border: none;
-  color: #555;
-  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 2.5rem;
   cursor: pointer;
   transition: color 0.3s;
 }
@@ -638,81 +427,79 @@
 }
 
 /* ─── ANIMATIONS ────────────────────────────────────────────────────────── */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* ─── RESPONSIVE ────────────────────────────────────────────────────────── */
-@media (max-width: 1050px) {
-  .wrapper {
-    padding: 1.2rem;
-  }
-
-  .cardSplit {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .visualArea {
-    padding: 0;
-  }
-
-  .controlsRow {
-    grid-template-columns: 1fr;
-  }
-
-  .headerTitle {
-    font-size: 1.6rem;
-  }
+@keyframes dropIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-@media (max-width: 600px) {
-  .timelineSteps {
+.layerAnimate {
+  animation: dropIn 0.8s ease-out;
+}
+
+.rainDrop {
+  animation: dropIn linear infinite;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .cardSplit {
+    grid-template-columns: 1fr;
+  }
+  
+  .infoArea {
+    padding: 1.5rem;
+  }
+
+  .explanationBox {
     display: none;
   }
 
-  .quizOptions {
-    grid-template-columns: 1fr;
+  .visualArea {
+    padding: 0.5rem;
   }
 
-  .statsGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.7rem;
+  .simulationDeck {
+    flex-wrap: wrap;
+    padding: 1rem 0.5rem 0.5rem 0.5rem;
   }
 
-  .statBox {
-    padding: 0.8rem;
+  .controlsStrip {
+    gap: 0.5rem;
   }
 
-  .statBox span {
-    font-size: 0.85rem;
+  .intensityBtn {
+    width: 40px;
+    height: 40px;
   }
 
-  .soilViewer {
-    border-radius: 16px;
+  .timelineTag {
+    font-size: 0.6rem;
   }
 
-  .infoModal {
-    padding: 2rem 1.5rem;
-  }
-
-  .modalTitle {
-    font-size: 1.2rem;
+  .timelineYear {
+    font-size: 1rem;
   }
 }
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .layerAnimate,
-  .rainDrop,
-  .rootAnimate {
-    animation: none;
-    transition: none;
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 0.5rem;
+  }
+  
+  .timelineHeader {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .timelineYear {
+    font-size: 0.9rem;
   }
 }

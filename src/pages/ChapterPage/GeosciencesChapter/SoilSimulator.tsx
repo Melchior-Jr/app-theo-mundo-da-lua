@@ -1,5 +1,16 @@
 import { useState, useCallback } from 'react'
 import styles from './SoilSimulator.module.css'
+import geoStyles from './GeosciencesChapter.module.css'
+import { 
+  AlertCircle,
+  FlaskConical,
+  Droplets,
+  CloudDrizzle,
+  CloudRain,
+  CloudLightning,
+  Leaf,
+  Wind
+} from 'lucide-react';
 
 // ─── DATA ───────────────────────────────────────────────────────────────────
 
@@ -76,17 +87,21 @@ const SOIL_STAGES = [
   },
 ]
 
-const QUIZ_OPTIONS = [
-  { id: 'rain', label: 'Mais chuva', correct: false, feedback: 'A chuva ajuda, mas sozinha pode causar erosão!' },
-  { id: 'wind', label: 'Mais vento', correct: false, feedback: 'O vento fragmenta a rocha, mas não é o principal motor.' },
-  { id: 'vegetation', label: 'Mais vegetação', correct: true, feedback: 'Exato! As raízes fragmentam a rocha e a matéria orgânica fertiliza o solo.' },
-  { id: 'nothing', label: 'Nada influencia', correct: false, feedback: 'Tudo influencia! Clima, vida e tempo trabalham juntos.' },
-]
-
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function getStageFromValue(val: number) {
   return SOIL_STAGES.find(s => val >= s.timeRange[0] && val <= s.timeRange[1]) ?? SOIL_STAGES[0]
+}
+
+function getYearFromValue(val: number) {
+  let year = 0;
+  if (val <= 25) year = (val / 25) * 500;
+  else if (val <= 50) year = 500 + ((val - 25) / 25) * 1500;
+  else if (val <= 75) year = 2000 + ((val - 50) / 25) * 3000;
+  else year = 5000 + ((val - 75) / 25) * 5000;
+  
+  const rounded = Math.round(year);
+  return rounded === 0 ? "Ano 0" : `+${rounded.toLocaleString('pt-BR')} Anos`;
 }
 
 // ─── SOIL SVG ─────────────────────────────────────────────────────────────────
@@ -99,21 +114,18 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
   const stage = getStageFromValue(timeValue)
   const progress = timeValue / 100
 
-  // Layer heights (0-60 visible area)
   const bedrockH = 60
   const fragmentH = Math.min(progress * 50, 30)
   const organicH = Math.min(Math.max((progress - 0.5) * 60, 0), 20)
   const hummusH = Math.min(Math.max((progress - 0.7) * 50, 0), 12)
   const topsoilH = Math.min(Math.max((progress - 0.8) * 40, 0), 8)
 
-  // Colors shift based on progress
   const bedrockColor = progress < 0.3 ? '#9E9E9E' : '#7B7B7B'
   const fragmentColor = '#A0522D'
   const organicColor = `hsl(${25 + progress * 15}, ${40 + progress * 25}%, ${30 + progress * 10}%)`
   const hummusColor = '#3E2005'
   const topsoilColor = hasVegetation ? '#1B5E20' : '#2E7D32'
 
-  // Rain animation
   const rainDrops = rainLevel > 0
     ? Array.from({ length: rainLevel * 3 }, (_, i) => ({
         x: (i * 37 + 15) % 200,
@@ -122,7 +134,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
       }))
     : []
 
-  // Roots
   const roots = hasVegetation && progress > 0.5
     ? Array.from({ length: 4 }, (_, i) => ({
         x: 60 + i * 20,
@@ -132,10 +143,8 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
 
   return (
     <svg viewBox="0 0 200 180" className={styles.soilSvg} aria-label={`Simulação de solo: estágio ${stage.label}`}>
-      {/* Sky */}
       <rect x="0" y="0" width="200" height="60" fill={`hsl(210, ${20 + progress * 30}%, ${10 + progress * 10}%)`} />
 
-      {/* Rain */}
       {rainDrops.map((drop, i) => (
         <line
           key={i}
@@ -148,12 +157,9 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       ))}
 
-      {/* Ground level */}
       <line x1="0" y1="60" x2="200" y2="60" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
 
-      {/* BEDROCK */}
       <rect x="0" y={180 - bedrockH} width="200" height={bedrockH} fill={bedrockColor} />
-      {/* Bedrock texture — cracks */}
       {progress > 0.1 && [30, 80, 130, 170].map((x, i) => (
         <path
           key={i}
@@ -162,7 +168,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       ))}
 
-      {/* FRAGMENT LAYER */}
       {fragmentH > 0 && (
         <rect
           x="0" y={180 - bedrockH - fragmentH}
@@ -172,7 +177,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       )}
 
-      {/* ORGANIC LAYER */}
       {organicH > 0 && (
         <rect
           x="0" y={180 - bedrockH - fragmentH - organicH}
@@ -182,7 +186,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       )}
 
-      {/* HUMMUS LAYER */}
       {hummusH > 0 && (
         <rect
           x="0" y={180 - bedrockH - fragmentH - organicH - hummusH}
@@ -192,7 +195,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       )}
 
-      {/* TOPSOIL */}
       {topsoilH > 0 && (
         <rect
           x="0" y={180 - bedrockH - fragmentH - organicH - hummusH - topsoilH}
@@ -202,7 +204,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       )}
 
-      {/* Roots */}
       {roots.map((root, i) => (
         <path
           key={i}
@@ -212,7 +213,6 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         />
       ))}
 
-      {/* Vegetation on top */}
       {hasVegetation && progress > 0.3 && (
         <>
           <circle cx="60" cy="50" r={4 + progress * 8} fill="#2E7D32" opacity="0.9" />
@@ -223,12 +223,10 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
         </>
       )}
 
-      {/* Stage label overlay */}
       <text x="10" y="15" fill="rgba(255,255,255,0.5)" fontSize="7" fontFamily="Outfit, sans-serif">
-        {stage.year}
+        {getYearFromValue(timeValue)}
       </text>
 
-      {/* Layer labels */}
       {fragmentH > 4 && (
         <text x="5" y={180 - bedrockH - fragmentH / 2 + 2} fill="rgba(255,255,255,0.4)" fontSize="6" fontFamily="Outfit">Sedimentos</text>
       )}
@@ -245,57 +243,97 @@ function SoilCrossSection({ timeValue, rainLevel, hasVegetation }: {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
+type RainIntensity = 'seca' | 'leve' | 'média' | 'forte';
+
 export default function SoilSimulator() {
   const [timeValue, setTimeValue] = useState(0)
-  const [rainLevel, setRainLevel] = useState(0) // 0, 1, 2, 3
+  const [rain, setRain] = useState<RainIntensity>('seca')
   const [hasVegetation, setHasVegetation] = useState(false)
-  const [quizAnswer, setQuizAnswer] = useState<string | null>(null)
+
   const [infoModal, setInfoModal] = useState<{ label: string; content: string } | null>(null)
+
+  const rainLevelMap: Record<RainIntensity, number> = { seca: 0, leve: 1, média: 2, forte: 3 };
+  const rainLevel = rainLevelMap[rain];
 
   const stage = getStageFromValue(timeValue)
 
-  // Effective time boosted by controls
   const effectiveTime = Math.min(timeValue + rainLevel * 5 + (hasVegetation ? 8 : 0), 100)
 
   const handleStatClick = useCallback((label: string, content: string) => {
     setInfoModal({ label, content })
   }, [])
 
-  // Close modal on overlay click
   const handleOverlayClick = useCallback(() => setInfoModal(null), [])
 
   return (
     <div className={styles.wrapper}>
-      {/* ─── HEADER ─── */}
-      <header className={styles.header}>
-        <div className={styles.headerBadge}>GEOCIÊNCIAS · CAP 03</div>
-        <h1 className={styles.headerTitle}>Formação do Solo</h1>
-        <p className={styles.headerSub}>Mova o tempo e veja a transformação de milênios acontecer.</p>
-      </header>
+      <main className={geoStyles.mainCard}>
+        <header className={geoStyles.layerMainHeader}>
+          <h2 className={geoStyles.layerTitle}>{stage.label}</h2>
+        </header>
 
-      {/* ─── MAIN CARD ─── */}
       <div className={styles.cardSplit}>
 
-        {/* ─── LEFT: VISUAL ─── */}
         <section className={styles.visualArea}>
           <div className={styles.viewerContainer}>
 
-            {/* Soil Cross Section */}
-            <div className={styles.soilViewer}>
+            <div className={styles.simulationDeck}>
+              <div className={styles.deckSection}>
+                <span className={styles.deckLabel}>CONTROLES AMBIENTAIS</span>
+                <div className={styles.controlsStrip}>
+                  {[
+                    { id: 'seca', icon: <Wind size={18} />, label: 'Seca' },
+                    { id: 'leve', icon: <CloudDrizzle size={18} />, label: 'Leve' },
+                    { id: 'média', icon: <CloudRain size={18} />, label: 'Média' },
+                    { id: 'forte', icon: <CloudLightning size={18} />, label: 'Tempestade' }
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      className={`${styles.intensityBtn} ${rain === item.id ? styles.intensityActive : ''}`}
+                      onClick={() => setRain(item.id as RainIntensity)}
+                      title={item.label}
+                    >
+                      {item.icon}
+                      <span className={styles.btnHint}>{item.label}</span>
+                    </button>
+                  ))}
+
+                  <div className={styles.stripDivider} />
+
+                  <button 
+                    className={`${styles.intensityBtn} ${hasVegetation ? styles.bioticActive : ''}`}
+                    onClick={() => setHasVegetation(!hasVegetation)}
+                    title="Cobertura de Vegetação"
+                  >
+                    <Leaf size={18} />
+                    <span className={styles.btnHint}>
+                      {hasVegetation ? 'Vegetação Ativa' : 'Solo Exposto'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className={styles.soilViewer}
+              onClick={() => setInfoModal({ 
+                label: `Estágio: ${stage.label}`, 
+                content: stage.description 
+              })}
+              title="Toque para entender este estágio"
+            >
               <SoilCrossSection
                 timeValue={effectiveTime}
                 rainLevel={rainLevel}
                 hasVegetation={hasVegetation}
               />
-              <div className={styles.stageLabel}>{stage.label}</div>
             </div>
 
-            {/* ─── TIMELINE ─── */}
             <div className={styles.timelineSection}>
               <div className={styles.timelineHeader}>
-                <span className={styles.timelineTag}>⏳ SUPERFÍCIE</span>
-                <span className={styles.timelineYear}>{stage.year}</span>
-                <span className={styles.timelineTag}>🌍 {stage.stats.tempo}</span>
+                <span className={styles.timelineTag}>⏳ 0 ANOS</span>
+                <span className={styles.timelineYear}>{getYearFromValue(timeValue)}</span>
+                <span className={styles.timelineTag}>🌍 10.000 ANOS</span>
               </div>
 
               <div className={styles.timelineTrack}>
@@ -321,68 +359,13 @@ export default function SoilSimulator() {
                   ))}
                 </div>
               </div>
-
-              <div className={styles.timelineSteps}>
-                {SOIL_STAGES.map(s => (
-                  <span
-                    key={s.id}
-                    className={`${styles.timelineStep} ${stage.id === s.id ? styles.stepActive : ''}`}
-                  >
-                    {s.label}
-                  </span>
-                ))}
-              </div>
             </div>
-
-            {/* ─── CONTROLS ─── */}
-            <div className={styles.controlsRow}>
-              {/* Rain */}
-              <div className={styles.controlCard}>
-                <div className={styles.controlLabel}>
-                  <span>🌧️</span>
-                  <span>Intensidade de Chuva</span>
-                </div>
-                <div className={styles.rainButtons}>
-                  {['Seca', 'Leve', 'Média', 'Forte'].map((label, idx) => (
-                    <button
-                      key={idx}
-                      className={`${styles.rainBtn} ${rainLevel === idx ? styles.rainBtnActive : ''}`}
-                      onClick={() => setRainLevel(idx)}
-                      aria-label={`Chuva: ${label}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Vegetation */}
-              <div className={styles.controlCard}>
-                <div className={styles.controlLabel}>
-                  <span>🌱</span>
-                  <span>Presença de Vegetação</span>
-                </div>
-                <button
-                  className={`${styles.vegToggle} ${hasVegetation ? styles.vegOn : ''}`}
-                  onClick={() => setHasVegetation(v => !v)}
-                  aria-pressed={hasVegetation}
-                  aria-label={hasVegetation ? 'Desativar vegetação' : 'Ativar vegetação'}
-                >
-                  <span className={styles.toggleKnob} />
-                  <span className={styles.toggleLabel}>{hasVegetation ? 'Ativa 🌿' : 'Inativa'}</span>
-                </button>
-              </div>
-            </div>
-
           </div>
         </section>
 
         {/* ─── RIGHT: INFO PANEL ─── */}
         <aside className={styles.infoArea}>
           <div className={styles.infoCard} key={stage.id}>
-
-            {/* Stage Badge */}
-            <div className={styles.stageBadge}>{stage.label}</div>
 
             {/* Stats Grid */}
             <div className={styles.statsGrid}>
@@ -392,7 +375,7 @@ export default function SoilSimulator() {
                 role="button" tabIndex={0}
               >
                 <label>⏱ Tempo</label>
-                <span>{stage.stats.tempo}</span>
+                <span>{getYearFromValue(timeValue).replace('+', '')}</span>
               </div>
               <div
                 className={styles.statBox}
@@ -434,36 +417,6 @@ export default function SoilSimulator() {
               </div>
             </div>
 
-            {/* ─── QUIZ ─── */}
-            <div className={styles.quizBox}>
-              <div className={styles.quizQuestion}>
-                🧠 O que faz o solo se formar mais rápido?
-              </div>
-              <div className={styles.quizOptions}>
-                {QUIZ_OPTIONS.map(opt => (
-                  <button
-                    key={opt.id}
-                    className={`${styles.quizOption}
-                      ${quizAnswer === opt.id ? (opt.correct ? styles.optionCorrect : styles.optionWrong) : ''}
-                    `}
-                    onClick={() => setQuizAnswer(opt.id)}
-                    disabled={quizAnswer !== null}
-                    aria-label={`Resposta: ${opt.label}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              {quizAnswer && (
-                <div className={`${styles.quizFeedback} ${QUIZ_OPTIONS.find(o => o.id === quizAnswer)?.correct ? styles.feedbackCorrect : styles.feedbackWrong}`}>
-                  {QUIZ_OPTIONS.find(o => o.id === quizAnswer)?.feedback}
-                  {QUIZ_OPTIONS.find(o => o.id === quizAnswer)?.correct && (
-                    <button className={styles.retryBtn} onClick={() => setQuizAnswer(null)}>↩ Tentar de novo</button>
-                  )}
-                </div>
-              )}
-            </div>
-
           </div>
         </aside>
 
@@ -480,6 +433,7 @@ export default function SoilSimulator() {
           </div>
         </div>
       )}
+      </main>
     </div>
   )
 }

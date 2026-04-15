@@ -1,0 +1,154 @@
+🌪️ CAPÍTULO 06 — Fenômenos Naturais (Simulação Urbana + Impacto Real)
+
+🎯 OBJETIVO DO CAPÍTULO
+
+O usuário deve:
+
+entender fenômenos naturais (enchentes, deslizamentos, secas)
+visualizar impactos no ambiente e nas cidades
+perceber relação entre natureza + ocupação humana
+testar cenários
+aprender prevenção
+
+🏙️ ÁREA ESQUERDA — SIMULAÇÃO
+🎯 Criar componente:
+
+DisasterSimulator
+
+📌 CONCEITO VISUAL
+
+👉 Um território semi-urbano com:
+
+área de morro
+área urbana
+rio ou área baixa
+casas / ruas
+vegetação
+🧱 ELEMENTOS VISUAIS
+relevo (alto/baixo)
+construções simples
+vegetação
+céu (clima dinâmico)
+🎮 INTERAÇÃO PRINCIPAL
+🎛️ 1. SELETOR DE FENÔMENO
+
+Criar botões:
+
+🌧️ Enchente
+⛰️ Deslizamento
+☀️ Seca
+
+👉 apenas um ativo por vez
+
+🌧️ 2. CONTROLES DE INTENSIDADE
+
+Dependendo do fenômeno:
+
+ENCHENTE:
+intensidade da chuva
+nível do rio
+DESLIZAMENTO:
+inclinação do terreno
+saturação do solo (água)
+SECA:
+tempo sem chuva
+temperatura
+💥 COMPORTAMENTO VISUAL
+🌧️ ENCHENTE
+água sobe gradualmente
+invade áreas baixas
+cobre casas
+⛰️ DESLIZAMENTO
+solo se desloca
+massa escorre encosta abaixo
+destrói estruturas
+☀️ SECA
+solo racha
+vegetação seca
+cores ficam mais amareladas
+🧠 ESTADOS DO SIMULADOR
+idle
+flood
+landslide
+drought
+highImpact
+stabilized
+🧾 ÁREA DIREITA — PAINEL
+🎯 Criar:
+
+DisasterInfoPanel
+
+📌 COMPORTAMENTO
+
+Atualiza conforme:
+
+fenômeno selecionado
+intensidade
+impacto atual
+🧱 ESTRUTURA
+1. STATUS
+
+Ex:
+
+Situação controlada
+Risco moderado
+Alto risco
+Desastre ativo
+2. CARDS (GRID 2x2)
+Nível de impacto
+Área afetada
+Condição do solo
+Segurança da população
+3. EXPLICAÇÃO
+
+Texto curto explicando:
+
+o que está acontecendo
+por que acontece
+4. DICA DO THÉO
+
+Exemplo:
+
+“Construir em lugar errado pode dar problema quando chove forte 😬”
+
+
+🔄 TRANSIÇÕES
+água subindo suavemente
+solo se movendo com física leve
+mudança de cor gradual (seca)
+📱 RESPONSIVIDADE
+simulação no topo
+controles abaixo
+painel depois
+🎨 CONSISTÊNCIA VISUAL
+
+Manter:
+
+estilo escuro
+glow leve
+tipografia
+padrão dos cards
+🚫 NÃO FAZER
+não exagerar no caos visual
+não transformar em jogo destrutivo
+não tirar controle do usuário
+🎯 RESULTADO ESPERADO
+
+O usuário deve:
+
+entender fenômenos naturais
+visualizar impacto
+testar cenários
+aprender prevenção
+🔥 DIFERENCIAL ABSURDO (SE APLICAR)
+🏗️ “Modo Planejamento”
+
+Adicionar opção:
+
+👉 “Simular cidade planejada”
+
+drenagem correta
+vegetação
+ocupação adequada
+
+👉 comparar com cenário ruim

@@ -11,8 +11,10 @@ envFile.split('\n').forEach(line => {
 const supabase = createClient(env['VITE_SUPABASE_URL'], env['VITE_SUPABASE_ANON_KEY']);
 
 async function check() {
-  const { data, error } = await supabase.from('push_subscriptions').select('*');
-  console.log("Subscriptions Table:", JSON.stringify(data, null, 2));
+  const { data: cols } = await supabase.rpc('get_column_names', { table_name: 'app_subjects' });
+  // Se o RPC não existir, vamos tentar um select simples
+  const { data, error } = await supabase.from('app_subjects').select('*').eq('slug', 'geociencias').single();
+  console.log("Geosciences Subject:", JSON.stringify(data, null, 2));
   console.log("Error:", error);
 }
 
