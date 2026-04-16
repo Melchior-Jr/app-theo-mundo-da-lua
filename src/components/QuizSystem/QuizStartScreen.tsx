@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FaLock, FaTrophy, FaUserFriends, FaMedal, FaStar, FaChevronDown, FaGlobeAmericas, FaLocationArrow } from 'react-icons/fa'
+import { FaLock, FaTrophy, FaUserFriends, FaMedal, FaStar, FaChevronDown, FaGlobeAmericas } from 'react-icons/fa'
 import { IoSettings, IoPlanetOutline } from 'react-icons/io5'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
@@ -535,7 +535,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                             onClick={(e) => {
                               e.stopPropagation();
                               playSFX('click');
-                              onStart(level.id, ch, selectedSubject);
+                              onStart(level.id, ch, selectedSubject as any);
                             }}
                           >
                             <span className={styles.chNumber}>{ch}</span>
@@ -556,7 +556,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                           onClick={(e) => {
                             e.stopPropagation();
                             playSFX('bonus');
-                            onStart(level.id, 4, selectedSubject);
+                            onStart(level.id, 4, selectedSubject as any);
                           }}
                         >
                           <div className={styles.bonusBtnIcon}>

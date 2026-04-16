@@ -4,12 +4,9 @@ import {
   Search,
   CheckCircle2,
   Clock,
-  Edit3,
   Trash2,
   AlertCircle,
   Box,
-  Cofee,
-  Users,
   Eye,
   Settings2
 } from 'lucide-react';
@@ -49,14 +46,7 @@ const SubjectsManager: React.FC = () => {
     }
   }
 
-  async function handleToggleStatus(subject: Subject, newStatus: 'draft' | 'published' | 'coming_soon') {
-    try {
-      await AdminService.updateSubjectStatus(subject.id, newStatus);
-      setSubjects(prev => prev.map(s => s.id === subject.id ? { ...s, status: newStatus } : s));
-    } catch (err) {
-      alert('Erro ao atualizar status.');
-    }
-  }
+
 
   async function handleManageVisibility(subject: Subject) {
     setSubjectToManage(subject);
@@ -286,7 +276,7 @@ interface VisibilityModalProps {
   testers: any[];
   isSaving: boolean;
   onClose: () => void;
-  onSave: (status: string, testerIds: string[]) => void;
+  onSave: (updates: any) => void;
 }
 
 const VisibilityModal: React.FC<VisibilityModalProps> = ({ subject, testers, isSaving, onClose, onSave }) => {
@@ -400,9 +390,9 @@ const VisibilityModal: React.FC<VisibilityModalProps> = ({ subject, testers, isS
           <button 
             className={styles.primaryBtn} 
             onClick={() => onSave({
-              status,
+              status: status as any,
               tester_ids: selectedTesters,
-              quiz_status: quizStatus,
+              quiz_status: quizStatus as any,
               quiz_tester_ids: selectedQuizTesters
             })}
             disabled={isSaving}

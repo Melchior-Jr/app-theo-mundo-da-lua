@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Gamepad2, Search, Filter, CheckCircle2, Users } from 'lucide-react';
+import { Gamepad2, Search } from 'lucide-react';
 import styles from './AdminPage.module.css';
 import QuizEditor from './QuizEditor';
 

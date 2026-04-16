@@ -78,7 +78,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ onBack }) => {
     setIsSavingVisibility(true);
     try {
       await AdminService.updateSubjectStatus(currentSubjectObj.id, {
-        quiz_status: status,
+        quiz_status: status as any,
         quiz_tester_ids: testerIds
       });
       // Recarrega apenas subjects
