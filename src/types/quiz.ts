@@ -12,6 +12,7 @@ export type QuizQuestionType =
 
 export interface QuizQuestion {
   id: string
+  subject?: 'astronomy' | 'geosciences'
   level: number
   challenge: number
   type: QuizQuestionType

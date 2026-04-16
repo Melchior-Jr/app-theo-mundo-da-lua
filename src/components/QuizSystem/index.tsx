@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
-import { THEO_QUIZ_DATA } from '@/data/quizQuestions'
+import { ALL_QUIZ_DATA } from '@/data/quizQuestions'
 import { useQuizEngine } from '@/hooks/useQuizEngine'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
@@ -7,6 +7,7 @@ import { useSound } from '@/context/SoundContext'
 import { usePlayer } from '@/context/PlayerContext'
 import { TrophyService } from '@/services/trophyService'
 import { ProgressionService } from '@/services/progressionService'
+import { AdminService } from '@/services/adminService'
 import styles from './QuizSystem.module.css'
 import QuestionRenderer from './QuestionRenderer.tsx'
 import QuizHeader from './QuizHeader.tsx'
@@ -95,29 +96,60 @@ export default function QuizSystem({
   // Duelo State
   const [isDuel, setIsDuel] = useState(false)
   const [duelConfig, setDuelConfig] = useState<DuelConfig | null>(null)
+  const [selectedSubject, setSelectedSubject] = useState<'astronomy' | 'geosciences'>('astronomy')
   
   // Efeito de XP animado (Roleta)
   const [animatedXp, setAnimatedXp] = useState(0)
   const [showConfetti, setShowConfetti] = useState(false)
 
+  // 0. Carregar as questões nativas do banco de dados 
+  const [allQuizData, setAllQuizData] = useState<typeof ALL_QUIZ_DATA>(ALL_QUIZ_DATA)
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const dbQuestions = await AdminService.getQuizQuestions()
+        if (dbQuestions && dbQuestions.length > 0) {
+          // MESCLAGEM INTELIGENTE: Prioriza o que vem do banco (editado) 
+          // mas mantém o que está no código local caso ainda não tenha sido migrado
+          setAllQuizData(prev => {
+            const merged = [...prev];
+            dbQuestions.forEach(dbQ => {
+              const idx = merged.findIndex(q => q.id === dbQ.id);
+              if (idx !== -1) {
+                merged[idx] = dbQ; // Sobrescreve local pelo do banco
+              } else {
+                merged.push(dbQ); // Nova pergunta do banco
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.error('Erro carregando questões do cloud:', err)
+      }
+    }
+    fetchQuestions()
+  }, [])
+
   // 1. Filtra as questões do nível e desafio atual
   const questions = useMemo(() => {
     if (isDuel && duelConfig) {
-      const allLevelQuestions = THEO_QUIZ_DATA.filter(q => q.level === duelConfig.levelId);
+      const allLevelQuestions = allQuizData.filter(q => q.subject === selectedSubject && q.level === duelConfig.levelId);
       
       // Se for resposta a um desafio, usamos os IDs salvos
       if (duelConfig.questionIds && duelConfig.questionIds.length > 0) {
         return duelConfig.questionIds
           .map(id => allLevelQuestions.find(q => q.id === id))
-          .filter(Boolean) as typeof THEO_QUIZ_DATA;
+          .filter(Boolean) as typeof ALL_QUIZ_DATA;
       }
 
       // Se for Novo Duelo, embaralhamos
       return [...allLevelQuestions].sort(() => 0.5 - Math.random());
     }
-    return THEO_QUIZ_DATA.filter(q => q.level === currentLevel && q.challenge === currentChallenge)
+    return allQuizData.filter(q => q.subject === selectedSubject && q.level === currentLevel && q.challenge === currentChallenge)
       .sort(() => 0.5 - Math.random())
-  }, [currentLevel, currentChallenge, isDuel, duelConfig])
+  }, [currentLevel, currentChallenge, isDuel, duelConfig, selectedSubject, allQuizData])
 
   // 2. Engine do Quiz
   const engine = useQuizEngine(questions, {
@@ -127,10 +159,11 @@ export default function QuizSystem({
   })
 
   // 3. Handler para começar
-  const handleStart = (selectedLevel: number, selectedChallenge: number = 1) => {
+  const handleStart = (selectedLevel: number, selectedChallenge: number = 1, subject: 'astronomy' | 'geosciences' = 'astronomy') => {
     playSFX('click')
     setIsDuel(false)
     setDuelConfig(null)
+    setSelectedSubject(subject)
     setCurrentLevel(selectedLevel)
     setCurrentChallenge(selectedChallenge)
     setIsStarted(true)
@@ -299,8 +332,9 @@ export default function QuizSystem({
         ];
         const [{ data: currentGlobal }, { data: currentPerGame }] = await Promise.all(statsPromises);
 
+        const subjectMetadata = currentPerGame?.metadata?.[selectedSubject] || {};
         const challengeKey = `L${currentLevel}C${currentChallenge}`;
-        const prevChallengeData = currentPerGame?.metadata?.challenge_data?.[challengeKey] || { best_xp: 0 };
+        const prevChallengeData = subjectMetadata.challenge_data?.[challengeKey] || { best_xp: 0 };
         const prevBestXp = Number(prevChallengeData.best_xp) || 0;
         const xpGain = Math.max(0, finalXp - prevBestXp);
         const scoreGain = xpGain * 10;
@@ -309,8 +343,8 @@ export default function QuizSystem({
         const isPerfect = isChallengeFinished && !engineSnapshot.hasMistakes;
         const challengeStatus = isChallengeFinished ? (isPerfect ? 'success' : 'partial') : 'failed';
 
-        let nextUnlockedLevel = currentPerGame?.metadata?.unlocked_level || 1;
-        let nextUnlockedChallenge = currentPerGame?.metadata?.unlocked_challenge || 1;
+        let nextUnlockedLevel = subjectMetadata.unlocked_level || 1;
+        let nextUnlockedChallenge = subjectMetadata.unlocked_challenge || 1;
 
         if (isChallengeFinished && currentChallenge < 4) {
           if (currentLevel === nextUnlockedLevel && currentChallenge === nextUnlockedChallenge) {
@@ -320,7 +354,7 @@ export default function QuizSystem({
         }
 
         const updatedChallengeData = {
-          ...(currentPerGame?.metadata?.challenge_data || {}),
+          ...(subjectMetadata.challenge_data || {}),
           [challengeKey]: {
             best_xp: Math.max(prevBestXp, finalXp),
             last_played: new Date().toISOString(),
@@ -362,9 +396,11 @@ export default function QuizSystem({
             last_played_at: new Date().toISOString(),
             metadata: { 
               ...(currentPerGame?.metadata || {}), 
-              unlocked_level: nextUnlockedLevel,
-              unlocked_challenge: nextUnlockedChallenge,
-              challenge_data: updatedChallengeData
+              [selectedSubject]: {
+                unlocked_level: nextUnlockedLevel,
+                unlocked_challenge: nextUnlockedChallenge,
+                challenge_data: updatedChallengeData
+              }
             }
           })
         ];

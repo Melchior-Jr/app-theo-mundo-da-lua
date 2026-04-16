@@ -36,6 +36,29 @@ export interface RecentActivity {
 }
 
 export const AdminService = {
+  /** Faz upload de arquivos (áudio/imagem) para o storage do Supabase */
+  async uploadFile(bucket: string, path: string, file: File): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { upsert: true });
+
+      if (error) {
+        console.error(`Erro Supabase Storage (${bucket}):`, error);
+        return error.message; // Retorna a mensagem de erro específica
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (err: any) {
+      console.error(`Erro ao fazer upload para ${bucket}:`, err);
+      return err.message || 'Erro desconhecido';
+    }
+  },
+
   /** Busca estatísticas gerais para o dashboard */
   async getDashboardStats(): Promise<AdminStats> {
     const today = new Date();
@@ -416,13 +439,33 @@ export const AdminService = {
   },
 
   async upsertSubject(subject: any) {
+    // Garante que os campos de visibilidade sejam arrays se não existirem
+    const payload = {
+      ...subject,
+      tester_ids: subject.tester_ids || [],
+      quiz_tester_ids: subject.quiz_tester_ids || []
+    };
+
     const { data, error } = await supabase
       .from('app_subjects')
-      .upsert(subject)
+      .upsert(payload)
       .select()
       .single();
     if (error) throw error;
     return data;
+  },
+
+  async updateSubjectStatus(id: string, updates: { 
+    status?: 'draft' | 'published' | 'coming_soon', 
+    tester_ids?: string[],
+    quiz_status?: 'draft' | 'published' | 'coming_soon',
+    quiz_tester_ids?: string[]
+  }) {
+    const { error } = await supabase
+      .from('app_subjects')
+      .update(updates)
+      .eq('id', id);
+    if (error) throw error;
   },
 
   async deleteSubject(id: string) {
@@ -436,14 +479,8 @@ export const AdminService = {
   async saveFullJourney(draft: any) {
     const { subject, chapters } = draft;
 
-    // 1. Salvar Matéria
-    const { data: savedSubject, error: sErr } = await supabase
-      .from('app_subjects')
-      .upsert(subject)
-      .select()
-      .single();
-    
-    if (sErr) throw sErr;
+    // 1. Salvar Matéria usando o método centralizado
+    const savedSubject = await this.upsertSubject(subject);
     const subjectId = savedSubject.id;
 
     // 2. Buscar capítulos atuais para identificar deleções
@@ -777,6 +814,72 @@ export const AdminService = {
         pct: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0
       }))
     };
+  },
+
+  /** Salva uma lista de perguntas no banco de dados quiz_questions */
+  async saveQuizQuestions(questions: any[]): Promise<boolean> {
+    try {
+      const formatted = questions.map(q => ({
+        id: q.id,
+        subject: q.subject || 'astronomy',
+        level: q.level,
+        challenge: q.challenge,
+        type: q.type,
+        question: q.question,
+        options: q.options,
+        items: q.items,
+        correct_answer: q.correctAnswer,
+        explanation: q.explanation,
+        image: q.image,
+        audio: q.audio,
+        explanation_audio: q.explanationAudio,
+        model_url: q.modelUrl,
+        time_limit: q.timeLimit,
+        updated_at: new Date().toISOString()
+      }));
+      
+      const { error } = await supabase.from('quiz_questions').upsert(formatted);
+      if (error) {
+        console.error('Erro ao salvar perguntas do quiz no Supabase:', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('Falha na comunicação com o Supabase ao salvar perguntas:', err);
+      return false;
+    }
+  },
+
+  /** Traz as perguntas salvas do banco, ou null se não houverem */
+  async getQuizQuestions(): Promise<any[] | null> {
+    try {
+      const { data, error } = await supabase.from('quiz_questions').select('*').order('level', { ascending: true }).order('challenge', { ascending: true });
+      if (error) {
+        console.error('Erro ao buscar perguntas do Supabase:', error);
+        return null;
+      }
+      if (!data || data.length === 0) return null;
+
+      return data.map(q => ({
+        id: q.id,
+        subject: q.subject,
+        level: q.level,
+        challenge: q.challenge,
+        type: q.type,
+        question: q.question,
+        options: q.options,
+        items: q.items,
+        correctAnswer: q.correct_answer,
+        explanation: q.explanation,
+        image: q.image,
+        audio: q.audio,
+        explanationAudio: q.explanation_audio,
+        modelUrl: q.model_url,
+        timeLimit: q.time_limit
+      }));
+    } catch (err) {
+      console.error('Falha de conexão com Supabase:', err);
+      return null;
+    }
   }
-}
-;
+};

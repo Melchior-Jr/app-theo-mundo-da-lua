@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
-import { FaLock, FaRocket, FaTrophy, FaUserFriends, FaMedal, FaStar } from 'react-icons/fa'
-import { IoSettings } from 'react-icons/io5'
+import { useState, useEffect, useCallback } from 'react';
+import { FaLock, FaTrophy, FaUserFriends, FaMedal, FaStar, FaChevronDown, FaGlobeAmericas, FaLocationArrow } from 'react-icons/fa'
+import { IoSettings, IoPlanetOutline } from 'react-icons/io5'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/context/SoundContext'
@@ -18,18 +18,39 @@ interface LevelInfo {
   color: string
 }
 
-const LEVELS: LevelInfo[] = [
-  { id: 1, title: 'Sistema Solar', icon: '☀️', desc: 'Conheça o Sol e a vizinhança espacial onde vivemos!', color: '#ffcc00' },
-  { id: 2, title: 'Planetas', icon: '🪐', desc: 'Gigantes gasosos, rochosos e todos os curiosos vizinhos da Terra.', color: '#ff6b6b' },
-  { id: 3, title: 'Terra', icon: '🌍', desc: 'Descubra como nosso planeta gira e dança pelo espaço!', color: '#4facfe' },
-  { id: 4, title: 'Lua', icon: '🌙', desc: 'As fases da Lua e por que ela brilha tanto no céu à noite.', color: '#a8edea' },
-  { id: 5, title: 'Constelações', icon: '✨', desc: 'Aprenda a ler o mapa das estrelas e descobrir desenhos no céu!', color: '#f093fb' },
-]
+// Temas carregados dinamicamente do banco
+interface QuizSubject {
+  id: string;
+  label: string;
+  icon: string;
+  title: string;
+}
+
+const LEVELS_BY_SUBJECT: Record<string, LevelInfo[]> = {
+  astronomy: [
+    { id: 1, title: 'Sistema Solar', icon: '☀️', desc: 'Conheça o Sol e a vizinhança espacial onde vivemos!', color: '#ffcc00' },
+    { id: 2, title: 'Planetas', icon: '🪐', desc: 'Gigantes gasosos, rochosos e todos os curiosos vizinhos da Terra.', color: '#ff6b6b' },
+    { id: 3, title: 'Terra', icon: '🌍', desc: 'Descubra como nosso planeta gira e dança pelo espaço!', color: '#4facfe' },
+    { id: 4, title: 'Lua', icon: '🌙', desc: 'As fases da Lua e por que ela brilha tanto no céu à noite.', color: '#a8edea' },
+    { id: 5, title: 'Constelações', icon: '✨', desc: 'Aprenda a ler o mapa das estrelas e descobrir desenhos no céu!', color: '#f093fb' },
+  ],
+  geosciences: [
+    { id: 1, title: 'Camadas da Terra', icon: '🌍', desc: 'Viaje até o coração do nosso planeta e conheça o que existe lá embaixo!', color: '#4facfe' },
+    { id: 2, title: 'Rochas e Minerais', icon: '🪨', desc: 'Explore os tesouros escondidos e aprenda a diferenciar pedras de minerais.', color: '#9b59b6' },
+    { id: 3, title: 'Formação do Solo', icon: '🌄', desc: 'Descubra como a terra onde pisamos e plantamos é criada pela natureza.', color: '#e67e22' },
+    { id: 4, title: 'Erosão e relevo', icon: '🌧️', desc: 'Entenda como o vento e a chuva esculpem as montanhas e vales.', color: '#2ecc71' },
+    { id: 5, title: 'Vulcões e terremotos', icon: '🌋', desc: 'Sinta a força das placas tectônicas e o calor do magma em ação!', color: '#e74c3c' },
+    { id: 6, title: 'Fenômenos naturais', icon: '🌪️', desc: 'Furacões, tsunamis e outros eventos poderosos do nosso planeta.', color: '#f1c40f' },
+    { id: 7, title: 'Ação humana no relevo', icon: '🏙️', desc: 'Como nossas cidades e atividades transformam a paisagem da Terra.', color: '#34495e' },
+    { id: 8, title: 'Sustentabilidade', icon: '🌱', desc: 'Aprenda a cuidar dos recursos naturais para um futuro brilhante!', color: '#27ae60' },
+    { id: 9, title: 'Missão final', icon: '🧠', desc: 'O desafio supremo: prove que você é um mestre das Geociências!', color: '#f39c12' },
+  ]
+}
 
 interface QuizStartScreenProps {
   mode?: string
   defaultDuelMode?: 'classic' | 'speedrun' | 'training'
-  onStart: (level: number, challenge: number) => void
+  onStart: (level: number, challenge: number, subject: 'astronomy' | 'geosciences') => void
   onExit: () => void
   onStartDuel: (config: any) => void
 }
@@ -39,6 +60,11 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
   const { playSFX } = useSound()
   const { playerStats } = usePlayer()
 
+  const [dbSubjects, setDbSubjects] = useState<QuizSubject[]>([])
+  const [selectedSubject, setSelectedSubject] = useState<string>(() => {
+    return localStorage.getItem('theo_quiz_last_subject') || 'astronomy'
+  })
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false)
   const [unlockedLevel, setUnlockedLevel] = useState(1)
   const [unlockedChallenge, setUnlockedChallenge] = useState(1)
   const [xp, setXp] = useState(playerStats?.galactic_xp || 0)
@@ -77,15 +103,11 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
         .match({ player_id: user.id, game_id: QUIZ_GAME_ID })
         .maybeSingle()
       
-      if (gameStats?.metadata?.unlocked_level) {
-        setUnlockedLevel(gameStats.metadata.unlocked_level)
-      }
-      if (gameStats?.metadata?.unlocked_challenge) {
-        setUnlockedChallenge(gameStats.metadata.unlocked_challenge)
-      }
-      if (gameStats?.metadata?.challenge_data) {
-        setChallengeData(gameStats.metadata.challenge_data)
-      }
+      const subjectMeta = gameStats?.metadata?.[selectedSubject] || {}
+      
+      setUnlockedLevel(subjectMeta.unlocked_level || 1)
+      setUnlockedChallenge(subjectMeta.unlocked_challenge || 1)
+      setChallengeData(subjectMeta.challenge_data || {})
 
       const { data: trophies } = await supabase
         .from('player_trophies')
@@ -109,6 +131,58 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
            isMe: tp.players?.username === user.email?.split('@')[0]
         }))
         setRankingData(formattedRanking)
+      }
+
+      // NOVO: Carregar jornadas e filtrar por visibilidade
+      const { data: journeys } = await supabase
+        .from('app_subjects')
+        .select('*')
+        .order('order_index', { ascending: true })
+
+      if (journeys) {
+        // Filtro de visibilidade
+        const visibleJourneys = journeys.filter(j => {
+          const status = j.quiz_status || 'draft';
+          const testerIds = j.quiz_tester_ids || [];
+
+          if (status === 'published') return true
+          if (status === 'coming_soon') return true
+          if (status === 'draft') {
+             // Admin e Professores sempre veem
+             if (playerStats?.is_admin || playerStats?.is_teacher) return true
+             // Testadores veem se estiverem na lista
+             if (testerIds.includes(user.id)) return true
+             return false
+          }
+          return false
+        })
+
+        const formatted = visibleJourneys.map(j => {
+          const rawName = j.name.split('|')[0].trim();
+          const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+          
+          // Mapeia o slug (pt-BR) para o ID esperado pelo sistema de Quiz (en-US)
+          let quizId = j.slug;
+          if (j.slug === 'astronomia') quizId = 'astronomy';
+          if (j.slug === 'geociencias') quizId = 'geosciences';
+          
+          return {
+            id: quizId, 
+            label: cleanName,
+            icon: j.icon || '🚀',
+            title: j.name
+          };
+        })
+        setDbSubjects(formatted)
+        
+        if (selectedSubject && !formatted.find(s => s.id === selectedSubject)) {
+          const newId = formatted[0]?.id || null;
+          setSelectedSubject(newId)
+          if (newId) localStorage.setItem('theo_quiz_last_subject', newId);
+        } else if (!selectedSubject && formatted.length > 0) {
+          setSelectedSubject(formatted[0].id)
+          localStorage.setItem('theo_quiz_last_subject', formatted[0].id);
+        }
       }
 
       const { data: pending } = await supabase
@@ -157,7 +231,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
     } catch (err) {
       console.error('Erro ao buscar progresso do quiz:', err)
     }
-  }, [user, lastProcessedIds, playSFX])
+  }, [user, lastProcessedIds, playSFX, selectedSubject])
 
   useEffect(() => {
     if (playerStats?.galactic_xp) {
@@ -230,7 +304,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
   }
 
   return (
-    <div className={styles.startScreen} onClick={() => setSelectedLevel(null)}>
+    <div className={styles.startScreen} onClick={() => { setSelectedLevel(null); setShowSubjectDropdown(false); }}>
       <StarField />
       <div className={styles.nebulaBackground} />
 
@@ -341,18 +415,82 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
 
       <div className={styles.startHeader}>
         <h2 className={styles.heroTitle}>Quiz Intergaláctico</h2>
-        <div className={styles.badgeRow}>
-          <span className={styles.missionBadge}><FaRocket /> 15 DESAFIOS</span>
-          <span className={styles.xpBadge}>⭐ 5 MISSÕES</span>
+        
+        <div className={styles.subjectDropdownWrapper}>
+          <button 
+            className={`${styles.dropdownTrigger} ${showSubjectDropdown ? styles.triggerActive : ''} ${styles['theme-' + selectedSubject]}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowSubjectDropdown(!showSubjectDropdown)
+              playSFX('click')
+            }}
+          >
+            <span className={styles.triggerIcon}>
+              {(() => {
+                const icon = dbSubjects.find(s => s.id === selectedSubject)?.icon;
+                if (icon?.toLowerCase() === 'orbit') return <IoPlanetOutline />;
+                if (icon?.toLowerCase() === 'globe') return <FaGlobeAmericas />;
+                return icon || '🚀';
+              })()}
+            </span>
+            <span className={styles.triggerLabel}>
+              {dbSubjects.find(s => s.id === selectedSubject)?.label || 'Carregando...'}
+            </span>
+            <FaChevronDown className={styles.chevronIcon} />
+          </button>
+
+          {showSubjectDropdown && (
+            <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
+              {dbSubjects.map(subject => (
+                <button 
+                  key={subject.id}
+                  className={`${styles.menuItem} ${selectedSubject === subject.id ? styles.menuItemActive : ''}`}
+                  onClick={() => {
+                    setSelectedSubject(subject.id)
+                    setSelectedLevel(null)
+                    localStorage.setItem('theo_quiz_last_subject', subject.id)
+                    setShowSubjectDropdown(false)
+                    playSFX('click')
+                  }}
+                >
+                  <span className={styles.menuIcon}>
+                    {subject.icon?.toLowerCase() === 'orbit' ? <IoPlanetOutline /> : 
+                     subject.icon?.toLowerCase() === 'globe' ? <FaGlobeAmericas /> : 
+                     subject.icon || '🚀'}
+                  </span>
+                  <span className={styles.menuLabel}>{subject.label}</span>
+                  {selectedSubject === subject.id && <div className={styles.activeDot} />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className={styles.journeyPathway}>
-        <svg className={styles.pathLine} viewBox="0 0 400 1200">
-          <path d="M200,0 C350,150 50,300 200,450 C350,600 50,750 200,900 C350,1050 50,1200 200,1350" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" strokeLinecap="round" strokeDasharray="20,25" />
+        <svg 
+          className={styles.pathLine} 
+          viewBox={`0 0 400 ${(LEVELS_BY_SUBJECT[selectedSubject] || []).length * 250}`}
+          preserveAspectRatio="xMidYMin meet"
+        >
+          <path 
+            d={`M200,0 ${(LEVELS_BY_SUBJECT[selectedSubject] || []).map((_, i) => {
+              const y = (i + 1) * 250;
+              const cp1y = y - 125;
+              const cp2y = y - 125;
+              const x = 200;
+              const direction = i % 2 === 0 ? 350 : 50;
+              return `C${direction},${cp1y} ${400 - direction},${cp2y} ${x},${y}`;
+            }).join(' ')}`}
+            fill="none" 
+            stroke="rgba(255,255,255,0.08)" 
+            strokeWidth="12" 
+            strokeLinecap="round" 
+            strokeDasharray="20,25" 
+          />
         </svg>
 
-        {LEVELS.map((level, idx) => {
+        {(LEVELS_BY_SUBJECT[selectedSubject] || []).map((level, idx) => {
           const isEven = idx % 2 === 0
           const isSelected = selectedLevel === level.id
           const isUnlocked = level.id <= unlockedLevel
@@ -361,7 +499,10 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
             <div 
               key={level.id} 
               className={`${styles.pathNode} ${isEven ? styles.nodeLeft : styles.nodeRight} ${isSelected ? styles.nodeSelected : ''} ${!isUnlocked ? styles.nodeLocked : ''}`}
-              style={{ animationDelay: `${idx * 0.1}s` }}
+              style={{ 
+                animationDelay: `${idx * 0.1}s`,
+                zIndex: isSelected ? 100 : (LEVELS_BY_SUBJECT[selectedSubject]?.length || 0) - idx
+              }}
               onClick={(e) => {
                 e.stopPropagation()
                 if (isUnlocked) handleLevelClick(level.id)
@@ -394,7 +535,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                             onClick={(e) => {
                               e.stopPropagation();
                               playSFX('click');
-                              onStart(level.id, ch);
+                              onStart(level.id, ch, selectedSubject);
                             }}
                           >
                             <span className={styles.chNumber}>{ch}</span>
@@ -405,7 +546,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                       })}
                     </div>
 
-                    {((unlockedLevel === level.id + 1 && unlockedChallenge >= 3) || (unlockedLevel > level.id + 1)) && level.id < 5 && (
+                    {((unlockedLevel === level.id + 1 && unlockedChallenge >= 3) || (unlockedLevel > level.id + 1)) && (
                       <div className={styles.bonusSection}>
                         <div className={styles.bonusDivider}>
                           <span>DESAFIO ESPECIAL</span>
@@ -415,7 +556,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                           onClick={(e) => {
                             e.stopPropagation();
                             playSFX('bonus');
-                            onStart(level.id, 4);
+                            onStart(level.id, 4, selectedSubject);
                           }}
                         >
                           <div className={styles.bonusBtnIcon}>

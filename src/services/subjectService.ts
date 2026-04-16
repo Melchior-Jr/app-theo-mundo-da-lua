@@ -10,6 +10,8 @@ export interface Subject {
   order_index: number;
   status: 'draft' | 'published' | 'coming_soon';
   tester_ids?: string[];
+  quiz_status: 'draft' | 'published' | 'coming_soon';
+  quiz_tester_ids?: string[];
   created_at: string;
 }
 
@@ -26,11 +28,11 @@ export const SubjectService = {
 
     if (!includeAllDrafts) {
       if (userId) {
-        // Mostra publicados/em_breve OU rascunhos onde o usuário está no array tester_ids
-        query = query.or(`status.neq.draft,tester_ids.cs.{"${userId}"}`);
+        // Mostra se (Aula visível OU usuário é testador da Aula) OU (Quiz visível OU usuário é testador do Quiz)
+        query = query.or(`status.neq.draft,tester_ids.cs.{"${userId}"},quiz_status.neq.draft,quiz_tester_ids.cs.{"${userId}"}`);
       } else {
-        // Usuário não logado: esconde todos os rascunhos
-        query = query.neq('status', 'draft');
+        // Usuário não logado: mostra apenas o que não é rascunho em pelo menos um
+        query = query.or('status.neq.draft,quiz_status.neq.draft');
       }
     }
 

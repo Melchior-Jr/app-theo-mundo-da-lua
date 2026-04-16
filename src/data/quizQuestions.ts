@@ -1,4 +1,5 @@
 import { QuizQuestion } from '@/types/quiz'
+import { GEOSCIENCES_QUIZ_DATA } from './geosciencesQuestions'
 
 export const THEO_QUIZ_DATA: QuizQuestion[] = [
   // ==========================================
@@ -1242,4 +1243,9 @@ export const THEO_QUIZ_DATA: QuizQuestion[] = [
     correctAnswer: false,
     explanation: 'As linhas não existem! Elas são fruto da nossa imaginação ao ligar os pontos de luz. 🧠✨🌌',
   }
+]
+
+export const ALL_QUIZ_DATA: QuizQuestion[] = [
+  ...THEO_QUIZ_DATA.map(q => ({ ...q, subject: 'astronomy' as const })),
+  ...GEOSCIENCES_QUIZ_DATA
 ]
