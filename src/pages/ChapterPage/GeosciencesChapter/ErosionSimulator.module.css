@@ -1,0 +1,634 @@
+/* ─── ROOT LAYOUT ─────────────────────────────────────────────── */
+
+.wrapper {
+  width: 100%;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+.mainCard {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  gap: 2.5rem;
+  align-items: start;
+  width: 100%;
+  animation: fadeSlideUp 0.6s ease-out both;
+}
+
+/* ─── LEFT: SIMULATION ────────────────────────────────────────── */
+
+.simArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Terrain Canvas */
+.terrainContainer {
+  position: relative;
+  background: #0d1b2a;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.terrainSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.terrainBody {
+  transition: d 0.8s ease;
+}
+
+/* Erosion Bar */
+.erosionBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.erosionBarLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+.erosionBarTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.erosionBarFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease, background 0.4s ease;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.erosionBarValue {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ffb703;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Controls Panel */
+.controlsPanel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controlIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.controlName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+
+.controlBadge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(255, 183, 3, 0.12);
+  color: #ffb703;
+  border: 1px solid rgba(255, 183, 3, 0.25);
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+}
+
+/* Custom slider */
+.simSlider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.simSlider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--thumb-color, #ffb703);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 14px var(--thumb-color, #ffb703);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.simSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.simSlider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--thumb-color, #ffb703);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 14px var(--thumb-color, #ffb703);
+  cursor: pointer;
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+  padding: 0 2px;
+}
+
+/* Action buttons row */
+.controlActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Vegetation Toggle */
+.vegToggle {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Outfit', sans-serif;
+}
+
+.vegOn {
+  background: rgba(45, 106, 79, 0.2);
+  border-color: rgba(82, 183, 136, 0.4);
+  color: #52b788;
+}
+
+.vegOn:hover {
+  background: rgba(45, 106, 79, 0.35);
+  box-shadow: 0 0 20px rgba(82, 183, 136, 0.15);
+}
+
+.vegOff {
+  background: rgba(180, 70, 30, 0.15);
+  border-color: rgba(220, 100, 50, 0.3);
+  color: #fb8500;
+}
+
+.vegOff:hover {
+  background: rgba(180, 70, 30, 0.25);
+}
+
+.vegIcon {
+  font-size: 1.2rem;
+}
+
+.vegPill {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  letter-spacing: 0.1em;
+}
+
+.pillOn {
+  background: rgba(82, 183, 136, 0.25);
+  color: #52b788;
+  border: 1px solid rgba(82, 183, 136, 0.5);
+}
+
+.pillOff {
+  background: rgba(251, 133, 0, 0.2);
+  color: #fb8500;
+  border: 1px solid rgba(251, 133, 0, 0.4);
+}
+
+/* Accelerate button */
+.accelBtn {
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 183, 3, 0.25);
+  background: rgba(255, 183, 3, 0.08);
+  color: #ffb703;
+  transition: all 0.25s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.accelBtn:hover {
+  background: rgba(255, 183, 3, 0.18);
+  box-shadow: 0 0 20px rgba(255, 183, 3, 0.2);
+}
+
+.accelActive {
+  background: rgba(255, 183, 3, 0.2);
+  border-color: #ffb703;
+  box-shadow: 0 0 20px rgba(255, 183, 3, 0.3), inset 0 0 10px rgba(255, 183, 3, 0.1);
+  animation: pulseGold 1.5s ease-in-out infinite;
+}
+
+/* Reset button */
+.resetBtn {
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.25s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.resetBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── RIGHT: INFO PANEL ───────────────────────────────────────── */
+
+.infoPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 1rem;
+}
+
+/* Status Row */
+.statusRow {
+  display: flex;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: all 0.4s ease;
+  animation: fadeSlideUp 0.4s ease both;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+  animation: blink 1.8s ease-in-out infinite;
+}
+
+/* Metrics Grid */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.metricCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: all 0.4s ease;
+}
+
+.metricHighlight {
+  border-color: rgba(251, 133, 0, 0.3);
+  background: rgba(251, 133, 0, 0.06);
+}
+
+.metricIcon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.metricLabel {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.35);
+  display: block;
+}
+
+.metricValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Interpretation Box */
+.interpretBox {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 1.25rem;
+  animation: fadeSlideUp 0.35s ease both;
+}
+
+.interpretTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffb703;
+}
+
+.interpretText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Theo Tip */
+.theoTip {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: linear-gradient(135deg, rgba(82, 183, 136, 0.08), transparent);
+  border: 1px solid rgba(82, 183, 136, 0.18);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  animation: fadeSlideUp 0.4s 0.1s ease both;
+}
+
+.theoEmoji {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.theoLabel {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #52b788;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.25rem;
+}
+
+.theoText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+  font-style: italic;
+}
+
+/* ─── SVG ANIMATIONS ──────────────────────────────────────────── */
+
+.rainDrop {
+  animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  20% { opacity: 1; }
+  to {
+    transform: translateY(220px);
+    opacity: 0;
+  }
+}
+
+.windParticle {
+  animation: windBlow linear infinite;
+}
+
+@keyframes windBlow {
+  from {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.5; }
+  to {
+    transform: translateX(350px);
+    opacity: 0;
+  }
+}
+
+.waterFlow {
+  stroke-dasharray: 6 4;
+  animation: flowDown 1.2s linear infinite;
+}
+
+@keyframes flowDown {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -20; }
+}
+
+.riverFlow {
+  stroke-dasharray: 8 5;
+  animation: riverAnim 1.8s linear infinite;
+}
+
+@keyframes riverAnim {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -26; }
+}
+
+.valleyAnimate {
+  animation: valleyGrow 0.6s ease-out both;
+}
+
+@keyframes valleyGrow {
+  from { opacity: 0; transform: scaleY(0); transform-origin: top; }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+.soilParticle {
+  animation: soilFly 1.4s ease-in-out infinite;
+}
+
+@keyframes soilFly {
+  from {
+    transform: translate(0, 0);
+    opacity: 0.8;
+  }
+  to {
+    transform: translate(80px, -30px);
+    opacity: 0;
+  }
+}
+
+.treeGroup {
+  animation: treeSway 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes treeSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+/* ─── PAGE ANIMATIONS ─────────────────────────────────────────── */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 183, 3, 0.3); }
+  50% { box-shadow: 0 0 35px rgba(255, 183, 3, 0.55); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+
+@media (max-width: 1050px) {
+  .mainCard {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .infoPanel {
+    position: static;
+  }
+
+  .controlActions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .mainCard {
+    gap: 1.5rem;
+  }
+
+  .controlsPanel {
+    padding: 1.1rem;
+    gap: 1rem;
+  }
+
+  .controlActions {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .vegToggle {
+    grid-column: 1;
+  }
+
+  .metricsGrid {
+    gap: 0.5rem;
+  }
+
+  .metricCard {
+    padding: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .metricValue {
+    font-size: 0.82rem;
+  }
+
+  .interpretBox {
+    padding: 1rem;
+  }
+
+  .interpretText {
+    font-size: 0.83rem;
+  }
+
+  .theoTip {
+    padding: 0.9rem;
+  }
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .rainDrop,
+  .windParticle,
+  .waterFlow,
+  .riverFlow,
+  .soilParticle,
+  .treeGroup,
+  .accelActive,
+  .statusDot {
+    animation: none;
+  }
+
+  .mainCard,
+  .statusBadge,
+  .interpretBox,
+  .theoTip {
+    animation: none;
+  }
+}

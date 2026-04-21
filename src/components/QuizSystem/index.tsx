@@ -155,7 +155,8 @@ export default function QuizSystem({
   const engine = useQuizEngine(questions, {
     mode: isDuel ? 'duel' : 'normal',
     duelMode: isDuel ? (duelConfig?.mode === 'training' ? 'classic' : (duelConfig?.mode || 'classic')) : 'classic',
-    maxTargetScore: isDuel && (duelConfig?.mode === 'classic' || duelConfig?.mode === 'training') ? duelConfig?.challengerScore : undefined
+    maxTargetScore: isDuel && (duelConfig?.mode === 'classic' || duelConfig?.mode === 'training') ? duelConfig?.challengerScore : undefined,
+    subjectId: selectedSubject
   })
 
   // 3. Handler para começar

@@ -1,29 +1,13 @@
 import React, { Suspense } from 'react';
-import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Gamepad2, 
-  Bell, 
-  Users, 
-  LogOut, 
-  ShieldCheck,
-  Compass,
-  BarChart2
-} from 'lucide-react';
+import { Outlet, Navigate } from 'react-router-dom';
+import { ShieldCheck } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
-import { useAuth } from '@/context/AuthContext';
+import { Navbar } from '@/components/Navbar/Navbar';
 import styles from './AdminPage.module.css';
 
 const AdminLayout: React.FC = () => {
   const { isAdmin, loading } = useAdmin();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/jogos');
-  };
+  // handleSignOut removed as unused
 
   if (loading) {
     return (
@@ -44,48 +28,20 @@ const AdminLayout: React.FC = () => {
   }
 
   const navItems = [
-    { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Overview', end: true },
-    { to: '/admin/subjects', icon: <Compass size={20} />, label: 'Jornadas' },
-    { to: '/admin/chapters', icon: <BookOpen size={20} />, label: 'Capítulos' },
-    { to: '/admin/activities', icon: <Gamepad2 size={20} />, label: 'Jogos' },
-    { to: '/admin/notifications', icon: <Bell size={20} />, label: 'Notificações' },
-    { to: '/admin/users', icon: <Users size={20} />, label: 'Alunos' },
-    { to: '/admin/pedagogical', icon: <BarChart2 size={20} />, label: 'Análise' },
-    { to: '/admin/access', icon: <ShieldCheck size={20} />, label: 'Acesso' },
+    { to: '/admin', label: 'OVERVIEW', end: true },
+    { to: '/admin/subjects', label: 'JORNADAS' },
+    { to: '/admin/chapters', label: 'CAPÍTULOS' },
+    { to: '/admin/activities', label: 'JOGOS' },
+    { to: '/admin/notifications', label: 'NOTIFICAÇÕES' },
+    { to: '/admin/users', label: 'ALUNOS' },
+    { to: '/admin/pedagogical', label: 'ANÁLISE' },
+    { to: '/admin/access', label: 'ACESSO' },
   ];
 
   return (
     <div className={styles.adminContainer}>
-      {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.logo}>
-          <ShieldCheck size={28} color="#00e5ff" />
-          <span>Théo Admin</span>
-        </div>
-
-        <nav className={styles.nav}>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => 
-                isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem
-              }
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div style={{ marginTop: 'auto' }}>
-          <button onClick={handleSignOut} className={styles.navItem} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
-            <LogOut size={20} />
-            <span>Sair do Painel</span>
-          </button>
-        </div>
-      </aside>
+      {/* Top Navbar for Admin */}
+      <Navbar customLinks={navItems} />
 
       {/* Main Content */}
       <main className={styles.mainContent}>

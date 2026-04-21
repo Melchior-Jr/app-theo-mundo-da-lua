@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FaLock, FaTrophy, FaUserFriends, FaMedal, FaStar, FaChevronDown, FaGlobeAmericas } from 'react-icons/fa'
-import { IoSettings, IoPlanetOutline } from 'react-icons/io5'
+import { FaLock, FaTrophy, FaUserFriends, FaMedal, FaStar, FaChevronDown } from 'react-icons/fa'
+import { IoSettings } from 'react-icons/io5'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/context/SoundContext'
@@ -9,6 +9,13 @@ import ChallengeModal from './ChallengeModal'
 import SettingsModal from './SettingsModal'
 import { usePlayer } from '@/context/PlayerContext'
 import styles from './QuizSystem.module.css'
+import { 
+  Rocket, Globe, Brain, Map as MapIcon, Sparkles, Gamepad2, Zap, Star, 
+  BookOpen, GraduationCap, School, Pencil, Languages, Binary, TestTube2, Microscope,
+  Palette, Calculator, Thermometer, Telescope, Coins, Leaf, Sun, Moon, Cloud,
+  Wind, Mountain, Waves, TreeDeciduous, Ghost, Skull, Crown, Heart, Smile,
+  Trophy, Flag, Anchor, Hammer, Wrench, Lightbulb, Camera, Coffee
+} from 'lucide-react';
 
 interface LevelInfo {
   id: number
@@ -24,7 +31,30 @@ interface QuizSubject {
   label: string;
   icon: string;
   title: string;
+  missions?: any[];
+  theme_color?: string;
 }
+
+const ICON_MAP: Record<string, any> = {
+  Rocket, Globe, Brain, Map: MapIcon, Sparkles, Gamepad2, Zap, Star,
+  BookOpen, GraduationCap, School, Pencil, Languages, Binary, TestTube2, Microscope,
+  Palette, Calculator, Thermometer, Telescope, Coins, Leaf, Sun, Moon, Cloud,
+  Wind, Mountain, Waves, TreeDeciduous, Ghost, Skull, Crown, Heart, Smile,
+  Trophy, Flag, Anchor, Hammer, Wrench, Lightbulb, Camera, Coffee
+};
+
+const RenderIcon = ({ name, size = 24, color, className }: { name: string, size?: number | string, color?: string, className?: string }) => {
+  // Se for emoji (caractere único ou par de substituto)
+  if (name && name.length <= 4 && /\p{Emoji}/u.test(name)) {
+    return <span className={className} style={{ fontSize: typeof size === 'number' ? `${size}px` : size, lineHeight: 1, display: 'inline-block' }}>{name}</span>;
+  }
+  
+  const IconComp = ICON_MAP[name];
+  if (IconComp) return <IconComp size={size} color={color} className={className} />;
+  
+  // Fallback para foguete
+  return <Rocket size={size} color={color} className={className} />;
+};
 
 const LEVELS_BY_SUBJECT: Record<string, LevelInfo[]> = {
   astronomy: [
@@ -105,8 +135,9 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
       
       const subjectMeta = gameStats?.metadata?.[selectedSubject] || {}
       
-      setUnlockedLevel(subjectMeta.unlocked_level || 1)
-      setUnlockedChallenge(subjectMeta.unlocked_challenge || 1)
+      const isMasterUser = user?.email === 'jamelchior72@gmail.com';
+      setUnlockedLevel(isMasterUser ? 99 : (subjectMeta.unlocked_level || 1))
+      setUnlockedChallenge(isMasterUser ? 99 : (subjectMeta.unlocked_challenge || 1))
       setChallengeData(subjectMeta.challenge_data || {})
 
       const { data: trophies } = await supabase
@@ -133,17 +164,32 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
         setRankingData(formattedRanking)
       }
 
-      // NOVO: Carregar jornadas e filtrar por visibilidade
       const { data: journeys } = await supabase
         .from('app_subjects')
         .select('*')
         .order('order_index', { ascending: true })
 
+      // NOVO: Carregar jornadas e filtrar por visibilidade
       if (journeys) {
+        const missionsMap: Record<string, any[]> = {};
+        const subjectColors: Record<string, string> = {};
+
         // Filtro de visibilidade
         const visibleJourneys = journeys.filter(j => {
           const status = j.quiz_status || 'draft';
           const testerIds = j.quiz_tester_ids || [];
+
+          // Capturar missões e cores dinâmicas
+          let quizId = j.slug;
+          if (j.slug === 'astronomia') quizId = 'astronomy';
+          if (j.slug === 'geociencias') quizId = 'geosciences';
+          
+          if (j.config?.missions) {
+            missionsMap[quizId] = j.config.missions;
+          }
+          if (j.theme_color) {
+            subjectColors[quizId] = j.theme_color;
+          }
 
           if (status === 'published') return true
           if (status === 'coming_soon') return true
@@ -161,7 +207,6 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
           const rawName = j.name.split('|')[0].trim();
           const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
           
-          // Mapeia o slug (pt-BR) para o ID esperado pelo sistema de Quiz (en-US)
           let quizId = j.slug;
           if (j.slug === 'astronomia') quizId = 'astronomy';
           if (j.slug === 'geociencias') quizId = 'geosciences';
@@ -170,7 +215,9 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
             id: quizId, 
             label: cleanName,
             icon: j.icon || '🚀',
-            title: j.name
+            title: j.name,
+            missions: j.config?.missions || [],
+            theme_color: j.theme_color || '#4facfe'
           };
         })
         setDbSubjects(formatted)
@@ -426,12 +473,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
             }}
           >
             <span className={styles.triggerIcon}>
-              {(() => {
-                const icon = dbSubjects.find(s => s.id === selectedSubject)?.icon;
-                if (icon?.toLowerCase() === 'orbit') return <IoPlanetOutline />;
-                if (icon?.toLowerCase() === 'globe') return <FaGlobeAmericas />;
-                return icon || '🚀';
-              })()}
+               <RenderIcon name={dbSubjects.find(s => s.id === selectedSubject)?.icon || 'Rocket'} size="1.5rem" />
             </span>
             <span className={styles.triggerLabel}>
               {dbSubjects.find(s => s.id === selectedSubject)?.label || 'Carregando...'}
@@ -454,9 +496,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                   }}
                 >
                   <span className={styles.menuIcon}>
-                    {subject.icon?.toLowerCase() === 'orbit' ? <IoPlanetOutline /> : 
-                     subject.icon?.toLowerCase() === 'globe' ? <FaGlobeAmericas /> : 
-                     subject.icon || '🚀'}
+                     <RenderIcon name={subject.icon || 'Rocket'} size="1.2rem" />
                   </span>
                   <span className={styles.menuLabel}>{subject.label}</span>
                   {selectedSubject === subject.id && <div className={styles.activeDot} />}
@@ -490,10 +530,13 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
           />
         </svg>
 
-        {(LEVELS_BY_SUBJECT[selectedSubject] || []).map((level, idx) => {
+        {(dbSubjects.find(s => s.id === selectedSubject)?.missions || LEVELS_BY_SUBJECT[selectedSubject] || []).map((level, idx) => {
+          const missionsList = dbSubjects.find(s => s.id === selectedSubject)?.missions || LEVELS_BY_SUBJECT[selectedSubject] || [];
           const isEven = idx % 2 === 0
           const isSelected = selectedLevel === level.id
-          const isUnlocked = level.id <= unlockedLevel
+          const currentLevelNum = level.level || level.id
+          const isUnlocked = currentLevelNum <= unlockedLevel
+          const themeColor = level.color || dbSubjects.find(s => s.id === selectedSubject)?.theme_color || '#4facfe';
 
           return (
             <div 
@@ -501,7 +544,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
               className={`${styles.pathNode} ${isEven ? styles.nodeLeft : styles.nodeRight} ${isSelected ? styles.nodeSelected : ''} ${!isUnlocked ? styles.nodeLocked : ''}`}
               style={{ 
                 animationDelay: `${idx * 0.1}s`,
-                zIndex: isSelected ? 100 : (LEVELS_BY_SUBJECT[selectedSubject]?.length || 0) - idx
+                zIndex: isSelected ? 100 : (missionsList.length || 0) - idx
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -512,16 +555,19 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                 <div className={`${styles.nodeTooltip} ${isEven ? styles.tooltipLeft : styles.tooltipRight} ${idx === 0 ? styles.tooltipBelow : ''}`} onClick={(e) => e.stopPropagation()}>
                   <div className={styles.tooltipArrow} />
                   <div className={styles.tooltipHeader}>
-                    <span className={styles.tooltipIcon}>{level.icon}</span>
-                    <h4>{level.title}</h4>
+                    <span className={styles.tooltipIcon}>
+                       <RenderIcon name={level.icon} size={24} />
+                    </span>
+                    <h4>{level.desc || level.title}</h4>
                   </div>
-                  <p className={styles.tooltipDesc}>{level.desc}</p>
+                  <p className={styles.tooltipDesc}>{level.name || `MISSÃO ${level.level || level.id}`}</p>
                   
                   <div className={styles.tooltipActions}>
                     <div className={styles.challengeGrid}>
-                      {[1, 2, 3].map(ch => {
-                        const isChUnlocked = level.id < unlockedLevel || (level.id === unlockedLevel && ch <= unlockedChallenge)
-                        const chKey = `L${level.id}C${ch}`
+                      {Array.from({ length: level.challengesCount || 3 }).map((_, i) => {
+                        const ch = i + 1;
+                        const isChUnlocked = currentLevelNum < unlockedLevel || (currentLevelNum === unlockedLevel && ch <= unlockedChallenge)
+                        const chKey = `L${currentLevelNum}C${ch}`
                         const chInfo = challengeData[chKey]
                         const statusClass = chInfo?.status === 'success' ? styles.btnSuccess : 
                                            chInfo?.status === 'partial' ? styles.btnPartial : 
@@ -535,7 +581,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                             onClick={(e) => {
                               e.stopPropagation();
                               playSFX('click');
-                              onStart(level.id, ch, selectedSubject as any);
+                              onStart(level.level || level.id, ch, selectedSubject as any);
                             }}
                           >
                             <span className={styles.chNumber}>{ch}</span>
@@ -546,7 +592,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                       })}
                     </div>
 
-                    {((unlockedLevel === level.id + 1 && unlockedChallenge >= 3) || (unlockedLevel > level.id + 1)) && (
+                    {((unlockedLevel === currentLevelNum + 1 && unlockedChallenge >= 3) || (unlockedLevel > currentLevelNum + 1)) && (
                       <div className={styles.bonusSection}>
                         <div className={styles.bonusDivider}>
                           <span>DESAFIO ESPECIAL</span>
@@ -556,7 +602,7 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                           onClick={(e) => {
                             e.stopPropagation();
                             playSFX('bonus');
-                            onStart(level.id, 4, selectedSubject as any);
+                            onStart(level.level || level.id, 4, selectedSubject as any);
                           }}
                         >
                           <div className={styles.bonusBtnIcon}>
@@ -577,22 +623,22 @@ export default function QuizStartScreen({ mode, defaultDuelMode, onStart, onExit
                 <div className={styles.nodeCircleWrapper}>
                   <div className={styles.nodeCircle} style={{ 
                     background: isSelected 
-                      ? (isUnlocked ? `linear-gradient(135deg, ${level.color}, #ffffff55)` : 'rgba(100,100,100,0.3)')
+                      ? (isUnlocked ? `linear-gradient(135deg, ${themeColor}, #ffffff55)` : 'rgba(100,100,100,0.3)')
                       : (isUnlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'),
-                    boxShadow: isSelected && isUnlocked ? `0 0 30px ${level.color}44` : 'none',
+                    boxShadow: isSelected && isUnlocked ? `0 0 30px ${themeColor}44` : 'none',
                     borderColor: isSelected ? '#fff' : (isUnlocked ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)')
                   }}>
-                    <span className={styles.nodeEmoji} style={{ filter: isUnlocked ? 'none' : 'grayscale(1) opacity(0.5)' }}>
-                      {level.icon}
-                    </span>
+                    <div className={styles.nodeEmoji} style={{ filter: isUnlocked ? 'none' : 'grayscale(1) opacity(0.5)' }}>
+                       <RenderIcon name={level.icon} size="4.2rem" />
+                    </div>
                     {!isUnlocked && <FaLock className={styles.nodeLock} />}
-                    {isUnlocked && <div className={styles.activePulse} style={{ borderColor: level.color }} />}
+                    {isUnlocked && <div className={styles.activePulse} style={{ borderColor: themeColor }} />}
                   </div>
                 </div>
                 
                 <div className={styles.nodeText} style={{ opacity: isUnlocked ? 1 : 0.5 }}>
-                  <span className={styles.levelTag} style={{ background: isUnlocked ? level.color : '#444' }}>Missão {level.id}</span>
-                  <h3 className={styles.levelName}>{level.title}</h3>
+                  <span className={styles.levelTag} style={{ background: isUnlocked ? themeColor : '#444' }}>{level.name || `MISSÃO ${level.level || level.id}`}</span>
+                  <h3 className={styles.levelName}>{level.desc || level.title}</h3>
                 </div>
               </div>
             </div>

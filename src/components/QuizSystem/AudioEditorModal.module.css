@@ -1,0 +1,231 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(30, 30, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.content {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.waveformContainer {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  min-height: 150px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+.actionBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.actionBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.primaryBtn {
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  color: #000;
+  border: none;
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(135deg, #33ebff, #33adff);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filterHeader {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #00e5ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.filterBtn {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterBtn.active {
+  background: rgba(0, 229, 255, 0.1);
+  border-color: #00e5ff;
+  color: #fff;
+}
+
+.footer {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.timeInfo {
+  display: flex;
+  gap: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  color: #ffd166;
+  margin-bottom: 8px;
+}
+
+.timeLabel {
+  display: block;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.4);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.scriptReference {
+  background: rgba(0,0,0,0.3);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 20px;
+}
+
+.scriptReference p {
+  margin: 0;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.volumeContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.volumeSlider {
+  width: 100px;
+  accent-color: #00e5ff;
+}
+
+.recording {
+  border-color: #ff4444 !important;
+  color: #ff4444 !important;
+  background: rgba(255, 68, 68, 0.1) !important;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.pulse {
+  width: 12px;
+  height: 12px;
+  background: #ff4444;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  animation: pulse-red 2s infinite;
+  margin-right: 8px;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+  }
+}

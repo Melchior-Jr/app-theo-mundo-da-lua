@@ -6,7 +6,9 @@ import { AuthProvider } from '@/context/AuthContext'
 import { SoundProvider } from '@/context/SoundContext'
 import { AchievementProvider } from '@/context/AchievementContext'
 import { PlayerProvider } from '@/context/PlayerContext'
+import { AudioAssetsProvider } from '@/context/AudioAssetsContext'
 import '@google/model-viewer'
+
 import '@/styles/globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -15,8 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <SoundProvider>
         <AchievementProvider>
           <PlayerProvider>
-            <RouterProvider router={router} />
+            <AudioAssetsProvider>
+              <RouterProvider router={router} />
+            </AudioAssetsProvider>
           </PlayerProvider>
+
         </AchievementProvider>
       </SoundProvider>
     </AuthProvider>

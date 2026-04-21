@@ -881,5 +881,46 @@ export const AdminService = {
       console.error('Falha de conexão com Supabase:', err);
       return null;
     }
+  },
+
+  /** Gerenciamento de Áudios Globais (assets do sistema) */
+  async getQuizAudioAssets() {
+    const { data, error } = await supabase
+      .from('quiz_audio_assets')
+      .select('*')
+      .order('subject', { ascending: true, nullsFirst: true })
+      .order('category', { ascending: true })
+      .order('label', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async upsertQuizAudioAsset(asset: any) {
+    const { data, error } = await supabase
+      .from('quiz_audio_assets')
+      .upsert(asset)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteQuizAudioAsset(id: string) {
+    const { error } = await supabase
+      .from('quiz_audio_assets')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async toggleAudioAssetStatus(id: string, isActive: boolean) {
+    const { error } = await supabase
+      .from('quiz_audio_assets')
+      .update({ is_active: isActive })
+      .eq('id', id);
+    if (error) throw error;
   }
+
 };
+

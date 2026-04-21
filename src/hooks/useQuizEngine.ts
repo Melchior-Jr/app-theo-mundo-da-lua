@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { QuizQuestion, QuizState } from '@/types/quiz'
 import { useSound } from '@/context/SoundContext'
+import { useAudioAssets } from '@/context/AudioAssetsContext'
+
 
 export type EngineMode = 'normal' | 'duel'
 export type DuelMode = 'classic' | 'speedrun'
@@ -9,14 +11,20 @@ interface EngineOptions {
   mode?: EngineMode
   duelMode?: DuelMode
   maxTargetScore?: number // Pontuação para vitória imediata
+  subjectId?: string // Matéria para filtro de áudio
 }
+
 
 export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | EngineOptions = 'normal') {
   const { playSFX, playTrack } = useSound()
+  const { getRandomAsset } = useAudioAssets()
+
   const mode = typeof options === 'string' ? options : (options.mode || 'normal')
   const duelMode = typeof options === 'object' ? options.duelMode : 'classic'
   const maxTargetScore = typeof options === 'object' ? options.maxTargetScore : undefined
+  const currentSubjectId = typeof options === 'object' ? options.subjectId : undefined
   const isDuel = mode === 'duel'
+
 
   const [state, setState] = useState<QuizState>({
     currentIdx: 0,
@@ -53,16 +61,17 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     // --- REAÇÕES DE ÁUDIO ---
     if (isCorrect) {
       if (nextCombo >= 3) {
-        const comboNum = Math.floor(Math.random() * 4) + 1
-        playTrack(`/audio/Quiz Intergaláctico/Combo_0${comboNum}.MP3`)
+        const url = getRandomAsset('combo', currentSubjectId);
+        if (url) playTrack(url);
       } else {
-        const hitNum = Math.floor(Math.random() * 5) + 1
-        playTrack(`/audio/Quiz Intergaláctico/Hit_0${hitNum}.MP3`)
+        const url = getRandomAsset('hit', currentSubjectId);
+        if (url) playTrack(url);
       }
     } else {
-      const missNum = Math.floor(Math.random() * 5) + 1
-      playTrack(`/audio/Quiz Intergaláctico/Miss_0${missNum}.MP3`)
+      const url = getRandomAsset('miss', currentSubjectId);
+      if (url) playTrack(url);
     }
+
 
     setState(prev => {
       let xpAwarded = 0
@@ -91,8 +100,9 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
 
       // Vitória Imediata (Duelo)
       if (maxTargetScore !== undefined && newCorrectCount > maxTargetScore && isCorrect) {
-        const winNum = Math.floor(Math.random() * 3) + 1
-        playTrack(`/audio/Quiz Intergaláctico/Win_0${winNum}.MP3`)
+        const url = getRandomAsset('win', currentSubjectId);
+        if (url) playTrack(url);
+
         return { 
           ...prev, 
           xp: newXP, 
@@ -120,7 +130,7 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
         questionsLog: newLog
       }
     })
-  }, [maxTargetScore, playTrack, introAudio, state, questionStartTime, questions])
+  }, [maxTargetScore, playTrack, introAudio, state, questionStartTime, questions, currentSubjectId, getRandomAsset])
 
   const nextStep = useCallback(() => {
     const isLast = state.currentIdx === questions.length - 1
@@ -136,16 +146,18 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     
     if (isGameOverClassic || isDead) {
       playSFX('fail')
-      const deathNum = Math.floor(Math.random() * 5) + 1
-      playTrack(`/audio/Quiz Intergaláctico/Death_0${deathNum}.MP3`)
+      const url = getRandomAsset('death', currentSubjectId);
+      if (url) playTrack(url);
       setState(prev => ({ ...prev, status: 'gameover' }))
+
       return
     }
     
     if (isLast) {
       playSFX('success')
-      const winNum = Math.floor(Math.random() * 3) + 1
-      playTrack(`/audio/Quiz Intergaláctico/Win_0${winNum}.MP3`)
+      const url = getRandomAsset('win', currentSubjectId);
+      if (url) playTrack(url);
+
       
       setState(prev => {
         const bonusXP = !prev.hasMistakes ? 300 : 0
@@ -158,12 +170,13 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
     let newAudio: HTMLAudioElement | null = null
 
     if (nextQuestion && nextQuestion.level >= 4) {
-      const hardNum = Math.floor(Math.random() * 2) + 1
-      newAudio = playTrack(`/audio/Quiz Intergaláctico/Hard_0${hardNum}.MP3`)
+      const url = getRandomAsset('hard', currentSubjectId);
+      if (url) newAudio = playTrack(url);
     } else if (nextIdx % 3 === 0) {
-      const qStartNum = Math.floor(Math.random() * 5) + 1
-      newAudio = playTrack(`/audio/Quiz Intergaláctico/QStart_0${qStartNum}.MP3`)
+      const url = getRandomAsset('start', currentSubjectId);
+      if (url) newAudio = playTrack(url);
     }
+
 
     setIntroAudio(newAudio)
     setState(prev => ({
@@ -172,7 +185,7 @@ export function useQuizEngine(questions: QuizQuestion[], options: EngineMode | E
       status: 'playing',
       lastAnswerCorrect: null
     }))
-  }, [questions, playSFX, playTrack, isDuel, state])
+  }, [questions, playSFX, playTrack, isDuel, state, currentSubjectId, getRandomAsset])
 
   const reset = useCallback(() => {
     setIntroAudio(null)

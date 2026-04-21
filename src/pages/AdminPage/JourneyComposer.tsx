@@ -5,12 +5,13 @@ import {
   Plus, 
   ChevronRight, 
   BookOpen, 
-  Type, 
   Info, 
   Link as LinkIcon, 
   Palette, 
   Layout,
   Target,
+  Layers,
+  Map,
   Image as ImageIcon,
   Video,
   FileText,
@@ -23,9 +24,14 @@ import {
   ToggleLeft,
   ToggleRight,
   Eye,
-  EyeOff,
-  Clock,
-  Users
+  EyeOff, 
+  Clock, 
+  Users,
+  Copy,
+  Globe,
+  Settings,
+  Volume2,
+  Rocket
 } from 'lucide-react';
 import styles from './JourneyComposer.module.css';
 import { Subject } from '@/services/subjectService';
@@ -135,6 +141,67 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
     }
   };
 
+  const duplicateChapter = (chapterId: string) => {
+    const chapter = draft.chapters.find(c => c.id === chapterId);
+    if (!chapter) return;
+    
+    const newId = `new-ch-copy-${Date.now()}`;
+    const newChapter: FullChapter = {
+      ...chapter,
+      id: newId,
+      title: `${chapter.title} (Cópia)`,
+      order: draft.chapters.length + 1,
+      missions: chapter.missions.map(m => ({
+        ...m,
+        id: `new-m-copy-${Math.random().toString(36).substr(2, 9)}`,
+        chapter_id: newId
+      }))
+    };
+    
+    setDraft({
+      ...draft,
+      chapters: [...draft.chapters, newChapter]
+    });
+  };
+
+  const duplicateMission = (chId: string, mId: string) => {
+    const chIdx = draft.chapters.findIndex(c => c.id === chId);
+    if (chIdx === -1) return;
+    
+    const mission = draft.chapters[chIdx].missions.find(m => m.id === mId);
+    if (!mission) return;
+    
+    const newMission: DBMission = {
+      ...mission,
+      id: `new-mi-copy-${Date.now()}`,
+      description: `${mission.description} (Cópia)`
+    };
+    
+    const updatedChapters = [...draft.chapters];
+    updatedChapters[chIdx].missions = [...updatedChapters[chIdx].missions, newMission];
+    setDraft({ ...draft, chapters: updatedChapters });
+  };
+
+  const toggleMissionVisibility = (chId: string, mId: string) => {
+    const chIdx = draft.chapters.findIndex(c => c.id === chId);
+    if (chIdx === -1) return;
+    
+    const updatedChapters = [...draft.chapters];
+    const mIdx = updatedChapters[chIdx].missions.findIndex(m => m.id === mId);
+    if (mIdx === -1) return;
+    
+    const mission = updatedChapters[chIdx].missions[mIdx];
+    const metadata = (mission as any).metadata || {};
+    const newStatus = metadata.status === 'hidden' ? 'published' : 'hidden';
+    
+    updatedChapters[chIdx].missions[mIdx] = {
+      ...mission,
+      metadata: { ...metadata, status: newStatus }
+    } as any;
+    
+    setDraft({ ...draft, chapters: updatedChapters });
+  };
+
   const addChapter = () => {
     const newChapter: FullChapter = {
       id: `new-ch-${Date.now()}`,
@@ -192,19 +259,75 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
   const renderSubjectEditor = () => (
     <div className={styles.editorContainer}>
       <header className={styles.editorHeader}>
-        <h2 className={styles.sectionTitle}><Layout size={24} color="#00e5ff" /> Configurações da Jornada</h2>
+        <h2 className={styles.sectionTitle}><Settings size={24} color="#00e5ff" /> Editor da Jornada</h2>
       </header>
       
       <div className={styles.editorSection}>
+        <h3 className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', marginBottom: '24px' }}>
+          <Globe size={20} color="#00e5ff" /> Configurações Gerais
+        </h3>
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
-            <label className={styles.formGroupLabel}><Type size={14} /> Nome da Matéria</label>
+            <label className={styles.formGroupLabel}>Nome do Quiz</label>
             <input 
               className={styles.input}
               value={draft.subject.name}
               onChange={e => setDraft({ ...draft, subject: { ...draft.subject, name: e.target.value }})}
-              placeholder="Ex: Português"
+              placeholder="Ex: Geociências"
             />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formGroupLabel}>Ícone do Quiz (Lucide)</label>
+            <input 
+              className={styles.input}
+              value={draft.subject.icon || ''}
+              onChange={e => setDraft({ ...draft, subject: { ...draft.subject, icon: e.target.value }})}
+              placeholder="Ex: globe, rocket, saturn..."
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formGroupLabel}>Visibilidade Global</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className={draft.subject.status === 'published' ? styles.primaryBtn : styles.secondaryBtn}
+                style={{ flex: 1, padding: '8px', fontSize: '0.8rem', background: draft.subject.status === 'published' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(0,0,0,0.2)', color: draft.subject.status === 'published' ? '#4ade80' : 'rgba(255,255,255,0.5)', border: draft.subject.status === 'published' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.06)' }}
+                onClick={() => setDraft({ ...draft, subject: { ...draft.subject, status: 'published' }})}
+              >
+                Visível
+              </button>
+              <button 
+                className={draft.subject.status === 'draft' ? styles.primaryBtn : styles.secondaryBtn}
+                style={{ flex: 1, padding: '8px', fontSize: '0.8rem', background: draft.subject.status === 'draft' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0,0,0,0.2)', color: draft.subject.status === 'draft' ? '#f87171' : 'rgba(255,255,255,0.5)', border: draft.subject.status === 'draft' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.06)' }}
+                onClick={() => setDraft({ ...draft, subject: { ...draft.subject, status: 'draft' }})}
+              >
+                Oculto
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formGroupLabel}>Narração do Théo</label>
+            <button 
+              className={styles.secondaryBtn}
+              style={{ width: '100%', justifyContent: 'start', gap: '10px', padding: '12px' }}
+              onClick={() => {
+                const current = draft.subject.config?.audio?.narration ?? true;
+                setDraft({
+                  ...draft,
+                  subject: {
+                    ...draft.subject,
+                    config: {
+                      ...draft.subject.config,
+                      audio: { ...draft.subject.config?.audio, narration: !current }
+                    }
+                  }
+                });
+              }}
+            >
+              <Volume2 size={18} color="#00e5ff" style={{ opacity: (draft.subject.config?.audio?.narration !== false) ? 1 : 0.4 }} />
+              <span>{draft.subject.config?.audio?.narration !== false ? 'Ativada' : 'Desativada'}</span>
+            </button>
           </div>
           <div className={styles.formGroup}>
             <label className={styles.formGroupLabel}><LinkIcon size={14} /> Slug (URL)</label>
@@ -233,18 +356,6 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
               onChange={e => setDraft({ ...draft, subject: { ...draft.subject, theme_color: e.target.value }})}
               style={{ height: '45px', padding: '4px' }}
             />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formGroupLabel}>Status</label>
-            <select 
-              className={styles.input}
-              value={draft.subject.status}
-              onChange={e => setDraft({ ...draft, subject: { ...draft.subject, status: e.target.value as any }})}
-            >
-              <option value="draft">Rascunho</option>
-              <option value="published">Publicado</option>
-              <option value="coming_soon">Em Breve</option>
-            </select>
           </div>
         </div>
 
@@ -313,11 +424,51 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
                 })}
               </div>
             )}
-            <p style={{ marginTop: '16px', fontSize: '0.75rem', opacity: 0.5, fontStyle: 'italic' }}>
-              Selecionando os testadores, apenas eles (e administradores) poderão visualizar esta jornada enquanto o status for "Rascunho".
-            </p>
           </div>
         )}
+      </div>
+
+      {/* Listagem de Capítulos para Visão Geral */}
+      <div className={styles.editorSection} style={{ marginTop: '32px' }}>
+        <h3 className={styles.sectionTitle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+            <Layers size={18} color="#00e5ff" /> Capítulos desta Jornada
+          </div>
+          <button className={styles.iconBtn} onClick={addChapter} title="Adicionar Capítulo">
+            <Plus size={18} />
+          </button>
+        </h3>
+        <div className={styles.formGrid}>
+          {draft.chapters.map((chItem, chIdx) => (
+            <div 
+              key={chItem.id} 
+              className={styles.missionCard}
+              onClick={() => setSelection({ type: 'chapter', index: chIdx })}
+            >
+              <div className={styles.missionIcon}>
+                <Layers size={20} />
+              </div>
+              <div className={styles.missionInfo}>
+                <span className={styles.missionLevel}>SEQUÊNCIA {chIdx + 1}</span>
+                <h4 className={styles.missionName}>{chItem.title}</h4>
+                <span className={styles.missionMeta}>{chItem.missions.length} Missões</span>
+              </div>
+              
+              <div className={styles.cardActions} onClick={e => e.stopPropagation()}>
+                <button className={styles.iconBtn} onClick={() => duplicateChapter(chItem.id)} title="Duplicar">
+                  <Copy size={16} />
+                </button>
+                <button className={styles.iconBtn} onClick={() => removeChapter(chIdx)} title="Excluir" style={{ color: '#ff4b4b' }}>
+                  <Trash2 size={16} />
+                </button>
+                <ChevronRight className={styles.missionArrow} size={18} />
+              </div>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={addChapter} style={{ margin: 0, height: '100%', minHeight: '80px' }}>
+            <Plus size={18} /> Novo Capítulo
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -335,7 +486,17 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
     return (
       <div className={styles.editorContainer}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 className={styles.sectionTitle}><BookOpen size={24} color="#00e5ff" /> Editor de Capítulo</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className={styles.secondaryBtn} 
+              onClick={() => setSelection({ type: 'subject' })}
+              style={{ padding: '8px', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Voltar para Jornada"
+            >
+              ←
+            </button>
+            <h2 className={styles.sectionTitle} style={{ margin: 0 }}><BookOpen size={24} color="#00e5ff" /> Editar Capítulo</h2>
+          </div>
           <button onClick={() => removeChapter(idx)} className={styles.closeBtn} title="Remover Capítulo">
             <Trash2 size={20} />
           </button>
@@ -471,6 +632,72 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
             </div>
           </div>
         </div>
+
+
+        {/* Listagem de Missões para Visão Geral do Capítulo */}
+        <div className={styles.editorSection} style={{ marginTop: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 className={styles.sectionTitle} style={{ margin: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+                <Map size={18} color="#00e5ff" /> Missões Disponíveis
+              </div>
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 12px', borderRadius: '8px' }}>
+              <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>QTD:</span>
+              <input 
+                type="number" 
+                className={styles.noneInput} 
+                value={ch.missions.length} 
+                style={{ width: '30px', fontWeight: 'bold', textAlign: 'center' }} 
+                readOnly 
+              />
+              <button className={styles.iconBtn} onClick={() => addMission(idx)} title="Adicionar Missão" style={{ background: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', padding: '2px', borderRadius: '4px' }}>
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+          <div className={styles.formGrid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+            {ch.missions.map((m, mIdx) => {
+              const isHidden = (m as any).metadata?.status === 'hidden';
+              return (
+                <div 
+                  key={m.id} 
+                  className={`${styles.missionCard} ${isHidden ? styles.cardInactive : ''}`}
+                  onClick={() => setSelection({ type: 'mission', chapterIndex: idx, missionIndex: mIdx })}
+                >
+                  <div className={styles.missionIcon} style={{ opacity: isHidden ? 0.4 : 1 }}>
+                    <Rocket size={24} />
+                  </div>
+                  <div className={styles.missionInfo}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span className={styles.missionLevel}>ETAPA {mIdx + 1}</span>
+                    </div>
+                    <span className={styles.missionName} style={{ opacity: isHidden ? 0.5 : 1 }}>{m.description}</span>
+                    <span className={styles.missionMeta}>
+                      {m.xp} XP • {m.category === 'lesson' ? 'Lição' : m.category} {isHidden && '• OCULTO'}
+                    </span>
+                  </div>
+                  
+                  <div className={styles.cardActions} onClick={e => e.stopPropagation()}>
+                    <button className={styles.iconBtn} onClick={() => toggleMissionVisibility(ch.id, m.id)} title={isHidden ? "Mostrar" : "Ocultar"}>
+                      {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button className={styles.iconBtn} onClick={() => duplicateMission(ch.id, m.id)} title="Duplicar">
+                      <Copy size={16} />
+                    </button>
+                    <button className={styles.iconBtn} onClick={() => removeMission(idx, mIdx)} title="Excluir" style={{ color: '#ff4b4b' }}>
+                      <Trash2 size={16} />
+                    </button>
+                    <ChevronRight className={styles.missionArrow} size={18} />
+                  </div>
+                </div>
+              );
+            })}
+            <button className={styles.addBtn} onClick={() => addMission(idx)} style={{ margin: 0, height: '100%', minHeight: '80px' }}>
+              <Plus size={18} /> Adicionar Missão
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -500,7 +727,17 @@ export const JourneyComposer: React.FC<JourneyComposerProps> = ({
     return (
       <div className={styles.editorContainer}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 className={styles.sectionTitle}><Target size={24} color="#00e5ff" /> Editor de Conteúdo (Missão)</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className={styles.secondaryBtn} 
+              onClick={() => setSelection({ type: 'chapter', index: chIdx })}
+              style={{ padding: '8px', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Voltar para Capítulo"
+            >
+              ←
+            </button>
+            <h2 className={styles.sectionTitle} style={{ margin: 0 }}><Target size={24} color="#00e5ff" /> Editor de Missão</h2>
+          </div>
           <button onClick={() => removeMission(chIdx, mIdx)} className={styles.closeBtn} title="Remover Missão">
             <Trash2 size={20} />
           </button>

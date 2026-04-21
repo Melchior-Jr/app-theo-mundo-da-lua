@@ -13,6 +13,7 @@ export interface Subject {
   quiz_status: 'draft' | 'published' | 'coming_soon';
   quiz_tester_ids?: string[];
   created_at: string;
+  config?: any;
 }
 
 export const SubjectService = {

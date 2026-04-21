@@ -1,0 +1,627 @@
+/* ─── ROOT LAYOUT ─────────────────────────────────────────────── */
+
+.wrapper {
+  width: 100%;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+  transition: filter 0.1s ease;
+}
+
+.mainCard {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  gap: 2.5rem;
+  align-items: start;
+  width: 100%;
+  animation: fadeSlideUp 0.6s ease-out both;
+}
+
+/* ─── SCREEN EFFECTS ──────────────────────────────────────────── */
+
+.screenShake {
+  animation: cameraShake 0.15s ease-in-out infinite;
+}
+
+.screenGlow {
+  filter: drop-shadow(0 0 30px rgba(255, 80, 0, 0.15));
+}
+
+@keyframes cameraShake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20%       { transform: translate(-2px, 1px) rotate(-0.2deg); }
+  40%       { transform: translate(2px, -1px) rotate(0.2deg); }
+  60%       { transform: translate(-1px, 2px) rotate(-0.1deg); }
+  80%       { transform: translate(1px, -2px) rotate(0.1deg); }
+}
+
+/* ─── LEFT: SIMULATION ────────────────────────────────────────── */
+
+.simArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Terrain Canvas */
+.terrainContainer {
+  position: relative;
+  background: #0a0f14;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.tectonicSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Pressure Bar */
+.pressureBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.25rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pressureBarLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+
+.pressureBarTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pressureBarFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.pressureBarValue {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ff6b35;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Eruption flash overlay */
+.eruptionFlash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 60%, rgba(255, 140, 0, 0.18) 0%, transparent 70%);
+  animation: flashPulse 0.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes flashPulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+/* ─── CONTROLS PANEL ──────────────────────────────────────────── */
+
+.controlsPanel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.controlHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controlIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.controlName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+
+.controlBadge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  border: 1px solid;
+  transition: all 0.4s ease;
+}
+
+/* Plate Grid */
+.plateGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.plateBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Outfit', sans-serif;
+}
+
+.plateBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.plateBtnActive {
+  background: rgba(255, 107, 53, 0.15) !important;
+  border-color: rgba(255, 107, 53, 0.5) !important;
+  box-shadow: 0 0 18px rgba(255, 107, 53, 0.25);
+}
+
+.plateBtnIcon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.plateBtnLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.plateBtnDesc {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Slider */
+.simSlider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.simSlider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--thumb-color, #ff6b35);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 14px var(--thumb-color, #ff6b35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.simSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.simSlider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--thumb-color, #ff6b35);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.22);
+  padding: 0 2px;
+}
+
+/* Action Buttons */
+.controlActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* Eruption button */
+.eruptBtn {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: not-allowed;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Outfit', sans-serif;
+}
+
+.eruptReady {
+  cursor: pointer !important;
+  background: rgba(230, 57, 70, 0.12) !important;
+  border-color: rgba(230, 57, 70, 0.35) !important;
+  color: #e63946 !important;
+}
+
+.eruptReady:hover {
+  background: rgba(230, 57, 70, 0.22) !important;
+  box-shadow: 0 0 25px rgba(230, 57, 70, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+.eruptActive {
+  background: rgba(255, 80, 0, 0.2) !important;
+  border-color: #ff6b35 !important;
+  color: #ff6b35 !important;
+  animation: eruptPulse 0.6s ease-in-out infinite;
+  cursor: not-allowed !important;
+}
+
+.eruptIcon {
+  font-size: 1.2rem;
+  animation: volcanoSpin 2s ease-in-out infinite;
+}
+
+.eruptActive .eruptIcon {
+  animation: volcanoShake 0.3s ease infinite;
+}
+
+@keyframes eruptPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.4); }
+  50%       { box-shadow: 0 0 40px rgba(255, 107, 53, 0.7); }
+}
+
+@keyframes volcanoSpin {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+@keyframes volcanoShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-2px); }
+  75%       { transform: translateX(2px); }
+}
+
+/* Quake button */
+.quakeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 210, 50, 0.15);
+  background: rgba(255, 210, 50, 0.05);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: not-allowed;
+  transition: all 0.25s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.quakeReady {
+  cursor: pointer !important;
+  border-color: rgba(255, 210, 50, 0.35) !important;
+  color: #ffd60a !important;
+}
+
+.quakeReady:hover {
+  background: rgba(255, 210, 50, 0.12) !important;
+  box-shadow: 0 0 18px rgba(255, 210, 50, 0.2);
+}
+
+/* Reset button */
+.resetBtn {
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.resetBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ─── RIGHT: INFO PANEL ───────────────────────────────────────── */
+
+.infoPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.statusRow { display: flex; }
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: all 0.5s ease;
+  animation: fadeSlideUp 0.4s ease both;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 1.8s ease-in-out infinite;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.metricCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: all 0.4s ease;
+}
+
+.metricHighlight {
+  border-color: rgba(255, 107, 53, 0.3);
+  background: rgba(255, 107, 53, 0.06);
+}
+
+.metricIcon  { font-size: 1.2rem; line-height: 1; }
+.metricLabel {
+  font-size: 0.62rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.33); display: block;
+}
+.metricValue { font-size: 0.88rem; font-weight: 700; color: rgba(255, 255, 255, 0.88); }
+
+.interpretBox {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 1.25rem;
+  animation: fadeSlideUp 0.35s ease both;
+}
+
+.interpretTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ff6b35;
+}
+
+.interpretText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.theoTip {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.07), transparent);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  animation: fadeSlideUp 0.4s 0.1s ease both;
+}
+
+.theoEmoji { font-size: 1.8rem; flex-shrink: 0; line-height: 1; }
+
+.theoLabel {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ff6b35;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.25rem;
+}
+
+.theoText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+  font-style: italic;
+}
+
+/* ─── SVG ELEMENT ANIMATIONS ──────────────────────────────────── */
+
+.lavaFlow {
+  stroke-dasharray: 8 4;
+  animation: lavaSlide 0.9s linear infinite;
+}
+
+@keyframes lavaSlide {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -24; }
+}
+
+.lavaBall {
+  animation: lavaDrop 0.05s linear;
+}
+
+.crackLine {
+  animation: crackGrow 0.4s ease-out both;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 0;
+}
+
+@keyframes crackGrow {
+  from { stroke-dashoffset: 40; opacity: 0; }
+  to   { stroke-dashoffset: 0;  opacity: 1; }
+}
+
+/* ─── PAGE ANIMATIONS ─────────────────────────────────────────── */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+
+@media (max-width: 1050px) {
+  .mainCard {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .infoPanel {
+    position: static;
+  }
+
+  .plateGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .controlActions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .mainCard { gap: 1.5rem; }
+
+  .controlsPanel {
+    padding: 1.1rem;
+    gap: 1.1rem;
+  }
+
+  .plateGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+
+  .plateBtn {
+    padding: 0.6rem 0.3rem;
+  }
+
+  .plateBtnDesc {
+    display: none;
+  }
+
+  .controlActions {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .eruptBtn { grid-column: 1; }
+
+  .metricsGrid { gap: 0.5rem; }
+
+  .metricCard {
+    padding: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .metricValue { font-size: 0.82rem; }
+  .interpretBox { padding: 1rem; }
+  .interpretText { font-size: 0.83rem; }
+  .theoTip { padding: 0.9rem; }
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .screenShake,
+  .eruptionFlash,
+  .lavaFlow,
+  .crackLine,
+  .statusDot,
+  .eruptActive,
+  .eruptIcon,
+  .mainCard,
+  .statusBadge,
+  .interpretBox,
+  .theoTip {
+    animation: none;
+  }
+
+  .screenGlow { filter: none; }
+}

@@ -977,8 +977,8 @@
 .navRight { justify-content: flex-end; }
 
 .navBackBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   color: #fff;
   width: 40px;
   height: 40px;
@@ -992,9 +992,8 @@
 }
 
 .navBackBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.05);
-  border-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
 }
 
 .navLogoContainer {
@@ -1053,8 +1052,8 @@
 }
 
 .navMuteBtn {
-  background: var(--quiz-glass);
-  border: 1px solid var(--quiz-border);
+  background: transparent;
+  border: none;
   color: #fff;
   width: 36px;
   height: 36px;
@@ -1069,7 +1068,7 @@
 
 .navMuteBtn:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 .navMuteBtn.isMuted {
